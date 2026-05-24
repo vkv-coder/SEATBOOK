@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Khursilo — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f5f3;--white:#fff;--s2:#f0eeea;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1a1a1a;--muted:#777;
+  --accent:#c8860a;--green:#2e9e60;--red:#cc3333;--blue:#2b6fd4;
+  --radius:12px;--rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+.login-logo{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:40px;display:flex;align-items:center;gap:6px;}
+.admin-badge{background:#1a1a1a;color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;}
+.login-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:24px;width:100%;}
+.login-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+.login-desc{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.inp{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;margin-bottom:10px;}
+.inp:focus{border-color:var(--accent);}
+.inp::placeholder{color:#bbb;}
+.btn-pri{width:100%;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;}
+.err{font-size:12px;color:var(--red);margin-top:6px;display:none;}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;}
+.topbar-left{display:flex;flex-direction:column;}
+.topbar-logo{font-family:'DM Serif Display',serif;font-size:18px;}
+.topbar-sub{font-size:10px;color:var(--muted);}
+.logout-btn{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* NAV TABS */
+.nav-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:10px 14px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+.nav-tab.active{color:var(--text);border-bottom-color:var(--text);}
+
+/* BODY */
+.dash-body{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.card-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.card-action{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px;}
+.stat-n{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);}
+.stat-l{font-size:11px;color:var(--muted);margin-top:2px;}
+.stat-trend{font-size:11px;margin-top:6px;font-weight:500;}
+.stat-trend.up{color:var(--green);}
+.stat-trend.down{color:var(--red);}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+.badge.active{background:rgba(46,158,96,0.1);color:var(--green);}
+.badge.pending{background:rgba(200,134,10,0.1);color:var(--accent);}
+.badge.suspended{background:rgba(204,51,51,0.08);color:var(--red);}
+.badge.live{background:rgba(46,158,96,0.1);color:var(--green);}
+.badge.closed{background:var(--s2);color:var(--muted);}
+.badge.paid{background:rgba(43,111,212,0.1);color:var(--blue);}
+.badge.unpaid{background:rgba(204,51,51,0.08);color:var(--red);}
+.tbl-btn{font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tbl-btn.red{color:var(--red);border-color:rgba(204,51,51,0.3);}
+.tbl-btn.green{color:var(--green);border-color:rgba(46,158,96,0.3);}
+
+/* REVENUE CHART */
+.rev-bars{display:flex;flex-direction:column;gap:8px;padding:14px;}
+.rev-bar-row{display:flex;align-items:center;gap:8px;}
+.rev-bar-label{font-size:11px;color:var(--muted);width:32px;flex-shrink:0;}
+.rev-bar-track{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.rev-bar-fill{height:100%;border-radius:4px;background:var(--accent);}
+.rev-bar-val{font-size:11px;font-weight:500;width:48px;text-align:right;flex-shrink:0;}
+
+/* ALERT */
+.alert{background:rgba(204,51,51,0.06);border:1px solid rgba(204,51,51,0.15);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#8b2222;display:flex;gap:8px;align-items:flex-start;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-end;}
+.overlay.show{display:flex;}
+.modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:20px;width:100%;}
+.modal-title{font-size:14px;font-weight:600;margin-bottom:14px;}
+.mf{margin-bottom:10px;}
+.ml{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.mbtns{display:flex;gap:8px;margin-top:14px;}
+.mbtn{flex:1;padding:10px;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);}
+.mbtn.pri{background:var(--text);color:#fff;border-color:var(--text);}
+.mbtn.red{background:var(--red);color:#fff;border-color:var(--red);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-wrap">
+    <div class="login-logo">Khursilo.</div>
+    <div class="login-sub"><span class="admin-badge">ADMIN</span> Private access only</div>
+    <div class="login-card">
+      <div class="login-title">Admin login</div>
+      <div class="login-desc">Enter your admin password to continue</div>
+      <input class="inp" type="password" id="admin-pass" placeholder="Admin password" onkeydown="if(event.key==='Enter')checkPass()">
+      <button class="btn-pri" onclick="checkPass()">Login →</button>
+      <div class="err" id="pass-err">Incorrect password. Try again.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dash">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Khursilo.</div>
+      <div class="topbar-sub">Admin panel · Vijay</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('overview',this)">Overview</button>
+    <button class="nav-tab" onclick="showTab('organisers',this)">Organisers</button>
+    <button class="nav-tab" onclick="showTab('events',this)">Events</button>
+    <button class="nav-tab" onclick="showTab('halls',this)">Halls</button>
+    <button class="nav-tab" onclick="showTab('billing',this)">Billing</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="dash-body" id="tab-overview">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-n">3</div>
+        <div class="stat-l">Active organisers</div>
+        <div class="stat-trend up">↑ +1 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n">5</div>
+        <div class="stat-l">Total events</div>
+        <div class="stat-trend up">↑ +2 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n">247</div>
+        <div class="stat-l">Total bookings</div>
+        <div class="stat-trend up">↑ +38 today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" style="color:var(--accent);">₹2,497</div>
+        <div class="stat-l">Platform revenue</div>
+        <div class="stat-trend up">↑ this month</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Monthly platform revenue</div></div>
+      <div class="rev-bars">
+        <div class="rev-bar-row"><div class="rev-bar-label">Jan</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:20%"></div></div><div class="rev-bar-val">₹398</div></div>
+        <div class="rev-bar-row"><div class="rev-bar-label">Feb</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:35%"></div></div><div class="rev-bar-val">₹697</div></div>
+        <div class="rev-bar-row"><div class="rev-bar-label">Mar</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:55%"></div></div><div class="rev-bar-val">₹1,097</div></div>
+        <div class="rev-bar-row"><div class="rev-bar-label">Apr</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:45%"></div></div><div class="rev-bar-val">₹897</div></div>
+        <div class="rev-bar-row"><div class="rev-bar-label">May</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:62%;background:var(--green)"></div></div><div class="rev-bar-val">₹1,297</div></div>
+      </div>
+    </div>
+
+    <div class="alert">
+      <span>⚠️</span>
+      <span>1 organiser has unpaid platform fee — <strong>Baroda Arts Circle</strong> · event starts in 2 days.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Recent activity</div></div>
+      <div style="padding:0 14px;">
+        <table>
+          <tr><td>🎟 New booking</td><td style="color:var(--muted);">Garba Night · B4</td><td style="color:var(--muted);">2m ago</td></tr>
+          <tr><td>👤 New organiser</td><td style="color:var(--muted);">Rotary Club</td><td style="color:var(--muted);">1h ago</td></tr>
+          <tr><td>💰 Fee received</td><td style="color:var(--green);">₹499</td><td style="color:var(--muted);">3h ago</td></tr>
+          <tr><td>🎭 New event</td><td style="color:var(--muted);">Navratri Show</td><td style="color:var(--muted);">5h ago</td></tr>
+          <tr><td>🔒 Event closed</td><td style="color:var(--muted);">Drama Night</td><td style="color:var(--muted);">1d ago</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORGANISERS TAB -->
+  <div class="dash-body" id="tab-organisers" style="display:none;">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">All organisers (4)</div>
+        <button class="card-action" onclick="showModal('modal-add-org')">+ Add</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Name</th><th>Mobile</th><th>Status</th><th>Action</th></tr>
+          <tr>
+            <td><div style="font-weight:500;">Vadodara Drama Circle</div><div style="font-size:10px;color:var(--muted);">3 events</div></td>
+            <td>98765 43210</td>
+            <td><span class="badge active">Active</span></td>
+            <td><button class="tbl-btn red" onclick="suspendOrg(this)">Suspend</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Rotary Club Vadodara</div><div style="font-size:10px;color:var(--muted);">1 event</div></td>
+            <td>87654 32109</td>
+            <td><span class="badge active">Active</span></td>
+            <td><button class="tbl-btn red" onclick="suspendOrg(this)">Suspend</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Baroda Arts Circle</div><div style="font-size:10px;color:var(--muted);">1 event</div></td>
+            <td>76543 21098</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td><button class="tbl-btn green" onclick="activateOrg(this)">Activate</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">DPS School</div><div style="font-size:10px;color:var(--muted);">0 events</div></td>
+            <td>65432 10987</td>
+            <td><span class="badge suspended">Suspended</span></td>
+            <td><button class="tbl-btn green" onclick="activateOrg(this)">Activate</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENTS TAB -->
+  <div class="dash-body" id="tab-events" style="display:none;">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">All events (5)</div></div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Event</th><th>Organiser</th><th>Date</th><th>Status</th><th>Seats</th></tr>
+          <tr>
+            <td><div style="font-weight:500;">Garba Night 2025</div><div style="font-size:10px;color:var(--muted);">Sayaji Hall</div></td>
+            <td style="font-size:11px;">Drama Circle</td>
+            <td style="font-size:11px;white-space:nowrap;">2 Oct</td>
+            <td><span class="badge live">Live</span></td>
+            <td style="font-size:11px;">58/85</td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Navratri Show</div><div style="font-size:10px;color:var(--muted);">Town Hall</div></td>
+            <td style="font-size:11px;">Drama Circle</td>
+            <td style="font-size:11px;white-space:nowrap;">5 Oct</td>
+            <td><span class="badge live">Live</span></td>
+            <td style="font-size:11px;">12/120</td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Rotary Annual</div><div style="font-size:10px;color:var(--muted);">Baroda Club</div></td>
+            <td style="font-size:11px;">Rotary Club</td>
+            <td style="font-size:11px;white-space:nowrap;">10 Oct</td>
+            <td><span class="badge live">Live</span></td>
+            <td style="font-size:11px;">45/200</td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Drama Night</div><div style="font-size:10px;color:var(--muted);">Sayaji Hall</div></td>
+            <td style="font-size:11px;">Drama Circle</td>
+            <td style="font-size:11px;white-space:nowrap;">15 Sep</td>
+            <td><span class="badge closed">Closed</span></td>
+            <td style="font-size:11px;">85/85</td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Annual Function</div><div style="font-size:10px;color:var(--muted);">Nirmala Hall</div></td>
+            <td style="font-size:11px;">DPS School</td>
+            <td style="font-size:11px;white-space:nowrap;">20 Nov</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td style="font-size:11px;">0/300</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HALLS TAB -->
+  <div class="dash-body" id="tab-halls" style="display:none;">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Mapped halls (4)</div>
+        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map hall</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Hall</th><th>Capacity</th><th>Sections</th><th>Events</th><th></th></tr>
+          <tr>
+            <td><div style="font-weight:500;">Sayaji Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
+            <td>850</td>
+            <td>3</td>
+            <td>3</td>
+            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Town Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
+            <td>420</td>
+            <td>2</td>
+            <td>1</td>
+            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Baroda Club</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
+            <td>320</td>
+            <td>2</td>
+            <td>1</td>
+            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:500;">Nirmala Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
+            <td>280</td>
+            <td>1</td>
+            <td>0</td>
+            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+        To add or edit a hall layout, click <strong>"+ Map hall"</strong> above — it opens the layout builder tool directly.
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLING TAB -->
+  <div class="dash-body" id="tab-billing" style="display:none;">
+    <div class="alert">
+      <span>⚠️</span>
+      <span><strong>Baroda Arts Circle</strong> has not paid the platform fee for "Navratri Show" (₹499). Event goes live in 2 days.</span>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Platform fee billing</div></div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Organiser</th><th>Event</th><th>Fee</th><th>Status</th><th></th></tr>
+          <tr>
+            <td style="font-weight:500;">Drama Circle</td>
+            <td style="font-size:11px;">Garba Night</td>
+            <td>₹499</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td><button class="tbl-btn">Receipt</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500;">Drama Circle</td>
+            <td style="font-size:11px;">Navratri Show</td>
+            <td>₹299</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td><button class="tbl-btn">Receipt</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500;">Rotary Club</td>
+            <td style="font-size:11px;">Rotary Annual</td>
+            <td>₹199</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td><button class="tbl-btn">Receipt</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500;color:var(--red);">Baroda Arts</td>
+            <td style="font-size:11px;">Navratri Show</td>
+            <td>₹499</td>
+            <td><span class="badge unpaid">Unpaid</span></td>
+            <td><button class="tbl-btn red" onclick="sendReminder()">Remind</button></td>
+          </tr>
+          <tr>
+            <td style="font-weight:500;">Drama Circle</td>
+            <td style="font-size:11px;">Drama Night</td>
+            <td>₹799</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td><button class="tbl-btn">Receipt</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Total collected</span><span style="font-weight:500;color:var(--green);">₹1,796</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
+        <span style="color:var(--muted);">Pending</span><span style="font-weight:500;color:var(--red);">₹499</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Organiser -->
+<div class="overlay" id="modal-add-org">
+  <div class="modal">
+    <div class="modal-title">Add new organiser</div>
+    <div class="mf"><div class="ml">Organisation name</div><input class="inp" type="text" placeholder="e.g. Navrang Drama Group" style="margin:0;"></div>
+    <div class="mf"><div class="ml">Contact person</div><input class="inp" type="text" placeholder="Full name" style="margin:0;"></div>
+    <div class="mf"><div class="ml">Mobile number</div><input class="inp" type="tel" placeholder="+91 XXXXX XXXXX" style="margin:0;"></div>
+    <div class="mf" style="margin:0;"><div class="ml">Mode</div>
+      <select class="inp" style="margin:0;appearance:none;">
+        <option>Paid ticketing + Free allocation</option>
+        <option>Paid ticketing only</option>
+        <option>Free allocation only</option>
+      </select>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn" onclick="closeModal('modal-add-org')">Cancel</button>
+      <button class="mbtn pri" onclick="addOrg()">Add organiser</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASS = 'khursilo@admin2025';
+
+function checkPass() {
+  const p = document.getElementById('admin-pass').value;
+  const err = document.getElementById('pass-err');
+  if (p === ADMIN_PASS) {
+    showScreen('screen-dash');
+  } else {
+    err.style.display = 'block';
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('admin-pass').focus();
+  }
+}
+
+function logout() {
+  showScreen('screen-login');
+  document.getElementById('admin-pass').value = '';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.dash-body').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'flex';
+  btn.classList.add('active');
+}
+
+function suspendOrg(btn) {
+  if(confirm('Suspend this organiser? Their booking links will be disabled.')) {
+    const badge = btn.closest('tr').querySelector('.badge');
+    badge.className = 'badge suspended';
+    badge.textContent = 'Suspended';
+    btn.className = 'tbl-btn green';
+    btn.textContent = 'Activate';
+    btn.onclick = function(){ activateOrg(this); };
+  }
+}
+
+function activateOrg(btn) {
+  const badge = btn.closest('tr').querySelector('.badge');
+  badge.className = 'badge active';
+  badge.textContent = 'Active';
+  btn.className = 'tbl-btn red';
+  btn.textContent = 'Suspend';
+  btn.onclick = function(){ suspendOrg(this); };
+}
+
+function sendReminder() {
+  alert('✓ WhatsApp reminder sent to Baroda Arts Circle for unpaid fee of ₹499.');
+}
+
+function addOrg() {
+  closeModal('modal-add-org');
+  alert('✓ Organiser added. OTP login link sent to their mobile.');
+}
+
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+</script>
+</body>
+</html>
