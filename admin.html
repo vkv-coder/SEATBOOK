@@ -34,75 +34,69 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* TOPBAR */
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;}
-.topbar-left{display:flex;flex-direction:column;}
 .topbar-logo{font-family:'DM Serif Display',serif;font-size:18px;}
 .topbar-sub{font-size:10px;color:var(--muted);}
 .logout-btn{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
 
-/* NAV TABS */
-.nav-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;}
-.nav-tabs::-webkit-scrollbar{display:none;}
-.nav-tab{padding:10px 14px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;}
+/* NAV */
+.nav-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;}
+.nav-tab{flex:1;padding:10px 8px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;}
 .nav-tab.active{color:var(--text);border-bottom-color:var(--text);}
 
 /* BODY */
 .dash-body{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
 
-/* CARDS */
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px;text-align:center;}
+.stat-n{font-family:'DM Serif Display',serif;font-size:32px;color:var(--text);}
+.stat-l{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3;}
+
+/* CARD */
 .card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
 .card-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-size:13px;font-weight:600;}
-.card-action{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.card-action{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;}
 
-/* STATS GRID */
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.stat-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px;}
-.stat-n{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);}
-.stat-l{font-size:11px;color:var(--muted);margin-top:2px;}
-.stat-trend{font-size:11px;margin-top:6px;font-weight:500;}
-.stat-trend.up{color:var(--green);}
-.stat-trend.down{color:var(--red);}
-
-/* TABLE */
-.table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th{padding:8px 12px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
-td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
-tr:last-child td{border-bottom:none;}
-.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;}
+/* ORG ITEMS */
+.org-list{display:flex;flex-direction:column;}
+.org-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.org-item:last-child{border-bottom:none;}
+.org-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.org-info{flex:1;min-width:0;}
+.org-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.org-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.org-actions{display:flex;gap:5px;flex-shrink:0;}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;}
 .badge.active{background:rgba(46,158,96,0.1);color:var(--green);}
 .badge.pending{background:rgba(200,134,10,0.1);color:var(--accent);}
 .badge.suspended{background:rgba(204,51,51,0.08);color:var(--red);}
-.badge.live{background:rgba(46,158,96,0.1);color:var(--green);}
-.badge.closed{background:var(--s2);color:var(--muted);}
-.badge.paid{background:rgba(43,111,212,0.1);color:var(--blue);}
-.badge.unpaid{background:rgba(204,51,51,0.08);color:var(--red);}
-.tbl-btn{font-size:10px;padding:3px 8px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tbl-btn{font-size:10px;padding:4px 9px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .tbl-btn.red{color:var(--red);border-color:rgba(204,51,51,0.3);}
 .tbl-btn.green{color:var(--green);border-color:rgba(46,158,96,0.3);}
+.tbl-btn.blue{color:var(--blue);border-color:rgba(43,111,212,0.3);}
 
-/* REVENUE CHART */
-.rev-bars{display:flex;flex-direction:column;gap:8px;padding:14px;}
-.rev-bar-row{display:flex;align-items:center;gap:8px;}
-.rev-bar-label{font-size:11px;color:var(--muted);width:32px;flex-shrink:0;}
-.rev-bar-track{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden;}
-.rev-bar-fill{height:100%;border-radius:4px;background:var(--accent);}
-.rev-bar-val{font-size:11px;font-weight:500;width:48px;text-align:right;flex-shrink:0;}
-
-/* ALERT */
-.alert{background:rgba(204,51,51,0.06);border:1px solid rgba(204,51,51,0.15);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#8b2222;display:flex;gap:8px;align-items:flex-start;}
+/* HALL ITEMS */
+.hall-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.hall-item:last-child{border-bottom:none;}
+.hall-icon{width:36px;height:36px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hall-info{flex:1;}
+.hall-name{font-size:13px;font-weight:500;}
+.hall-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 
 /* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-end;}
 .overlay.show{display:flex;}
-.modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:20px;width:100%;}
+.modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
 .modal-title{font-size:14px;font-weight:600;margin-bottom:14px;}
 .mf{margin-bottom:10px;}
 .ml{font-size:11px;color:var(--muted);margin-bottom:3px;}
 .mbtns{display:flex;gap:8px;margin-top:14px;}
 .mbtn{flex:1;padding:10px;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);}
 .mbtn.pri{background:var(--text);color:#fff;border-color:var(--text);}
-.mbtn.red{background:var(--red);color:#fff;border-color:var(--red);}
+
+/* INFO BOX */
+.info-box{background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#1a3a6b;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -114,10 +108,10 @@ tr:last-child td{border-bottom:none;}
     <div class="login-sub"><span class="admin-badge">ADMIN</span> Private access only</div>
     <div class="login-card">
       <div class="login-title">Admin login</div>
-      <div class="login-desc">Enter your admin password to continue</div>
-      <input class="inp" type="password" id="admin-pass" placeholder="Admin password" onkeydown="if(event.key==='Enter')checkPass()">
+      <div class="login-desc">This page is not linked anywhere. Enter password to continue.</div>
+      <input class="inp" type="password" id="admin-pass" placeholder="Password" onkeydown="if(event.key==='Enter')checkPass()">
       <button class="btn-pri" onclick="checkPass()">Login →</button>
-      <div class="err" id="pass-err">Incorrect password. Try again.</div>
+      <div class="err" id="pass-err">Incorrect password.</div>
     </div>
   </div>
 </div>
@@ -125,9 +119,9 @@ tr:last-child td{border-bottom:none;}
 <!-- DASHBOARD -->
 <div class="screen" id="screen-dash">
   <div class="topbar">
-    <div class="topbar-left">
+    <div>
       <div class="topbar-logo">Khursilo.</div>
-      <div class="topbar-sub">Admin panel · Vijay</div>
+      <div class="topbar-sub">Admin · Platform management</div>
     </div>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
@@ -135,345 +129,285 @@ tr:last-child td{border-bottom:none;}
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('overview',this)">Overview</button>
     <button class="nav-tab" onclick="showTab('organisers',this)">Organisers</button>
-    <button class="nav-tab" onclick="showTab('events',this)">Events</button>
     <button class="nav-tab" onclick="showTab('halls',this)">Halls</button>
-    <button class="nav-tab" onclick="showTab('billing',this)">Billing</button>
   </div>
 
-  <!-- OVERVIEW TAB -->
+  <!-- OVERVIEW -->
   <div class="dash-body" id="tab-overview">
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-n">3</div>
-        <div class="stat-l">Active organisers</div>
-        <div class="stat-trend up">↑ +1 this week</div>
+        <div class="stat-n" id="count-orgs">4</div>
+        <div class="stat-l">Organisers</div>
       </div>
       <div class="stat-card">
-        <div class="stat-n">5</div>
-        <div class="stat-l">Total events</div>
-        <div class="stat-trend up">↑ +2 this week</div>
+        <div class="stat-n" id="count-events">5</div>
+        <div class="stat-l">Events created</div>
       </div>
       <div class="stat-card">
-        <div class="stat-n">247</div>
-        <div class="stat-l">Total bookings</div>
-        <div class="stat-trend up">↑ +38 today</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-n" style="color:var(--accent);">₹2,497</div>
-        <div class="stat-l">Platform revenue</div>
-        <div class="stat-trend up">↑ this month</div>
+        <div class="stat-n" id="count-halls">4</div>
+        <div class="stat-l">Halls mapped</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-title">Monthly platform revenue</div></div>
-      <div class="rev-bars">
-        <div class="rev-bar-row"><div class="rev-bar-label">Jan</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:20%"></div></div><div class="rev-bar-val">₹398</div></div>
-        <div class="rev-bar-row"><div class="rev-bar-label">Feb</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:35%"></div></div><div class="rev-bar-val">₹697</div></div>
-        <div class="rev-bar-row"><div class="rev-bar-label">Mar</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:55%"></div></div><div class="rev-bar-val">₹1,097</div></div>
-        <div class="rev-bar-row"><div class="rev-bar-label">Apr</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:45%"></div></div><div class="rev-bar-val">₹897</div></div>
-        <div class="rev-bar-row"><div class="rev-bar-label">May</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:62%;background:var(--green)"></div></div><div class="rev-bar-val">₹1,297</div></div>
+      <div class="card-hdr"><div class="card-title">Platform status</div></div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Active organisers</span>
+          <span style="font-weight:500;color:var(--green);" id="ov-active">2</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Pending approval</span>
+          <span style="font-weight:500;color:var(--accent);" id="ov-pending">1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Suspended</span>
+          <span style="font-weight:500;color:var(--red);" id="ov-suspended">1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;">
+          <span style="color:var(--muted);">Live events right now</span>
+          <span style="font-weight:500;" id="ov-live">3</span>
+        </div>
       </div>
     </div>
 
-    <div class="alert">
-      <span>⚠️</span>
-      <span>1 organiser has unpaid platform fee — <strong>Baroda Arts Circle</strong> · event starts in 2 days.</span>
+    <div class="info-box">
+      ℹ️ This panel manages platform access only. Organiser bookings, ticket revenue, and audience data are private to each organiser. Khursilo does not store or view that data.
     </div>
 
     <div class="card">
-      <div class="card-hdr"><div class="card-title">Recent activity</div></div>
-      <div style="padding:0 14px;">
-        <table>
-          <tr><td>🎟 New booking</td><td style="color:var(--muted);">Garba Night · B4</td><td style="color:var(--muted);">2m ago</td></tr>
-          <tr><td>👤 New organiser</td><td style="color:var(--muted);">Rotary Club</td><td style="color:var(--muted);">1h ago</td></tr>
-          <tr><td>💰 Fee received</td><td style="color:var(--green);">₹499</td><td style="color:var(--muted);">3h ago</td></tr>
-          <tr><td>🎭 New event</td><td style="color:var(--muted);">Navratri Show</td><td style="color:var(--muted);">5h ago</td></tr>
-          <tr><td>🔒 Event closed</td><td style="color:var(--muted);">Drama Night</td><td style="color:var(--muted);">1d ago</td></tr>
-        </table>
+      <div class="card-hdr"><div class="card-title">Quick actions</div></div>
+      <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="showTab('organisers',document.querySelectorAll('.nav-tab')[1]);openModal('modal-add-org')" style="padding:12px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;">
+          👤 Add organiser
+        </button>
+        <button onclick="window.location.href='layout-builder.html'" style="padding:12px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;">
+          🏛 Map new hall
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ORGANISERS TAB -->
+  <!-- ORGANISERS -->
   <div class="dash-body" id="tab-organisers" style="display:none;">
     <div class="card">
       <div class="card-hdr">
-        <div class="card-title">All organisers (4)</div>
-        <button class="card-action" onclick="showModal('modal-add-org')">+ Add</button>
+        <div class="card-title">Organisers <span id="org-count-label" style="color:var(--muted);font-weight:400;">(4)</span></div>
+        <button class="card-action" onclick="openModal('modal-add-org')">+ Add organiser</button>
       </div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Name</th><th>Mobile</th><th>Status</th><th>Action</th></tr>
-          <tr>
-            <td><div style="font-weight:500;">Vadodara Drama Circle</div><div style="font-size:10px;color:var(--muted);">3 events</div></td>
-            <td>98765 43210</td>
-            <td><span class="badge active">Active</span></td>
-            <td><button class="tbl-btn red" onclick="suspendOrg(this)">Suspend</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Rotary Club Vadodara</div><div style="font-size:10px;color:var(--muted);">1 event</div></td>
-            <td>87654 32109</td>
-            <td><span class="badge active">Active</span></td>
-            <td><button class="tbl-btn red" onclick="suspendOrg(this)">Suspend</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Baroda Arts Circle</div><div style="font-size:10px;color:var(--muted);">1 event</div></td>
-            <td>76543 21098</td>
-            <td><span class="badge pending">Pending</span></td>
-            <td><button class="tbl-btn green" onclick="activateOrg(this)">Activate</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">DPS School</div><div style="font-size:10px;color:var(--muted);">0 events</div></td>
-            <td>65432 10987</td>
-            <td><span class="badge suspended">Suspended</span></td>
-            <td><button class="tbl-btn green" onclick="activateOrg(this)">Activate</button></td>
-          </tr>
-        </table>
-      </div>
+      <div class="org-list" id="org-list"></div>
     </div>
   </div>
 
-  <!-- EVENTS TAB -->
-  <div class="dash-body" id="tab-events" style="display:none;">
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">All events (5)</div></div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Event</th><th>Organiser</th><th>Date</th><th>Status</th><th>Seats</th></tr>
-          <tr>
-            <td><div style="font-weight:500;">Garba Night 2025</div><div style="font-size:10px;color:var(--muted);">Sayaji Hall</div></td>
-            <td style="font-size:11px;">Drama Circle</td>
-            <td style="font-size:11px;white-space:nowrap;">2 Oct</td>
-            <td><span class="badge live">Live</span></td>
-            <td style="font-size:11px;">58/85</td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Navratri Show</div><div style="font-size:10px;color:var(--muted);">Town Hall</div></td>
-            <td style="font-size:11px;">Drama Circle</td>
-            <td style="font-size:11px;white-space:nowrap;">5 Oct</td>
-            <td><span class="badge live">Live</span></td>
-            <td style="font-size:11px;">12/120</td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Rotary Annual</div><div style="font-size:10px;color:var(--muted);">Baroda Club</div></td>
-            <td style="font-size:11px;">Rotary Club</td>
-            <td style="font-size:11px;white-space:nowrap;">10 Oct</td>
-            <td><span class="badge live">Live</span></td>
-            <td style="font-size:11px;">45/200</td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Drama Night</div><div style="font-size:10px;color:var(--muted);">Sayaji Hall</div></td>
-            <td style="font-size:11px;">Drama Circle</td>
-            <td style="font-size:11px;white-space:nowrap;">15 Sep</td>
-            <td><span class="badge closed">Closed</span></td>
-            <td style="font-size:11px;">85/85</td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Annual Function</div><div style="font-size:10px;color:var(--muted);">Nirmala Hall</div></td>
-            <td style="font-size:11px;">DPS School</td>
-            <td style="font-size:11px;white-space:nowrap;">20 Nov</td>
-            <td><span class="badge pending">Pending</span></td>
-            <td style="font-size:11px;">0/300</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- HALLS TAB -->
+  <!-- HALLS -->
   <div class="dash-body" id="tab-halls" style="display:none;">
     <div class="card">
       <div class="card-hdr">
-        <div class="card-title">Mapped halls (4)</div>
-        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map hall</button>
+        <div class="card-title">Mapped halls <span style="color:var(--muted);font-weight:400;" id="hall-count-lbl">(4)</span></div>
+        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map new hall</button>
       </div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Hall</th><th>Capacity</th><th>Sections</th><th>Events</th><th></th></tr>
-          <tr>
-            <td><div style="font-weight:500;">Sayaji Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
-            <td>850</td>
-            <td>3</td>
-            <td>3</td>
-            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Town Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
-            <td>420</td>
-            <td>2</td>
-            <td>1</td>
-            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Baroda Club</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
-            <td>320</td>
-            <td>2</td>
-            <td>1</td>
-            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
-          </tr>
-          <tr>
-            <td><div style="font-weight:500;">Nirmala Hall</div><div style="font-size:10px;color:var(--muted);">Vadodara</div></td>
-            <td>280</td>
-            <td>1</td>
-            <td>0</td>
-            <td><button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit</button></td>
-          </tr>
-        </table>
-      </div>
+      <div id="hall-list"></div>
     </div>
-    <div class="card" style="padding:14px;">
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-        To add or edit a hall layout, click <strong>"+ Map hall"</strong> above — it opens the layout builder tool directly.
-      </div>
+    <div class="info-box">
+      ℹ️ Each hall is mapped once by you. When an organiser creates an event, they select from this list — the layout loads instantly. Click <strong>Edit layout</strong> to modify any hall in the layout builder.
     </div>
   </div>
 
-  <!-- BILLING TAB -->
-  <div class="dash-body" id="tab-billing" style="display:none;">
-    <div class="alert">
-      <span>⚠️</span>
-      <span><strong>Baroda Arts Circle</strong> has not paid the platform fee for "Navratri Show" (₹499). Event goes live in 2 days.</span>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">Platform fee billing</div></div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Organiser</th><th>Event</th><th>Fee</th><th>Status</th><th></th></tr>
-          <tr>
-            <td style="font-weight:500;">Drama Circle</td>
-            <td style="font-size:11px;">Garba Night</td>
-            <td>₹499</td>
-            <td><span class="badge paid">Paid</span></td>
-            <td><button class="tbl-btn">Receipt</button></td>
-          </tr>
-          <tr>
-            <td style="font-weight:500;">Drama Circle</td>
-            <td style="font-size:11px;">Navratri Show</td>
-            <td>₹299</td>
-            <td><span class="badge paid">Paid</span></td>
-            <td><button class="tbl-btn">Receipt</button></td>
-          </tr>
-          <tr>
-            <td style="font-weight:500;">Rotary Club</td>
-            <td style="font-size:11px;">Rotary Annual</td>
-            <td>₹199</td>
-            <td><span class="badge paid">Paid</span></td>
-            <td><button class="tbl-btn">Receipt</button></td>
-          </tr>
-          <tr>
-            <td style="font-weight:500;color:var(--red);">Baroda Arts</td>
-            <td style="font-size:11px;">Navratri Show</td>
-            <td>₹499</td>
-            <td><span class="badge unpaid">Unpaid</span></td>
-            <td><button class="tbl-btn red" onclick="sendReminder()">Remind</button></td>
-          </tr>
-          <tr>
-            <td style="font-weight:500;">Drama Circle</td>
-            <td style="font-size:11px;">Drama Night</td>
-            <td>₹799</td>
-            <td><span class="badge paid">Paid</span></td>
-            <td><button class="tbl-btn">Receipt</button></td>
-          </tr>
-        </table>
-      </div>
-    </div>
-    <div class="card" style="padding:14px;">
-      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-        <span style="color:var(--muted);">Total collected</span><span style="font-weight:500;color:var(--green);">₹1,796</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
-        <span style="color:var(--muted);">Pending</span><span style="font-weight:500;color:var(--red);">₹499</span>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL: Add Organiser -->
 <div class="overlay" id="modal-add-org">
   <div class="modal">
     <div class="modal-title">Add new organiser</div>
-    <div class="mf"><div class="ml">Organisation name</div><input class="inp" type="text" placeholder="e.g. Navrang Drama Group" style="margin:0;"></div>
-    <div class="mf"><div class="ml">Contact person</div><input class="inp" type="text" placeholder="Full name" style="margin:0;"></div>
-    <div class="mf"><div class="ml">Mobile number</div><input class="inp" type="tel" placeholder="+91 XXXXX XXXXX" style="margin:0;"></div>
-    <div class="mf" style="margin:0;"><div class="ml">Mode</div>
-      <select class="inp" style="margin:0;appearance:none;">
-        <option>Paid ticketing + Free allocation</option>
-        <option>Paid ticketing only</option>
-        <option>Free allocation only</option>
+    <div class="mf">
+      <div class="ml">Organisation / group name *</div>
+      <input class="inp" type="text" id="new-org-name" placeholder="e.g. Navrang Drama Group" style="margin:0;">
+    </div>
+    <div class="mf">
+      <div class="ml">Contact person</div>
+      <input class="inp" type="text" id="new-org-contact" placeholder="Full name" style="margin:0;">
+    </div>
+    <div class="mf">
+      <div class="ml">Mobile number *</div>
+      <input class="inp" type="tel" id="new-org-mobile" placeholder="98765 43210" maxlength="10" style="margin:0;">
+    </div>
+    <div class="mf" style="margin:0;">
+      <div class="ml">Event type</div>
+      <select class="inp" id="new-org-type" style="margin:0;appearance:none;">
+        <option value="both">Paid ticketing + Free allocation</option>
+        <option value="paid">Paid ticketing only</option>
+        <option value="free">Free allocation only</option>
       </select>
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-add-org')">Cancel</button>
-      <button class="mbtn pri" onclick="addOrg()">Add organiser</button>
+      <button class="mbtn pri" onclick="addOrg()">Add & send login link</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Org Detail -->
+<div class="overlay" id="modal-org-detail">
+  <div class="modal">
+    <div class="modal-title" id="detail-org-name">Organiser</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Mobile</span><span id="detail-mobile" style="font-weight:500;"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Event type</span><span id="detail-type" style="font-weight:500;"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Status</span><span id="detail-status"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;">
+        <span style="color:var(--muted);">Events created</span><span id="detail-events" style="font-weight:500;"></span>
+      </div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn" onclick="closeModal('modal-org-detail')">Close</button>
+      <button class="mbtn" id="detail-action-btn" style="color:var(--red);border-color:rgba(204,51,51,0.3);" onclick="toggleOrgStatus()">Suspend</button>
     </div>
   </div>
 </div>
 
 <script>
-const ADMIN_PASS = 'khursilo@admin2025';
+const PASS = 'khursilo@admin2025';
+let currentOrgIdx = null;
 
-function checkPass() {
+let orgs = [
+  { name:'Vadodara Drama Circle', contact:'Rajesh Mehta', mobile:'98765 43210', type:'Paid + Free', status:'active', events:3 },
+  { name:'Rotary Club Vadodara', contact:'Sunita Shah', mobile:'87654 32109', type:'Free allocation', status:'active', events:1 },
+  { name:'Baroda Arts Circle', contact:'Amit Patel', mobile:'76543 21098', type:'Paid ticketing', status:'pending', events:1 },
+  { name:'DPS School', contact:'Mrs. Trivedi', mobile:'65432 10987', type:'Free allocation', status:'suspended', events:0 },
+];
+
+const halls = [
+  { name:'Sayaji Hall', city:'Vadodara', capacity:850, sections:3 },
+  { name:'Town Hall', city:'Vadodara', capacity:420, sections:2 },
+  { name:'Baroda Club Auditorium', city:'Vadodara', capacity:320, sections:2 },
+  { name:'Nirmala Convent Hall', city:'Vadodara', capacity:280, sections:1 },
+];
+
+const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
+const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
+
+// ── Login ──
+function checkPass(){
   const p = document.getElementById('admin-pass').value;
-  const err = document.getElementById('pass-err');
-  if (p === ADMIN_PASS) {
-    showScreen('screen-dash');
-  } else {
-    err.style.display = 'block';
-    document.getElementById('admin-pass').value = '';
-    document.getElementById('admin-pass').focus();
-  }
+  if(p === PASS){ showScreen('screen-dash'); renderOrgs(); renderHalls(); updateOverview(); }
+  else{ document.getElementById('pass-err').style.display='block'; document.getElementById('admin-pass').value=''; document.getElementById('admin-pass').focus(); }
 }
+function logout(){ showScreen('screen-login'); document.getElementById('admin-pass').value=''; }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 
-function logout() {
-  showScreen('screen-login');
-  document.getElementById('admin-pass').value = '';
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
-}
-
-function showTab(tab, btn) {
-  document.querySelectorAll('.dash-body').forEach(t => t.style.display = 'none');
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + tab).style.display = 'flex';
+// ── Tabs ──
+function showTab(tab,btn){
+  document.querySelectorAll('.dash-body').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display='flex';
   btn.classList.add('active');
 }
 
-function suspendOrg(btn) {
-  if(confirm('Suspend this organiser? Their booking links will be disabled.')) {
-    const badge = btn.closest('tr').querySelector('.badge');
-    badge.className = 'badge suspended';
-    badge.textContent = 'Suspended';
-    btn.className = 'tbl-btn green';
-    btn.textContent = 'Activate';
-    btn.onclick = function(){ activateOrg(this); };
+// ── Overview ──
+function updateOverview(){
+  document.getElementById('count-orgs').textContent = orgs.length;
+  document.getElementById('count-halls').textContent = halls.length;
+  document.getElementById('ov-active').textContent = orgs.filter(o=>o.status==='active').length;
+  document.getElementById('ov-pending').textContent = orgs.filter(o=>o.status==='pending').length;
+  document.getElementById('ov-suspended').textContent = orgs.filter(o=>o.status==='suspended').length;
+}
+
+// ── Organisers ──
+function renderOrgs(){
+  const list = document.getElementById('org-list');
+  list.innerHTML = '';
+  orgs.forEach((org,i)=>{
+    const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const statusLabel = {active:'Active',pending:'Pending',suspended:'Suspended'}[org.status];
+    const item = document.createElement('div');
+    item.className = 'org-item';
+    item.innerHTML = `
+      <div class="org-avatar" style="background:${AVATARBG[i%4]};color:${AVATARCOL[i%4]};">${initials}</div>
+      <div class="org-info">
+        <div class="org-name">${org.name}</div>
+        <div class="org-meta">${org.mobile} · ${org.type}</div>
+      </div>
+      <div class="org-actions">
+        <span class="badge ${org.status}">${statusLabel}</span>
+        <button class="tbl-btn blue" onclick="viewOrg(${i})">View</button>
+      </div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('org-count-label').textContent = '('+orgs.length+')';
+  updateOverview();
+}
+
+function viewOrg(i){
+  currentOrgIdx = i;
+  const org = orgs[i];
+  document.getElementById('detail-org-name').textContent = org.name;
+  document.getElementById('detail-mobile').textContent = org.mobile;
+  document.getElementById('detail-type').textContent = org.type;
+  document.getElementById('detail-events').textContent = org.events + ' event' + (org.events!==1?'s':'');
+  const statusEl = document.getElementById('detail-status');
+  statusEl.innerHTML = `<span class="badge ${org.status}">${org.status.charAt(0).toUpperCase()+org.status.slice(1)}</span>`;
+  const actionBtn = document.getElementById('detail-action-btn');
+  if(org.status==='active'){
+    actionBtn.textContent='Suspend'; actionBtn.style.color='var(--red)'; actionBtn.style.borderColor='rgba(204,51,51,0.3)';
+  } else {
+    actionBtn.textContent='Activate'; actionBtn.style.color='var(--green)'; actionBtn.style.borderColor='rgba(46,158,96,0.3)';
   }
+  openModal('modal-org-detail');
 }
 
-function activateOrg(btn) {
-  const badge = btn.closest('tr').querySelector('.badge');
-  badge.className = 'badge active';
-  badge.textContent = 'Active';
-  btn.className = 'tbl-btn red';
-  btn.textContent = 'Suspend';
-  btn.onclick = function(){ suspendOrg(this); };
+function toggleOrgStatus(){
+  const org = orgs[currentOrgIdx];
+  org.status = org.status === 'active' ? 'suspended' : 'active';
+  closeModal('modal-org-detail');
+  renderOrgs();
+  const action = org.status === 'active' ? 'activated' : 'suspended';
+  alert(`✓ ${org.name} has been ${action}.`);
 }
 
-function sendReminder() {
-  alert('✓ WhatsApp reminder sent to Baroda Arts Circle for unpaid fee of ₹499.');
-}
-
-function addOrg() {
+function addOrg(){
+  const name = document.getElementById('new-org-name').value.trim();
+  const contact = document.getElementById('new-org-contact').value.trim();
+  const mobile = document.getElementById('new-org-mobile').value.trim();
+  const type = document.getElementById('new-org-type');
+  const typeText = type.options[type.selectedIndex].text;
+  if(!name||!mobile){alert('Name and mobile are required');return;}
+  orgs.push({name,contact,mobile,type:typeText,status:'pending',events:0});
   closeModal('modal-add-org');
-  alert('✓ Organiser added. OTP login link sent to their mobile.');
+  document.getElementById('new-org-name').value='';
+  document.getElementById('new-org-contact').value='';
+  document.getElementById('new-org-mobile').value='';
+  renderOrgs();
+  alert(`✓ ${name} added.\nThey can log in at khursilo.in/organiser-dashboard.html using their mobile number.`);
 }
 
-function showModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+// ── Halls ──
+function renderHalls(){
+  const list = document.getElementById('hall-list');
+  list.innerHTML = '';
+  halls.forEach((hall,i)=>{
+    const item = document.createElement('div');
+    item.className = 'hall-item';
+    item.innerHTML = `
+      <div class="hall-icon">🏛</div>
+      <div class="hall-info">
+        <div class="hall-name">${hall.name}</div>
+        <div class="hall-meta">${hall.city} · ${hall.capacity} seats · ${hall.sections} sections</div>
+      </div>
+      <button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit layout</button>`;
+    list.appendChild(item);
+  });
+  document.getElementById('hall-count-lbl').textContent = '('+halls.length+')';
+  document.getElementById('count-halls').textContent = halls.length;
+}
+
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 </script>
 </body>
 </html>
