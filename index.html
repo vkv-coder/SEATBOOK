@@ -103,16 +103,27 @@ body {
   overflow-y: auto;
 }
 .stage-label {
-  text-align: center; font-size: 10px; letter-spacing: 3px;
-  color: var(--muted); margin-bottom: 16px;
+  text-align: center; margin-bottom: 20px;
   position: relative;
 }
-.stage-label::before, .stage-label::after {
-  content: ''; position: absolute; top: 50%;
-  width: 28%; height: 1px; background: var(--border2);
+.stage-label .stage-box {
+  display: inline-block;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  padding: 8px 32px;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  z-index: 1;
 }
-.stage-label::before { left: 0; }
-.stage-label::after { right: 0; }
+.stage-label .stage-line {
+  height: 5px;
+  background: #1a1a1a;
+  border-radius: 3px;
+  margin-top: -1px;
+}
 
 .section-block { margin-bottom: 18px; }
 .section-title {
@@ -539,7 +550,7 @@ function renderMap() {
 
   const stageDiv = document.createElement('div');
   stageDiv.className = 'stage-label';
-  stageDiv.textContent = 'STAGE';
+  stageDiv.innerHTML = '<div class="stage-box">STAGE</div><div class="stage-line"></div>';
   frag.appendChild(stageDiv);
 
   LAYOUT.forEach(sec => {
