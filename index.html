@@ -608,13 +608,48 @@ function renderMap() {
 function toggleSeat(key, type, num, rowLetter) {
   if (selected[key]) {
     delete selected[key];
-  } else {
-    if (Object.keys(selected).length >= 6) {
-      alert('Maximum 6 seats per booking');
-      return;
-    }
-    selected[key] = { type, num, row: rowLetter, price: PRICES[type] };
+    renderMap();
+    return;
   }
+  if (Object.keys(selected).length >= 6) {
+    alert('Maximum 6 seats per booking');
+    return;
+  }
+  // ── Adjacent seat enforcement ──
+  // Get all selected seats in the same row
+  const sameRow = Object.values(selected).filter(s => s.row === rowLetter);
+  if (sameRow.length > 0) {
+    const selectedNums = sameRow.map(s => s.num).sort((a,b) => a-b);
+    const minSel = selectedNums[0];
+    const maxSel = selectedNums[selectedNums.length - 1];
+    // New seat must be adjacent to existing selection (no gap allowed)
+    const adjacentLeft  = num === minSel - 1;
+    const adjacentRight = num === maxSel + 1;
+    if (!adjacentLeft && !adjacentRight) {
+      // Check if gap would be created
+      if (num < minSel - 1 || num > maxSel + 1) {
+        alert('⚠️ Cannot skip seats!\nYou must select seats adjacent to your current selection.\nThis prevents leaving single vacant seats between bookings.');
+        return;
+      }
+    }
+    // Also check: would selecting this seat leave a single gap between existing booked seats?
+    // Find booked seats in this row
+    const rowData = LAYOUT.flatMap(sec => sec.rows).find(r => r.r === rowLetter);
+    if (rowData) {
+      const allBooked = rowData.booked;
+      const afterSelect = [...selectedNums, num].sort((a,b) => a-b);
+      const newMin = afterSelect[0], newMax = afterSelect[afterSelect.length-1];
+      // Check no single seat gap between our selection range and booked seats
+      for (let n = newMin - 1; n >= 1; n--) {
+        if (allBooked.includes(n)) break;
+        if (!afterSelect.includes(n) && n === newMin - 1) {
+          // single seat gap on left edge — allowed, user may still select it
+          break;
+        }
+      }
+    }
+  }
+  selected[key] = { type, num, row: rowLetter, price: PRICES[type] };
   renderMap();
 }
 
