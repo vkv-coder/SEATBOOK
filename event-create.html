@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SeatBook — Create Event</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f5f3;
+  --white: #ffffff;
+  --surface2: #f0eeea;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1a1a;
+  --muted: #777;
+  --accent: #c8860a;
+  --accent-dim: rgba(200,134,10,0.10);
+  --green: #2e9e60;
+  --green-dim: rgba(46,158,96,0.10);
+  --blue: #2b6fd4;
+  --blue-dim: rgba(43,111,212,0.10);
+  --red: #cc3333;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; }
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── TOPBAR ── */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+.back-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text); padding: 0; line-height: 1; }
+.topbar-title { font-size: 15px; font-weight: 500; }
+.topbar-step { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+/* ── STEP PROGRESS ── */
+.step-progress { background: var(--white); padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.step-track { display: flex; align-items: center; gap: 0; }
+.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; border: 2px solid var(--border2); color: var(--muted); background: var(--white); transition: all 0.3s; }
+.step-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+.step-dot.active { background: var(--text); border-color: var(--text); color: #fff; }
+.step-line { flex: 1; height: 2px; background: var(--border2); transition: background 0.3s; }
+.step-line.done { background: var(--green); }
+.step-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+.step-label { font-size: 9px; color: var(--muted); text-align: center; width: 28px; }
+.step-label.active { color: var(--text); font-weight: 500; }
+
+/* ── FORM BODY ── */
+.form-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.form-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
+.form-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.form-card-icon { font-size: 16px; }
+
+.field-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.field-group:last-child { margin-bottom: 0; }
+.field-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+.field-label span { color: var(--red); }
+.input-field { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.input-field:focus { border-color: var(--accent); background: var(--white); }
+.input-field::placeholder { color: #bbb; }
+select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+.field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+/* ── MODE SELECTOR ── */
+.mode-cards { display: flex; flex-direction: column; gap: 8px; }
+.mode-card { border: 1.5px solid var(--border2); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; transition: all 0.2s; position: relative; }
+.mode-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.mode-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.mode-icon { font-size: 20px; width: 36px; height: 36px; background: var(--surface2); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mode-title { font-size: 13px; font-weight: 500; }
+.mode-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.mode-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border2); margin-left: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.mode-card.selected .mode-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+.mode-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+.badge-free { background: var(--green-dim); color: var(--green); }
+.badge-paid { background: var(--blue-dim); color: var(--blue); }
+
+/* ── SECTION PRICING ── */
+.section-pricing { display: flex; flex-direction: column; gap: 10px; }
+.pricing-row { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; }
+.pricing-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pricing-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.pricing-section-name { font-size: 13px; font-weight: 500; flex: 1; }
+.pricing-seat-count { font-size: 11px; color: var(--muted); }
+.pricing-mode-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.pmode-btn { flex: 1; padding: 6px; font-size: 11px; font-weight: 500; border-radius: 6px; border: 1px solid var(--border2); background: var(--white); color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.pmode-btn.active-paid { background: var(--blue); border-color: var(--blue); color: #fff; }
+.pmode-btn.active-free { background: var(--green); border-color: var(--green); color: #fff; }
+.pmode-btn.active-off { background: var(--text); border-color: var(--text); color: #fff; }
+.price-input-wrap { display: flex; align-items: center; gap: 8px; }
+.rupee-prefix { font-size: 16px; font-weight: 500; color: var(--muted); }
+.price-input { flex: 1; background: var(--white); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--text); outline: none; }
+.price-input:focus { border-color: var(--accent); }
+
+/* ── BOOKING WINDOW ── */
+.window-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.window-opt { border: 1.5px solid var(--border2); border-radius: var(--radius-sm); padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.window-opt.selected { border-color: var(--accent); background: var(--accent-dim); }
+.window-days { font-size: 20px; font-weight: 600; color: var(--text); }
+.window-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.window-price { font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 4px; }
+.window-opt.selected .window-days { color: var(--accent); }
+
+/* ── RAZORPAY ── */
+.razorpay-note { background: var(--blue-dim); border: 1px solid rgba(43,111,212,0.2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: #1a4a8a; line-height: 1.5; margin-bottom: 12px; display: flex; gap: 8px; }
+.key-field-wrap { position: relative; }
+.key-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--muted); }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav { background: var(--white); border-top: 1px solid var(--border); padding: 14px 20px 28px; display: flex; gap: 10px; }
+.btn-secondary { flex: 1; padding: 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+.btn-primary { flex: 2; padding: 12px; background: var(--text); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
+.btn-primary.accent { background: var(--accent); }
+.btn-primary:active, .btn-secondary:active { opacity: 0.8; }
+
+/* ── PREVIEW ── */
+.preview-hero { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); border-radius: var(--radius); padding: 20px; color: #fff; margin-bottom: 14px; }
+.preview-tag { font-size: 10px; opacity: 0.6; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.preview-name { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 10px; }
+.preview-meta { display: flex; flex-direction: column; gap: 5px; }
+.preview-meta-row { font-size: 12px; opacity: 0.8; }
+.preview-sections { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.preview-section-row { background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 12px; display: flex; align-items: center; gap: 10px; }
+.preview-section-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.preview-section-info { flex: 1; }
+.preview-section-name { font-size: 13px; font-weight: 500; }
+.preview-section-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.preview-section-price { font-size: 14px; font-weight: 600; color: var(--accent); }
+.link-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border2); }
+.link-url { font-size: 12px; color: var(--blue); flex: 1; word-break: break-all; }
+.link-copy { background: var(--text); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+
+/* ── SUCCESS ── */
+.success-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; }
+.success-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--green-dim); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 20px; animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes pop { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+.success-title { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 8px; }
+.success-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.info-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-dim); border: 1px solid rgba(200,134,10,0.2); color: var(--accent); font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 20px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ══ SCREEN 1: BASIC DETAILS ══ -->
+<div class="screen active" id="s1">
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <div class="topbar-title">Create event</div>
+    <div class="topbar-step">Step 1 of 4</div>
+  </div>
+  <div class="step-progress">
+    <div class="step-track">
+      <div class="step-dot active" id="dot1">1</div>
+      <div class="step-line" id="line1"></div>
+      <div class="step-dot" id="dot2">2</div>
+      <div class="step-line" id="line2"></div>
+      <div class="step-dot" id="dot3">3</div>
+      <div class="step-line" id="line3"></div>
+      <div class="step-dot" id="dot4">4</div>
+    </div>
+    <div class="step-labels">
+      <div class="step-label active">Details</div>
+      <div class="step-label">Seats</div>
+      <div class="step-label">Window</div>
+      <div class="step-label">Preview</div>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">🎭</span> Event details</div>
+      <div class="field-group">
+        <div class="field-label">Event name <span>*</span></div>
+        <input class="input-field" type="text" placeholder="e.g. Garba Night 2025" id="ev-name">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Description</div>
+        <textarea class="input-field" rows="2" placeholder="Short description for your audience" id="ev-desc" style="resize:none;"></textarea>
+      </div>
+      <div class="field-row-2">
+        <div class="field-group" style="margin:0">
+          <div class="field-label">Date <span>*</span></div>
+          <input class="input-field" type="date" id="ev-date">
+        </div>
+        <div class="field-group" style="margin:0">
+          <div class="field-label">Time <span>*</span></div>
+          <input class="input-field" type="time" id="ev-time">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Hall / Venue <span>*</span></div>
+        <select class="input-field" id="ev-hall">
+          <option value="">— Select hall —</option>
+          <option>Sayaji Hall, Vadodara (850 seats)</option>
+          <option>Town Hall, Vadodara (420 seats)</option>
+          <option>Baroda Club Auditorium (320 seats)</option>
+          <option>Nirmala Convent Hall (280 seats)</option>
+          <option>Request new hall mapping</option>
+        </select>
+      </div>
+      <div class="field-group" style="margin:0">
+        <div class="field-label">Organiser / Group name <span>*</span></div>
+        <input class="input-field" type="text" placeholder="e.g. Vadodara Drama Circle" id="ev-org">
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="btn-primary" onclick="goStep(2)">Next — Seat pricing →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: SEAT PRICING ══ -->
+<div class="screen" id="s2">
+  <div class="topbar">
+    <button class="back-btn" onclick="goStep(1)">←</button>
+    <div class="topbar-title">Seat sections</div>
+    <div class="topbar-step">Step 2 of 4</div>
+  </div>
+  <div class="step-progress">
+    <div class="step-track">
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot active">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot">4</div>
+    </div>
+    <div class="step-labels">
+      <div class="step-label">Details</div>
+      <div class="step-label active">Seats</div>
+      <div class="step-label">Window</div>
+      <div class="step-label">Preview</div>
+    </div>
+  </div>
+
+  <div class="form-body">
+
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">💡</span> Each section can be paid or free</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:-6px;">
+        Set <strong>Paid</strong> for sections where audience buys tickets. Set <strong>Free / Reserved</strong> for sponsor blocks, committee members, school teachers — no payment needed. Set <strong>Off</strong> to hide a section for this event.
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">🪑</span> Section pricing</div>
+      <div class="section-pricing">
+
+        <!-- Premium Section -->
+        <div class="pricing-row">
+          <div class="pricing-row-header">
+            <div class="pricing-dot" style="background:#c8860a;"></div>
+            <div class="pricing-section-name">Premium (Rows A–B)</div>
+            <div class="pricing-seat-count">22 seats</div>
+          </div>
+          <div class="pricing-mode-row">
+            <button class="pmode-btn active-paid" id="pm-prem-paid" onclick="setPriceMode('prem','paid')">💳 Paid</button>
+            <button class="pmode-btn" id="pm-prem-free" onclick="setPriceMode('prem','free')">🎁 Free / Reserved</button>
+            <button class="pmode-btn" id="pm-prem-off" onclick="setPriceMode('prem','off')">✕ Off</button>
+          </div>
+          <div id="prem-price-wrap" class="price-input-wrap">
+            <div class="rupee-prefix">₹</div>
+            <input class="price-input" type="number" placeholder="400" id="price-prem" value="400">
+            <span style="font-size:12px;color:var(--muted);">per seat</span>
+          </div>
+          <div id="prem-free-note" style="display:none;font-size:12px;color:var(--green);margin-top:4px;">✓ Seats reserved — no payment collected</div>
+        </div>
+
+        <!-- Regular Section -->
+        <div class="pricing-row">
+          <div class="pricing-row-header">
+            <div class="pricing-dot" style="background:#2b6fd4;"></div>
+            <div class="pricing-section-name">Regular (Rows C–H)</div>
+            <div class="pricing-seat-count">63 seats</div>
+          </div>
+          <div class="pricing-mode-row">
+            <button class="pmode-btn active-paid" id="pm-reg-paid" onclick="setPriceMode('reg','paid')">💳 Paid</button>
+            <button class="pmode-btn" id="pm-reg-free" onclick="setPriceMode('reg','free')">🎁 Free / Reserved</button>
+            <button class="pmode-btn" id="pm-reg-off" onclick="setPriceMode('reg','off')">✕ Off</button>
+          </div>
+          <div id="reg-price-wrap" class="price-input-wrap">
+            <div class="rupee-prefix">₹</div>
+            <input class="price-input" type="number" placeholder="200" id="price-reg" value="200">
+            <span style="font-size:12px;color:var(--muted);">per seat</span>
+          </div>
+          <div id="reg-free-note" style="display:none;font-size:12px;color:var(--green);margin-top:4px;">✓ Seats reserved — no payment collected</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Razorpay keys — shown only if any section is paid -->
+    <div class="form-card" id="rzp-card">
+      <div class="form-card-title"><span class="form-card-icon">🔑</span> Razorpay account</div>
+      <div class="razorpay-note">
+        <span>ℹ️</span>
+        <span>Ticket payments go directly to your Razorpay account. We never hold your money.</span>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Key ID <span>*</span></div>
+        <input class="input-field" type="text" placeholder="rzp_live_XXXXXXXXXXXX" id="rzp-key-id" style="font-family:monospace;font-size:13px;">
+      </div>
+      <div class="field-group" style="margin:0;">
+        <div class="field-label">Key Secret <span>*</span></div>
+        <div class="key-field-wrap">
+          <input class="input-field" type="password" placeholder="••••••••••••••••" id="rzp-secret" style="font-family:monospace;font-size:13px;">
+          <button class="key-toggle" onclick="toggleSecret()">👁</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="bottom-nav">
+    <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+    <button class="btn-primary" onclick="goStep(3)">Next — Booking window →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: BOOKING WINDOW ══ -->
+<div class="screen" id="s3">
+  <div class="topbar">
+    <button class="back-btn" onclick="goStep(2)">←</button>
+    <div class="topbar-title">Booking window</div>
+    <div class="topbar-step">Step 3 of 4</div>
+  </div>
+  <div class="step-progress">
+    <div class="step-track">
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot active">3</div>
+      <div class="step-line"></div>
+      <div class="step-dot">4</div>
+    </div>
+    <div class="step-labels">
+      <div class="step-label">Details</div>
+      <div class="step-label">Seats</div>
+      <div class="step-label active">Window</div>
+      <div class="step-label">Preview</div>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">📅</span> How long should booking stay open?</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:-6px;">
+        Choose your booking window. Your platform fee depends on this duration. Booking auto-closes on event date.
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title" style="margin-bottom:12px;">Select duration</div>
+      <div class="window-options" id="window-opts">
+        <div class="window-opt selected" onclick="selectWindow(this,'1 day','₹199')">
+          <div class="window-days">1</div>
+          <div class="window-label">Day</div>
+          <div class="window-price">₹199</div>
+        </div>
+        <div class="window-opt" onclick="selectWindow(this,'3 days','₹299')">
+          <div class="window-days">3</div>
+          <div class="window-label">Days</div>
+          <div class="window-price">₹299</div>
+        </div>
+        <div class="window-opt" onclick="selectWindow(this,'7 days','₹499')">
+          <div class="window-days">7</div>
+          <div class="window-label">Days</div>
+          <div class="window-price">₹499</div>
+        </div>
+        <div class="window-opt" onclick="selectWindow(this,'30 days','₹799')">
+          <div class="window-days">30</div>
+          <div class="window-label">Days</div>
+          <div class="window-price">₹799</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" id="window-summary">
+      <div class="form-card-title"><span class="form-card-icon">🧾</span> Summary</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Booking window</span>
+          <span id="sum-window" style="font-weight:500;">1 day</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Opens</span>
+          <span id="sum-opens" style="font-weight:500;">Immediately</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Auto-closes</span>
+          <span id="sum-closes" style="font-weight:500;">On event date</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;padding:8px 0;">
+          <span style="font-weight:500;">Platform fee</span>
+          <span id="sum-fee" style="font-weight:600;color:var(--accent);">₹199</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" style="background:var(--accent-dim);border-color:rgba(200,134,10,0.2);">
+      <div style="font-size:12px;color:#7a4f06;line-height:1.6;">
+        💳 You will be charged the platform fee before your booking link is activated. Pay via UPI or card — takes 2 minutes.
+      </div>
+    </div>
+
+  </div>
+  <div class="bottom-nav">
+    <button class="btn-secondary" onclick="goStep(2)">← Back</button>
+    <button class="btn-primary" onclick="goStep(4)">Preview event →</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 4: PREVIEW ══ -->
+<div class="screen" id="s4">
+  <div class="topbar">
+    <button class="back-btn" onclick="goStep(3)">←</button>
+    <div class="topbar-title">Preview & publish</div>
+    <div class="topbar-step">Step 4 of 4</div>
+  </div>
+  <div class="step-progress">
+    <div class="step-track">
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot active">4</div>
+    </div>
+    <div class="step-labels">
+      <div class="step-label">Details</div>
+      <div class="step-label">Seats</div>
+      <div class="step-label">Window</div>
+      <div class="step-label active">Preview</div>
+    </div>
+  </div>
+
+  <div class="form-body">
+
+    <div class="preview-hero">
+      <div class="preview-tag">Preview — how audience sees it</div>
+      <div class="preview-name" id="prev-name">Garba Night 2025</div>
+      <div class="preview-meta">
+        <div class="preview-meta-row" id="prev-datetime">📅 2 October 2025 · 7:00 PM</div>
+        <div class="preview-meta-row" id="prev-hall">📍 Sayaji Hall, Vadodara</div>
+        <div class="preview-meta-row" id="prev-org">🎭 Vadodara Drama Circle</div>
+      </div>
+    </div>
+
+    <div class="preview-sections" id="prev-sections">
+      <div class="preview-section-row">
+        <div class="preview-section-dot" style="background:#c8860a;"></div>
+        <div class="preview-section-info">
+          <div class="preview-section-name">Premium (Rows A–B)</div>
+          <div class="preview-section-sub">22 seats · Paid</div>
+        </div>
+        <div class="preview-section-price">₹400</div>
+      </div>
+      <div class="preview-section-row">
+        <div class="preview-section-dot" style="background:#2b6fd4;"></div>
+        <div class="preview-section-info">
+          <div class="preview-section-name">Regular (Rows C–H)</div>
+          <div class="preview-section-sub">63 seats · Paid</div>
+        </div>
+        <div class="preview-section-price">₹200</div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">🔗</span> Your booking link</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Share this link on WhatsApp, Instagram, or print it on your poster.</div>
+      <div class="link-box">
+        <div class="link-url" id="prev-link">vkv-coder.github.io/SEATBOOK/?ev=garba-night-2025</div>
+        <button class="link-copy" onclick="copyLink()">Copy</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">✅</span> Ready to publish?</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Event details filled</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Seat sections configured</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Booking window selected</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--accent);">⏳</span> Platform fee payment pending</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="bottom-nav">
+    <button class="btn-secondary" onclick="goStep(3)">← Back</button>
+    <button class="btn-primary accent" onclick="publish()">Pay & Publish 🚀</button>
+  </div>
+</div>
+
+<!-- ══ SCREEN 5: SUCCESS ══ -->
+<div class="screen" id="s5">
+  <div class="success-wrap">
+    <div class="success-icon">🚀</div>
+    <div class="success-title">Event is live!</div>
+    <div class="success-sub">Your booking link is active.<br>Share it with your audience now.</div>
+    <div class="info-pill">✦ Booking closes automatically on event date</div>
+
+    <div style="width:100%;margin-bottom:12px;">
+      <div class="link-box">
+        <div class="link-url">vkv-coder.github.io/SEATBOOK/?ev=garba-night-2025</div>
+        <button class="link-copy" onclick="copyLink()">Copy</button>
+      </div>
+    </div>
+
+    <button style="width:100%;padding:14px;background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span style="font-size:18px;">📱</span> Share on WhatsApp
+    </button>
+    <button style="width:100%;padding:12px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;" onclick="showScreen('s1')">
+      + Create another event
+    </button>
+  </div>
+</div>
+
+<script>
+let selectedWindow = { label: '1 day', fee: '₹199' };
+let sectionModes = { prem: 'paid', reg: 'paid' };
+
+function goStep(n) {
+  if (n === 4) buildPreview();
+  showScreen('s' + n);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function setPriceMode(section, mode) {
+  sectionModes[section] = mode;
+  ['paid','free','off'].forEach(m => {
+    const btn = document.getElementById(`pm-${section}-${m}`);
+    btn.className = 'pmode-btn' + (m === mode ? ` active-${m}` : '');
+  });
+  const priceWrap = document.getElementById(`${section}-price-wrap`);
+  const freeNote = document.getElementById(`${section}-free-note`);
+  priceWrap.style.display = mode === 'paid' ? 'flex' : 'none';
+  freeNote.style.display = mode === 'free' ? 'block' : 'none';
+
+  // Show/hide Razorpay card
+  const anyPaid = Object.values(sectionModes).includes('paid');
+  document.getElementById('rzp-card').style.display = anyPaid ? 'block' : 'none';
+}
+
+function selectWindow(el, label, fee) {
+  document.querySelectorAll('.window-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedWindow = { label, fee };
+  document.getElementById('sum-window').textContent = label;
+  document.getElementById('sum-fee').textContent = fee;
+}
+
+function toggleSecret() {
+  const f = document.getElementById('rzp-secret');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+function buildPreview() {
+  const name = document.getElementById('ev-name').value || 'Your Event';
+  const date = document.getElementById('ev-date').value;
+  const time = document.getElementById('ev-time').value;
+  const hall = document.getElementById('ev-hall').value || 'Selected Hall';
+  const org  = document.getElementById('ev-org').value || 'Your Organisation';
+  const slug = name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+
+  document.getElementById('prev-name').textContent = name;
+  document.getElementById('prev-datetime').textContent = '📅 ' + (date || 'Date TBD') + ' · ' + (time || 'Time TBD');
+  document.getElementById('prev-hall').textContent = '📍 ' + hall;
+  document.getElementById('prev-org').textContent = '🎭 ' + org;
+  document.getElementById('prev-link').textContent = `vkv-coder.github.io/SEATBOOK/?ev=${slug}`;
+}
+
+function copyLink() {
+  const url = document.getElementById('prev-link')?.textContent || 'vkv-coder.github.io/SEATBOOK/';
+  navigator.clipboard?.writeText(url);
+  alert('Link copied!');
+}
+
+function publish() {
+  showScreen('s5');
+}
+</script>
+</body>
+</html>
