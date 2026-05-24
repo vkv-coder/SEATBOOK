@@ -240,61 +240,22 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   <div class="form-body">
 
     <div class="form-card">
-      <div class="form-card-title"><span class="form-card-icon">💡</span> Each section can be paid or free</div>
+      <div class="form-card-title"><span class="form-card-icon">💡</span> Add as many sections as needed</div>
       <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:-6px;">
-        Set <strong>Paid</strong> for sections where audience buys tickets. Set <strong>Free / Reserved</strong> for sponsor blocks, committee members, school teachers — no payment needed. Set <strong>Off</strong> to hide a section for this event.
+        Each section = a group of rows with its own pricing. Mix paid and free — e.g. Front rows paid, Sponsor block free/reserved.
       </div>
     </div>
 
-    <div class="form-card">
-      <div class="form-card-title"><span class="form-card-icon">🪑</span> Section pricing</div>
-      <div class="section-pricing">
+    <!-- Dynamic sections list -->
+    <div id="sections-list" style="display:flex;flex-direction:column;gap:10px;"></div>
 
-        <!-- Premium Section -->
-        <div class="pricing-row">
-          <div class="pricing-row-header">
-            <div class="pricing-dot" style="background:#c8860a;"></div>
-            <div class="pricing-section-name">Premium (Rows A–B)</div>
-            <div class="pricing-seat-count">22 seats</div>
-          </div>
-          <div class="pricing-mode-row">
-            <button class="pmode-btn active-paid" id="pm-prem-paid" onclick="setPriceMode('prem','paid')">💳 Paid</button>
-            <button class="pmode-btn" id="pm-prem-free" onclick="setPriceMode('prem','free')">🎁 Free / Reserved</button>
-            <button class="pmode-btn" id="pm-prem-off" onclick="setPriceMode('prem','off')">✕ Off</button>
-          </div>
-          <div id="prem-price-wrap" class="price-input-wrap">
-            <div class="rupee-prefix">₹</div>
-            <input class="price-input" type="number" placeholder="400" id="price-prem" value="400">
-            <span style="font-size:12px;color:var(--muted);">per seat</span>
-          </div>
-          <div id="prem-free-note" style="display:none;font-size:12px;color:var(--green);margin-top:4px;">✓ Seats reserved — no payment collected</div>
-        </div>
-
-        <!-- Regular Section -->
-        <div class="pricing-row">
-          <div class="pricing-row-header">
-            <div class="pricing-dot" style="background:#2b6fd4;"></div>
-            <div class="pricing-section-name">Regular (Rows C–H)</div>
-            <div class="pricing-seat-count">63 seats</div>
-          </div>
-          <div class="pricing-mode-row">
-            <button class="pmode-btn active-paid" id="pm-reg-paid" onclick="setPriceMode('reg','paid')">💳 Paid</button>
-            <button class="pmode-btn" id="pm-reg-free" onclick="setPriceMode('reg','free')">🎁 Free / Reserved</button>
-            <button class="pmode-btn" id="pm-reg-off" onclick="setPriceMode('reg','off')">✕ Off</button>
-          </div>
-          <div id="reg-price-wrap" class="price-input-wrap">
-            <div class="rupee-prefix">₹</div>
-            <input class="price-input" type="number" placeholder="200" id="price-reg" value="200">
-            <span style="font-size:12px;color:var(--muted);">per seat</span>
-          </div>
-          <div id="reg-free-note" style="display:none;font-size:12px;color:var(--green);margin-top:4px;">✓ Seats reserved — no payment collected</div>
-        </div>
-
-      </div>
-    </div>
+    <!-- Add section button -->
+    <button onclick="addSection()" style="width:100%;padding:13px;background:var(--white);border:1.5px dashed var(--border2);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span style="font-size:18px;">＋</span> Add seat section
+    </button>
 
     <!-- Razorpay keys — shown only if any section is paid -->
-    <div class="form-card" id="rzp-card">
+    <div class="form-card" id="rzp-card" style="display:none;">
       <div class="form-card-title"><span class="form-card-icon">🔑</span> Razorpay account</div>
       <div class="razorpay-note">
         <span>ℹ️</span>
@@ -522,7 +483,6 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
 
 <script>
 let selectedWindow = { label: '1 day', fee: '₹199' };
-let sectionModes = { prem: 'paid', reg: 'paid' };
 
 function goStep(n) {
   if (n === 4) buildPreview();
@@ -535,21 +495,94 @@ function showScreen(id) {
   window.scrollTo(0, 0);
 }
 
-function setPriceMode(section, mode) {
-  sectionModes[section] = mode;
-  ['paid','free','off'].forEach(m => {
-    const btn = document.getElementById(`pm-${section}-${m}`);
-    btn.className = 'pmode-btn' + (m === mode ? ` active-${m}` : '');
-  });
-  const priceWrap = document.getElementById(`${section}-price-wrap`);
-  const freeNote = document.getElementById(`${section}-free-note`);
-  priceWrap.style.display = mode === 'paid' ? 'flex' : 'none';
-  freeNote.style.display = mode === 'free' ? 'block' : 'none';
+// ── Dynamic sections ──
+const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
+let sections = [];
+let sectionCounter = 0;
 
-  // Show/hide Razorpay card
-  const anyPaid = Object.values(sectionModes).includes('paid');
+function addSection(preset) {
+  const id = 's' + (++sectionCounter);
+  const color = SECTION_COLORS[(sectionCounter - 1) % SECTION_COLORS.length];
+  const sec = preset || { id, color, name:'', rows:'', seats:'', mode:'paid', price:'' };
+  sec.id = id; sec.color = color;
+  sections.push(sec);
+  renderSections();
+}
+
+function removeSection(id) {
+  sections = sections.filter(s => s.id !== id);
+  renderSections();
+}
+
+function setSectionMode(id, mode) {
+  const sec = sections.find(s => s.id === id);
+  if (sec) { sec.mode = mode; renderSections(); }
+}
+
+function renderSections() {
+  const list = document.getElementById('sections-list');
+  list.innerHTML = '';
+  sections.forEach((sec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'form-card';
+    card.style.cssText = 'padding:14px;border-left:4px solid ' + sec.color;
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:12px;height:12px;border-radius:3px;background:${sec.color};flex-shrink:0;"></div>
+        <div style="font-size:13px;font-weight:600;flex:1;">Section ${idx + 1}</div>
+        <button onclick="removeSection('${sec.id}')" style="background:none;border:none;color:#cc3333;font-size:18px;cursor:pointer;line-height:1;padding:0;">✕</button>
+      </div>
+      <div class="field-row-2" style="margin-bottom:10px;">
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Section name <span style="color:var(--red);">*</span></div>
+          <input class="input-field" type="text" placeholder="e.g. Premium, VIP, Balcony" value="${sec.name}"
+            oninput="sections[${idx}].name=this.value" style="font-size:13px;padding:9px 10px;">
+        </div>
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Rows covered</div>
+          <input class="input-field" type="text" placeholder="e.g. A–C or AA, BB" value="${sec.rows}"
+            oninput="sections[${idx}].rows=this.value" style="font-size:13px;padding:9px 10px;">
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <div class="field-label">Number of seats in this section</div>
+        <input class="input-field" type="number" placeholder="e.g. 50" value="${sec.seats}"
+          oninput="sections[${idx}].seats=this.value" style="font-size:13px;padding:9px 10px;">
+      </div>
+      <div class="pricing-mode-row" style="margin-bottom:10px;">
+        <button class="pmode-btn ${sec.mode==='paid'?'active-paid':''}" onclick="setSectionMode('${sec.id}','paid')">💳 Paid</button>
+        <button class="pmode-btn ${sec.mode==='free'?'active-free':''}" onclick="setSectionMode('${sec.id}','free')">🎁 Free / Reserved</button>
+        <button class="pmode-btn ${sec.mode==='off'?'active-off':''}" onclick="setSectionMode('${sec.id}','off')">✕ Off</button>
+      </div>
+      ${sec.mode === 'paid' ? `
+        <div class="price-input-wrap">
+          <div class="rupee-prefix">₹</div>
+          <input class="price-input" type="number" placeholder="e.g. 400" value="${sec.price}"
+            oninput="sections[${idx}].price=this.value">
+          <span style="font-size:12px;color:var(--muted);">per seat</span>
+        </div>` : ''}
+      ${sec.mode === 'free' ? `
+        <div style="font-size:12px;color:var(--green);background:var(--green-dim);padding:8px 10px;border-radius:6px;">
+          🎁 Seats reserved — audience picks seat, no payment collected
+        </div>` : ''}
+      ${sec.mode === 'off' ? `
+        <div style="font-size:12px;color:var(--muted);background:var(--surface2);padding:8px 10px;border-radius:6px;">
+          ✕ This section will be hidden from the booking page
+        </div>` : ''}
+    `;
+    list.appendChild(card);
+  });
+
+  // Show Razorpay if any paid section
+  const anyPaid = sections.some(s => s.mode === 'paid');
   document.getElementById('rzp-card').style.display = anyPaid ? 'block' : 'none';
 }
+
+// Pre-load 2 default sections on page load
+window.addEventListener('DOMContentLoaded', () => {
+  addSection({ name:'Premium', rows:'A–B', seats:'22', mode:'paid', price:'400' });
+  addSection({ name:'Regular', rows:'C–H', seats:'63', mode:'paid', price:'200' });
+});
 
 function selectWindow(el, label, fee) {
   document.querySelectorAll('.window-opt').forEach(o => o.classList.remove('selected'));
@@ -577,6 +610,24 @@ function buildPreview() {
   document.getElementById('prev-hall').textContent = '📍 ' + hall;
   document.getElementById('prev-org').textContent = '🎭 ' + org;
   document.getElementById('prev-link').textContent = `vkv-coder.github.io/SEATBOOK/?ev=${slug}`;
+
+  // Build dynamic section preview
+  const prevSec = document.getElementById('prev-sections');
+  prevSec.innerHTML = '';
+  sections.filter(s => s.mode !== 'off').forEach(sec => {
+    const row = document.createElement('div');
+    row.className = 'preview-section-row';
+    const modeLabel = sec.mode === 'free' ? 'Free / Reserved' : 'Paid';
+    const priceLabel = sec.mode === 'paid' ? `₹${sec.price || '—'}` : 'Free';
+    row.innerHTML = `
+      <div class="preview-section-dot" style="background:${sec.color};"></div>
+      <div class="preview-section-info">
+        <div class="preview-section-name">${sec.name || 'Unnamed section'} ${sec.rows ? '(Rows ' + sec.rows + ')' : ''}</div>
+        <div class="preview-section-sub">${sec.seats || '—'} seats · ${modeLabel}</div>
+      </div>
+      <div class="preview-section-price" style="color:${sec.mode==='free'?'var(--green)':'var(--accent)'};">${priceLabel}</div>`;
+    prevSec.appendChild(row);
+  });
 }
 
 function copyLink() {
