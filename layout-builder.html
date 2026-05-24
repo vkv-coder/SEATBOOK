@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SeatBook — Layout Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f5f3;
+  --white: #ffffff;
+  --surface2: #f0eeea;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1a1a;
+  --muted: #777;
+  --accent: #c8860a;
+  --accent-dim: rgba(200,134,10,0.10);
+  --green: #2e9e60;
+  --green-dim: rgba(46,158,96,0.10);
+  --blue: #2b6fd4;
+  --blue-dim: rgba(43,111,212,0.10);
+  --red: #cc3333;
+  --red-dim: rgba(204,51,51,0.08);
+  --purple: #7c3aed;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; }
+
+/* ── TOPBAR ── */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 20; }
+.topbar-logo { font-family: 'DM Serif Display', serif; font-size: 18px; }
+.topbar-sub { font-size: 12px; color: var(--muted); flex: 1; }
+.topbar-save { background: var(--text); color: #fff; border: none; border-radius: var(--radius-sm); padding: 7px 14px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; }
+.topbar-save:active { opacity: 0.8; }
+
+/* ── HALL SELECTOR ── */
+.hall-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+.hall-select { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; appearance: none; }
+.hall-new { background: var(--accent-dim); border: 1px solid rgba(200,134,10,0.3); color: var(--accent); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+
+/* ── TOOLBAR ── */
+.toolbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; position: sticky; top: 53px; z-index: 15; }
+.tool-row { display: flex; gap: 6px; align-items: center; }
+.tool-label { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; width: 36px; flex-shrink: 0; }
+.tool-btn { padding: 6px 10px; font-size: 11px; font-weight: 500; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.tool-btn.active { border-color: var(--text); background: var(--text); color: #fff; }
+.tool-btn.t-premium.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tool-btn.t-regular.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.tool-btn.t-blocked.active { background: var(--muted); border-color: var(--muted); color: #fff; }
+.tool-btn.t-aisle.active { background: var(--surface2); border-color: var(--border2); color: var(--muted); }
+.tool-btn.t-erase.active { background: var(--red); border-color: var(--red); color: #fff; }
+.tool-btn.danger { color: var(--red); border-color: rgba(204,51,51,0.3); }
+.tool-btn.success { color: var(--green); border-color: rgba(46,158,96,0.3); }
+.tool-divider { width: 1px; height: 24px; background: var(--border2); flex-shrink: 0; }
+
+/* ── STATS BAR ── */
+.stats-bar { display: flex; gap: 0; background: var(--white); border-bottom: 1px solid var(--border); }
+.stat-item { flex: 1; padding: 8px 4px; text-align: center; border-right: 1px solid var(--border); }
+.stat-item:last-child { border-right: none; }
+.stat-num { font-size: 16px; font-weight: 600; color: var(--text); }
+.stat-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* ── CANVAS AREA ── */
+.canvas-wrap { padding: 12px 8px; overflow-x: auto; overflow-y: auto; flex: 1; }
+.underlay-hint { text-align: center; padding: 10px; margin-bottom: 10px; }
+.underlay-img { max-width: 100%; border-radius: 8px; opacity: 0.25; display: none; }
+.stage-block { text-align: center; margin-bottom: 12px; }
+.stage-box { display: inline-block; background: var(--text); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 3px; padding: 6px 28px; border-radius: 5px 5px 0 0; }
+.stage-line { height: 4px; background: var(--text); border-radius: 2px; margin: 0 20px; }
+
+.grid-area { display: flex; flex-direction: column; gap: 3px; }
+.grid-row { display: flex; align-items: center; gap: 3px; }
+.row-controls { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.row-lbl { font-size: 10px; color: var(--muted); width: 16px; text-align: center; font-weight: 500; }
+.row-del { width: 16px; height: 16px; border-radius: 3px; border: none; background: transparent; color: var(--red); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; opacity: 0.5; }
+.row-del:hover { opacity: 1; background: var(--red-dim); }
+.row-add-seat { width: 20px; height: 20px; border-radius: 3px; border: 1px dashed var(--border2); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.row-add-seat:hover { border-color: var(--accent); color: var(--accent); }
+
+.seat {
+  width: 26px; height: 22px;
+  border-radius: 4px 4px 2px 2px;
+  border: none; cursor: pointer;
+  font-size: 8px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+.seat:active { transform: scale(0.88); }
+.seat.empty { background: transparent; border: 1.5px dashed #ddd; color: #ccc; cursor: crosshair; }
+.seat.premium { background: rgba(200,134,10,0.18); color: var(--accent); border: 1px solid rgba(200,134,10,0.4); }
+.seat.regular { background: rgba(43,111,212,0.13); color: var(--blue); border: 1px solid rgba(43,111,212,0.3); }
+.seat.blocked { background: var(--surface2); color: #bbb; border: 1px solid var(--border2); }
+.seat.aisle { background: transparent; border: none; cursor: default; pointer-events: none; width: 12px; }
+.seat.custom { background: rgba(124,58,237,0.13); color: var(--purple); border: 1px solid rgba(124,58,237,0.3); }
+
+/* ── ADD ROW AREA ── */
+.add-row-bar { padding: 10px 12px; display: flex; gap: 8px; align-items: center; background: var(--white); border-top: 1px solid var(--border); position: sticky; bottom: 0; }
+.add-row-input { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 8px 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; }
+.add-row-input:focus { border-color: var(--accent); }
+.add-row-btn { background: var(--text); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+
+/* ── SECTION LEGEND ── */
+.legend-bar { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 12px; background: var(--white); border-bottom: 1px solid var(--border); }
+.leg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.leg-dot { width: 14px; height: 12px; border-radius: 3px; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50; display: none; align-items: flex-end; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius) var(--radius) 0 0; padding: 20px; width: 100%; }
+.modal-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.modal-field { margin-bottom: 10px; }
+.modal-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.modal-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; }
+.modal-input:focus { border-color: var(--accent); }
+.modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn { flex: 1; padding: 11px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); }
+.modal-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* ── SAVE MODAL ── */
+.save-modal { background: var(--white); border-radius: var(--radius) var(--radius) 0 0; padding: 24px; width: 100%; text-align: center; }
+.save-icon { font-size: 40px; margin-bottom: 12px; }
+.save-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 6px; }
+.save-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.save-stats { display: flex; gap: 0; border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; }
+.save-stat { flex: 1; padding: 10px; text-align: center; border-right: 1px solid var(--border2); }
+.save-stat:last-child { border-right: none; }
+.save-stat-n { font-size: 18px; font-weight: 600; }
+.save-stat-l { font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div style="display:flex;flex-direction:column;min-height:100vh;">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-logo">SeatBook</div>
+    <div class="topbar-sub">Layout builder · Admin</div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    <button class="tool-btn success" onclick="loadUnderlay()">📷 Underlay</button>
+    <button class="topbar-save" onclick="showSaveModal()">Save layout</button>
+  </div>
+</div>
+
+<!-- HALL SELECTOR -->
+<div class="hall-bar">
+  <select class="hall-select" id="hall-select" onchange="loadHall()">
+    <option value="">— Select hall to edit —</option>
+    <option value="sayaji">Sayaji Hall, Vadodara</option>
+    <option value="townhall">Town Hall, Vadodara</option>
+    <option value="baroda">Baroda Club Auditorium</option>
+    <option value="nirmala">Nirmala Convent Hall</option>
+    <option value="new">+ Add new hall</option>
+  </select>
+  <button class="hall-new" onclick="newHallModal()">+ New hall</button>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="tool-row">
+    <div class="tool-label">Paint</div>
+    <button class="tool-btn t-premium active" id="t-premium" onclick="setTool('premium')">● Premium</button>
+    <button class="tool-btn t-regular" id="t-regular" onclick="setTool('regular')">● Regular</button>
+    <button class="tool-btn t-blocked" id="t-blocked" onclick="setTool('blocked')">■ Blocked</button>
+    <button class="tool-btn t-aisle" id="t-aisle" onclick="setTool('aisle')">⎸ Aisle</button>
+    <button class="tool-btn t-erase" id="t-erase" onclick="setTool('erase')">✕ Erase</button>
+  </div>
+  <div class="tool-row">
+    <div class="tool-label">Edit</div>
+    <button class="tool-btn" onclick="addSeatToAll()">＋ Col</button>
+    <button class="tool-btn" onclick="removeSeatFromAll()">− Col</button>
+    <div class="tool-divider"></div>
+    <button class="tool-btn" onclick="renameRows()">A→Z Labels</button>
+    <button class="tool-btn danger" onclick="clearAll()">Clear all</button>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-bar">
+  <div class="leg"><div class="leg-dot" style="background:rgba(200,134,10,0.18);border:1px solid rgba(200,134,10,0.4);"></div>Premium</div>
+  <div class="leg"><div class="leg-dot" style="background:rgba(43,111,212,0.13);border:1px solid rgba(43,111,212,0.3);"></div>Regular</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--surface2);border:1px solid var(--border2);"></div>Blocked</div>
+  <div class="leg"><div class="leg-dot" style="background:transparent;border:1.5px dashed #ddd;"></div>Empty</div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num" id="st-total">0</div><div class="stat-lbl">Total</div></div>
+  <div class="stat-item"><div class="stat-num" id="st-premium" style="color:var(--accent);">0</div><div class="stat-lbl">Premium</div></div>
+  <div class="stat-item"><div class="stat-num" id="st-regular" style="color:var(--blue);">0</div><div class="stat-lbl">Regular</div></div>
+  <div class="stat-item"><div class="stat-num" id="st-blocked" style="color:var(--muted);">0</div><div class="stat-lbl">Blocked</div></div>
+  <div class="stat-item"><div class="stat-num" id="st-rows">0</div><div class="stat-lbl">Rows</div></div>
+</div>
+
+<!-- CANVAS -->
+<div class="canvas-wrap" id="canvas-wrap">
+  <div style="text-align:center;padding:20px 0 4px;color:var(--muted);font-size:12px;" id="hall-name-label">Select a hall above to start</div>
+  <input type="file" id="underlay-input" accept="image/*" style="display:none;" onchange="applyUnderlay(event)">
+  <img id="underlay-img" class="underlay-img" alt="Hall reference underlay">
+  <div class="stage-block" id="stage-block" style="display:none;">
+    <div class="stage-box">STAGE</div>
+    <div class="stage-line"></div>
+  </div>
+  <div class="grid-area" id="grid-area"></div>
+</div>
+
+<!-- ADD ROW -->
+<div class="add-row-bar">
+  <input class="add-row-input" type="text" id="new-row-label" placeholder="Row label (e.g. I, J, VIP, AA)" maxlength="4">
+  <input class="add-row-input" type="number" id="new-row-seats" placeholder="Seats" min="1" max="40" style="width:70px;flex:none;">
+  <button class="add-row-btn" onclick="addRow()">＋ Add row</button>
+</div>
+
+</div><!-- end flex wrapper -->
+
+<!-- NEW HALL MODAL -->
+<div class="modal-overlay" id="modal-hall">
+  <div class="modal">
+    <div class="modal-title">Add new hall</div>
+    <div class="modal-field">
+      <div class="modal-label">Hall name</div>
+      <input class="modal-input" type="text" placeholder="e.g. Navrang Hall, Vadodara" id="new-hall-name">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">City</div>
+      <input class="modal-input" type="text" placeholder="e.g. Vadodara" id="new-hall-city" value="Vadodara">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Approximate capacity</div>
+      <input class="modal-input" type="number" placeholder="e.g. 500" id="new-hall-cap">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal('modal-hall')">Cancel</button>
+      <button class="modal-btn primary" onclick="createHall()">Create & start mapping</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+<div class="modal-overlay" id="modal-save">
+  <div class="save-modal">
+    <div class="save-icon">💾</div>
+    <div class="save-title">Save layout</div>
+    <div class="save-sub" id="save-sub">Review your layout before saving.</div>
+    <div class="save-stats">
+      <div class="save-stat"><div class="save-stat-n" id="sv-total">0</div><div class="save-stat-l">Total seats</div></div>
+      <div class="save-stat"><div class="save-stat-n" id="sv-premium" style="color:var(--accent)">0</div><div class="save-stat-l">Premium</div></div>
+      <div class="save-stat"><div class="save-stat-n" id="sv-regular" style="color:var(--blue)">0</div><div class="save-stat-l">Regular</div></div>
+      <div class="save-stat"><div class="save-stat-n" id="sv-rows">0</div><div class="save-stat-l">Rows</div></div>
+    </div>
+    <div style="background:var(--green-dim);border:1px solid rgba(46,158,96,0.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#1a5c38;margin-bottom:14px;line-height:1.5;">
+      ✓ Layout will be saved and available for all future events at this hall. Organisers won't need to set it up again.
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="modal-btn" onclick="closeModal('modal-save')">Cancel</button>
+      <button class="modal-btn primary" onclick="saveLayout()" style="background:var(--green);border-color:var(--green);">✓ Save layout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let tool = 'premium';
+let rows = [];         // [{label, seats:[{type}]}]
+let painting = false;
+let currentHall = '';
+
+const SEAT_COLS_DEFAULT = 12;
+
+// ── Default layout for demo ──
+const DEFAULT_LAYOUT = [
+  { label:'A', seats: Array(11).fill(0).map((_,i)=> i===3||i===7 ? {type:'aisle'} : {type:'premium'}) },
+  { label:'B', seats: Array(11).fill(0).map((_,i)=> i===3||i===7 ? {type:'aisle'} : {type:'premium'}) },
+  { label:'C', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+  { label:'D', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+  { label:'E', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+  { label:'F', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+  { label:'G', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+  { label:'H', seats: Array(14).fill(0).map((_,i)=> i===4||i===9 ? {type:'aisle'} : {type:'regular'}) },
+];
+
+// ── Tool selection ──
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('.tool-btn[id^="t-"]').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('t-' + t);
+  if (el) el.classList.add('active');
+}
+
+// ── Paint a seat ──
+function paintSeat(rowIdx, seatIdx) {
+  if (rows[rowIdx].seats[seatIdx].type === 'aisle' && tool !== 'erase') return;
+  if (tool === 'aisle') {
+    rows[rowIdx].seats[seatIdx] = { type: 'aisle' };
+  } else if (tool === 'erase') {
+    rows[rowIdx].seats[seatIdx] = { type: 'empty' };
+  } else {
+    rows[rowIdx].seats[seatIdx] = { type: tool };
+  }
+  render();
+}
+
+// ── Render grid ──
+function render() {
+  const grid = document.getElementById('grid-area');
+  grid.innerHTML = '';
+  let total = 0, premium = 0, regular = 0, blocked = 0;
+
+  rows.forEach((row, ri) => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'grid-row';
+
+    // Row controls
+    const ctrl = document.createElement('div');
+    ctrl.className = 'row-controls';
+    const lbl = document.createElement('div');
+    lbl.className = 'row-lbl';
+    lbl.textContent = row.label;
+    lbl.title = 'Click to rename';
+    lbl.style.cursor = 'pointer';
+    lbl.onclick = () => renameRow(ri);
+    const del = document.createElement('button');
+    del.className = 'row-del';
+    del.textContent = '✕';
+    del.title = 'Delete row';
+    del.onclick = () => deleteRow(ri);
+    ctrl.appendChild(lbl);
+    ctrl.appendChild(del);
+    rowDiv.appendChild(ctrl);
+
+    // Seats
+    let seatNum = 1;
+    row.seats.forEach((seat, si) => {
+      const btn = document.createElement('button');
+      if (seat.type === 'aisle') {
+        btn.className = 'seat aisle';
+      } else {
+        btn.className = 'seat ' + (seat.type || 'empty');
+        if (seat.type && seat.type !== 'empty' && seat.type !== 'blocked') {
+          btn.textContent = seatNum;
+          if (seat.type === 'premium') premium++;
+          else if (seat.type === 'regular') regular++;
+          total++;
+          seatNum++;
+        } else if (seat.type === 'blocked') {
+          btn.textContent = '✕';
+          blocked++;
+        } else {
+          btn.textContent = '+';
+          seatNum++;
+        }
+        btn.addEventListener('mousedown', (e) => { e.preventDefault(); painting = true; paintSeat(ri, si); });
+        btn.addEventListener('mouseenter', () => { if (painting) paintSeat(ri, si); });
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); painting = true; paintSeat(ri, si); });
+        btn.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          const t = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+          if (t && t._rowIdx !== undefined) paintSeat(t._rowIdx, t._seatIdx);
+        });
+        btn._rowIdx = ri;
+        btn._seatIdx = si;
+      }
+      rowDiv.appendChild(btn);
+    });
+
+    // Add seat button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'row-add-seat';
+    addBtn.textContent = '+';
+    addBtn.title = 'Add seat to this row';
+    addBtn.onclick = () => { rows[ri].seats.push({ type: tool === 'erase' ? 'empty' : tool }); render(); };
+    rowDiv.appendChild(addBtn);
+
+    grid.appendChild(rowDiv);
+  });
+
+  document.addEventListener('mouseup', () => painting = false, { once: false });
+
+  // Update stats
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-premium').textContent = premium;
+  document.getElementById('st-regular').textContent = regular;
+  document.getElementById('st-blocked').textContent = blocked;
+  document.getElementById('st-rows').textContent = rows.length;
+}
+
+// ── Add row ──
+function addRow() {
+  const lbl = document.getElementById('new-row-label').value.trim() || nextLabel();
+  const cnt = parseInt(document.getElementById('new-row-seats').value) || 10;
+  const seats = [];
+  for (let i = 0; i < cnt; i++) {
+    // Auto-add aisle after seat 4 and before last 4 for wide rows
+    if (cnt > 8 && (i === 4 || i === cnt - 5)) seats.push({ type: 'aisle' });
+    seats.push({ type: tool === 'erase' ? 'regular' : tool });
+  }
+  rows.push({ label: lbl, seats });
+  document.getElementById('new-row-label').value = '';
+  document.getElementById('new-row-seats').value = '';
+  render();
+}
+
+function nextLabel() {
+  if (rows.length === 0) return 'A';
+  const last = rows[rows.length - 1].label;
+  if (last.length === 1 && last < 'Z') return String.fromCharCode(last.charCodeAt(0) + 1);
+  return last + "'";
+}
+
+function deleteRow(ri) {
+  if (confirm('Delete row ' + rows[ri].label + '?')) {
+    rows.splice(ri, 1);
+    render();
+  }
+}
+
+function renameRow(ri) {
+  const newLabel = prompt('New label for row ' + rows[ri].label + ':', rows[ri].label);
+  if (newLabel && newLabel.trim()) { rows[ri].label = newLabel.trim().toUpperCase(); render(); }
+}
+
+function renameRows() {
+  rows.forEach((r, i) => r.label = String.fromCharCode(65 + i));
+  render();
+}
+
+function addSeatToAll() {
+  rows.forEach(r => r.seats.push({ type: tool === 'erase' ? 'empty' : tool }));
+  render();
+}
+
+function removeSeatFromAll() {
+  rows.forEach(r => { if (r.seats.length > 1) r.seats.pop(); });
+  render();
+}
+
+function clearAll() {
+  if (confirm('Clear all seats? This cannot be undone.')) {
+    rows.forEach(r => r.seats = r.seats.map(s => ({ type: 'empty' })));
+    render();
+  }
+}
+
+// ── Hall loading ──
+function loadHall() {
+  const val = document.getElementById('hall-select').value;
+  if (!val) return;
+  if (val === 'new') { newHallModal(); return; }
+  currentHall = val;
+  const names = { sayaji:'Sayaji Hall, Vadodara', townhall:'Town Hall, Vadodara', baroda:'Baroda Club Auditorium', nirmala:'Nirmala Convent Hall' };
+  document.getElementById('hall-name-label').textContent = 'Editing: ' + names[val];
+  document.getElementById('stage-block').style.display = 'block';
+  // Load default layout as starting point
+  rows = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+  render();
+}
+
+// ── Underlay ──
+function loadUnderlay() {
+  document.getElementById('underlay-input').click();
+}
+
+function applyUnderlay(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = document.getElementById('underlay-img');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── New hall modal ──
+function newHallModal() {
+  document.getElementById('hall-select').value = '';
+  showModal('modal-hall');
+}
+
+function createHall() {
+  const name = document.getElementById('new-hall-name').value.trim();
+  if (!name) { alert('Enter hall name'); return; }
+  closeModal('modal-hall');
+  document.getElementById('hall-name-label').textContent = 'Editing: ' + name;
+  document.getElementById('stage-block').style.display = 'block';
+  rows = [];
+  render();
+  alert('Hall "' + name + '" created. Now add rows and paint seats below.');
+}
+
+// ── Save ──
+function showSaveModal() {
+  if (rows.length === 0) { alert('Add at least one row before saving.'); return; }
+  let total = 0, premium = 0, regular = 0;
+  rows.forEach(r => r.seats.forEach(s => {
+    if (s.type === 'premium') { premium++; total++; }
+    else if (s.type === 'regular') { regular++; total++; }
+    else if (s.type && s.type !== 'aisle' && s.type !== 'empty') total++;
+  }));
+  document.getElementById('sv-total').textContent = total;
+  document.getElementById('sv-premium').textContent = premium;
+  document.getElementById('sv-regular').textContent = regular;
+  document.getElementById('sv-rows').textContent = rows.length;
+  const hall = document.getElementById('hall-name-label').textContent.replace('Editing: ','');
+  document.getElementById('save-sub').textContent = 'Saving layout for ' + hall;
+  showModal('modal-save');
+}
+
+function saveLayout() {
+  const layout = { hall: currentHall, rows: rows, savedAt: new Date().toISOString() };
+  const json = JSON.stringify(layout, null, 2);
+  // Download as JSON (later → Supabase)
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (currentHall || 'hall') + '-layout.json';
+  a.click();
+  closeModal('modal-save');
+  alert('✓ Layout saved! JSON downloaded.\nWhen Supabase is connected, this will auto-upload to your database.');
+}
+
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+</script>
+</body>
+</html>
