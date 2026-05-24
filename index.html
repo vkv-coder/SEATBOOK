@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Khursilo — Book your seat</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f5f2;
+  --border: rgba(0,0,0,0.08);
+  --text: #1a1a1a;
+  --muted: #777;
+  --accent: #c8860a;
+  --accent-dim: rgba(200,134,10,0.10);
+  --green: #2e9e60;
+  --blue: #2b6fd4;
+  --radius: 16px;
+  --rsm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background pattern */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(200,134,10,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: -80px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(43,111,212,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  padding: 20px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative; z-index: 2;
+}
+.logo-wrap { display: flex; flex-direction: column; }
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px;
+  color: var(--text);
+  line-height: 1;
+}
+.logo span { color: var(--accent); }
+.logo-city {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 4px;
+}
+.city-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* ── MAIN CONTENT ── */
+.hero-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 24px 20px;
+  position: relative; z-index: 2;
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(200,134,10,0.2);
+  color: var(--accent);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
+  padding: 5px 12px; border-radius: 20px;
+  margin-bottom: 20px; width: fit-content;
+}
+
+.hero-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 38px;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.hero-title em { color: var(--accent); font-style: italic; }
+
+.hero-sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 320px;
+}
+
+/* ── BIG BUTTONS ── */
+.cta-wrap { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+
+.cta-btn {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  border: none; cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.cta-btn:active { transform: scale(0.97); }
+
+.cta-btn.primary {
+  background: var(--text);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(26,26,26,0.18);
+}
+.cta-btn.secondary {
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.cta-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.cta-btn.primary .cta-icon { background: rgba(255,255,255,0.12); }
+.cta-btn.secondary .cta-icon { background: var(--bg); }
+
+.cta-text { flex: 1; }
+.cta-label { font-size: 16px; font-weight: 600; line-height: 1.2; }
+.cta-desc { font-size: 12px; opacity: 0.65; margin-top: 3px; }
+.cta-arrow { font-size: 18px; opacity: 0.5; flex-shrink: 0; }
+
+/* ── SEAT ILLUSTRATION ── */
+.seat-illustration {
+  display: flex; flex-direction: column; gap: 4px;
+  align-items: center; margin-bottom: 32px;
+}
+.seat-row-il {
+  display: flex; gap: 3px;
+}
+.seat-il {
+  width: 18px; height: 15px;
+  border-radius: 3px 3px 1px 1px;
+  opacity: 0.7;
+  animation: fadeIn 0.4s ease both;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px);} to{opacity:0.7;transform:none;} }
+.seat-il.taken { background: #e8e4de; opacity: 0.4; }
+.seat-il.p { background: var(--accent); opacity: 0.8; }
+.seat-il.r { background: var(--blue); opacity: 0.6; }
+.seat-il.sel { background: var(--text); opacity: 1; animation: pulse-sel 1.5s ease infinite; }
+@keyframes pulse-sel { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+.stage-il {
+  width: 120px; height: 6px; background: var(--text);
+  border-radius: 3px; opacity: 0.12; margin-bottom: 6px;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: flex; gap: 0;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.stat-item {
+  flex: 1; padding: 14px 8px; text-align: center;
+  border-right: 1px solid var(--border);
+}
+.stat-item:last-child { border-right: none; }
+.stat-n {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; color: var(--text);
+}
+.stat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ── HOW IT WORKS ── */
+.how-section {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 28px 24px;
+}
+.how-title {
+  font-size: 11px; letter-spacing: 1px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 18px; text-align: center;
+}
+.how-tabs {
+  display: flex; gap: 0;
+  background: var(--bg);
+  border-radius: var(--rsm);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.how-tab {
+  flex: 1; padding: 9px;
+  text-align: center; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: none; background: transparent;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+.how-tab.active { background: var(--text); color: #fff; }
+.how-steps { display: flex; flex-direction: column; gap: 12px; }
+.how-step {
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  flex-shrink: 0;
+}
+.step-text { flex: 1; }
+.step-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.step-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 20px 24px 32px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+.footer-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px; color: var(--text);
+  margin-bottom: 4px;
+}
+.footer-sub { font-size: 11px; color: var(--muted); }
+.footer-links {
+  display: flex; gap: 16px; justify-content: center;
+  margin-top: 12px;
+}
+.footer-link { font-size: 11px; color: var(--muted); text-decoration: none; }
+.footer-link:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo">Khursilo<span>.</span></div>
+      <div class="logo-city"><div class="city-dot"></div> Vadodara, Gujarat</div>
+    </div>
+  </div>
+
+  <!-- Hero body -->
+  <div class="hero-body">
+    <div class="hero-tag">✦ Seat booking made simple</div>
+
+    <div class="hero-title">
+      Your seat,<br>your <em>choice.</em>
+    </div>
+
+    <div class="hero-sub">
+      Book seats for local events — dramas, concerts, functions — directly from the organiser.
+    </div>
+
+    <!-- NO EXTRA CHARGE banner — prominent -->
+    <div style="
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    ">
+      <div style="font-size: 28px; flex-shrink:0;">🎉</div>
+      <div>
+        <div style="color:#fff; font-size:16px; font-weight:600; line-height:1.2;">Zero convenience fee</div>
+        <div style="color:rgba(255,255,255,0.6); font-size:12px; margin-top:3px;">No hidden charges. Pay only the ticket price — nothing extra.</div>
+      </div>
+    </div>
+
+    <!-- Legal disclaimer -->
+    <div style="
+      background: rgba(43,111,212,0.07);
+      border: 1px solid rgba(43,111,212,0.15);
+      border-radius: var(--rsm);
+      padding: 10px 14px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    ">
+      <div style="font-size:15px; flex-shrink:0; margin-top:1px;">ℹ️</div>
+      <div style="font-size:11px; color:#1a4a8a; line-height:1.6;">
+        Your payment goes <strong>directly to the event organiser</strong> — not to Khursilo.
+        Khursilo is a <strong>technology platform only</strong> and is not responsible for the event, refunds, or cancellations. Please contact the organiser for any queries.
+      </div>
+    </div>
+
+    <!-- Seat illustration -->
+    <div class="seat-illustration">
+      <div class="stage-il"></div>
+      <div class="seat-row-il">
+        <div class="seat-il p" style="animation-delay:0.0s"></div>
+        <div class="seat-il p" style="animation-delay:0.05s"></div>
+        <div class="seat-il taken" style="animation-delay:0.1s"></div>
+        <div class="seat-il p" style="animation-delay:0.15s"></div>
+        <div class="seat-il p" style="animation-delay:0.2s"></div>
+        <div class="seat-il taken" style="animation-delay:0.25s"></div>
+        <div class="seat-il p" style="animation-delay:0.3s"></div>
+      </div>
+      <div class="seat-row-il">
+        <div class="seat-il r" style="animation-delay:0.1s"></div>
+        <div class="seat-il sel" style="animation-delay:0.15s"></div>
+        <div class="seat-il sel" style="animation-delay:0.2s"></div>
+        <div class="seat-il r" style="animation-delay:0.25s"></div>
+        <div class="seat-il taken" style="animation-delay:0.3s"></div>
+        <div class="seat-il r" style="animation-delay:0.35s"></div>
+        <div class="seat-il r" style="animation-delay:0.4s"></div>
+      </div>
+      <div class="seat-row-il">
+        <div class="seat-il r" style="animation-delay:0.2s"></div>
+        <div class="seat-il r" style="animation-delay:0.25s"></div>
+        <div class="seat-il taken" style="animation-delay:0.3s"></div>
+        <div class="seat-il r" style="animation-delay:0.35s"></div>
+        <div class="seat-il r" style="animation-delay:0.4s"></div>
+        <div class="seat-il r" style="animation-delay:0.45s"></div>
+        <div class="seat-il taken" style="animation-delay:0.5s"></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-n">4+</div>
+        <div class="stat-l">Venues</div>
+      </div>
+      <div class="stat-item" style="background:rgba(46,158,96,0.06);">
+        <div class="stat-n" style="color:var(--green);font-size:26px;">₹0</div>
+        <div class="stat-l" style="color:var(--green);font-weight:600;">Extra charges</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-n">QR</div>
+        <div class="stat-l">Instant ticket</div>
+      </div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="cta-wrap">
+      <a class="cta-btn primary" href="booking.html">
+        <div class="cta-icon">🎟</div>
+        <div class="cta-text">
+          <div class="cta-label">Book a seat</div>
+          <div class="cta-desc">No convenience fee · Pay only ticket price</div>
+        </div>
+        <div class="cta-arrow">→</div>
+      </a>
+      <a class="cta-btn secondary" href="organiser-dashboard.html">
+        <div class="cta-icon">🎭</div>
+        <div class="cta-text">
+          <div class="cta-label">Organiser login</div>
+          <div class="cta-desc">Manage your event and bookings</div>
+        </div>
+        <div class="cta-arrow">→</div>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="how-section">
+  <div class="how-title">How it works</div>
+  <div class="how-tabs">
+    <button class="how-tab active" onclick="showHow('audience',this)">For audience</button>
+    <button class="how-tab" onclick="showHow('organiser',this)">For organisers</button>
+  </div>
+  <div class="how-steps" id="how-steps"></div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-logo">Khursilo.</div>
+  <div class="footer-sub">Seat booking for local events · Vadodara</div>
+  <div style="font-size:10px;color:#bbb;margin-top:6px;line-height:1.5;padding:0 12px;">
+    Khursilo is a technology platform only. Payments go directly to event organisers. Khursilo is not liable for events, refunds or cancellations.
+  </div>
+  <div class="footer-links">
+    <a class="footer-link" href="organiser-dashboard.html">Organiser login</a>
+    <a class="footer-link" href="mailto:vkvcoder.support@gmail.com">Support</a>
+  </div>
+</div>
+
+<script>
+const HOW = {
+  audience: [
+    { n:'1', title:'Get the link', desc:'Organiser shares a booking link on WhatsApp or social media.' },
+    { n:'2', title:'Pick your seat', desc:'See the live seat map, choose your seat, pay securely.' },
+    { n:'3', title:'Get QR ticket', desc:'Receive your QR code ticket instantly on WhatsApp. Show at entry.' },
+  ],
+  organiser: [
+    { n:'1', title:'Register & connect Razorpay', desc:'Sign up with your mobile, paste your Razorpay API keys once.' },
+    { n:'2', title:'Create your event', desc:'Select your hall, set seat pricing, choose booking window duration.' },
+    { n:'3', title:'Share & collect', desc:'Share your unique booking link. Money goes directly to your account.' },
+  ]
+};
+
+function showHow(type, btn) {
+  document.querySelectorAll('.how-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const steps = document.getElementById('how-steps');
+  steps.innerHTML = '';
+  HOW[type].forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'how-step';
+    el.style.animationDelay = (i * 0.08) + 's';
+    el.innerHTML = `
+      <div class="step-num">${s.n}</div>
+      <div class="step-text">
+        <div class="step-title">${s.title}</div>
+        <div class="step-desc">${s.desc}</div>
+      </div>`;
+    steps.appendChild(el);
+  });
+}
+
+showHow('audience', document.querySelector('.how-tab.active'));
+</script>
+</body>
+</html>
