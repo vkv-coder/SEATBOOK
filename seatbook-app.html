@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SeatBook — Garba Night 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --surface: #f7f7f5;
+  --surface2: #f0eeea;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1a1a;
+  --muted: #777;
+  --accent: #c8860a;
+  --accent-dim: rgba(200,134,10,0.10);
+  --green: #2e9e60;
+  --green-dim: rgba(46,158,96,0.10);
+  --red: #cc3333;
+  --red-dim: rgba(204,51,51,0.08);
+  --blue: #2b6fd4;
+  --blue-dim: rgba(43,111,212,0.10);
+  --premium: #e8a435;
+  --regular: #5b8dee;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── Event Header ── */
+.event-hero {
+  background: linear-gradient(160deg, #fdf6e8 0%, #ffffff 60%);
+  padding: 48px 20px 28px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.event-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(200,134,10,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+.event-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(232,164,53,0.3);
+  color: var(--accent);
+  font-size: 11px; font-weight: 500; letter-spacing: 0.5px;
+  padding: 4px 10px; border-radius: 20px;
+  margin-bottom: 12px;
+}
+.event-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px; line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.event-meta { display: flex; flex-direction: column; gap: 7px; }
+.meta-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--muted);
+}
+.meta-row span { color: var(--text); }
+.meta-icon { font-size: 14px; width: 16px; text-align: center; }
+
+/* ── Section pills ── */
+.section-nav {
+  display: flex; gap: 6px; padding: 14px 20px;
+  overflow-x: auto; border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.section-nav::-webkit-scrollbar { display: none; }
+.sec-pill {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--muted);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s;
+}
+.sec-pill.active { background: var(--accent); border-color: var(--accent); color: #000; }
+.sec-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── Seat Map ── */
+.seat-map-wrap {
+  flex: 1; padding: 16px 12px;
+  overflow-y: auto;
+}
+.stage-label {
+  text-align: center; font-size: 10px; letter-spacing: 3px;
+  color: var(--muted); margin-bottom: 16px;
+  position: relative;
+}
+.stage-label::before, .stage-label::after {
+  content: ''; position: absolute; top: 50%;
+  width: 28%; height: 1px; background: var(--border2);
+}
+.stage-label::before { left: 0; }
+.stage-label::after { right: 0; }
+
+.section-block { margin-bottom: 18px; }
+.section-title {
+  font-size: 10px; letter-spacing: 1.5px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;
+}
+.seat-row {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 4px; justify-content: center;
+}
+.row-label {
+  font-size: 9px; color: var(--muted); width: 14px;
+  text-align: center; flex-shrink: 0;
+}
+.seat {
+  width: 26px; height: 22px;
+  border-radius: 4px 4px 2px 2px;
+  border: none; cursor: pointer;
+  font-size: 8px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s, opacity 0.12s;
+  position: relative;
+}
+.seat:active { transform: scale(0.88); }
+.seat.available-p { background: rgba(232,164,53,0.2); color: var(--accent); border: 1px solid rgba(232,164,53,0.4); }
+.seat.available-r { background: rgba(91,141,238,0.15); color: var(--blue); border: 1px solid rgba(91,141,238,0.3); }
+.seat.booked { background: #e8e6e2; color: #bbb; cursor: not-allowed; border: 1px solid transparent; }
+.seat.selected-p { background: var(--accent); color: #000; border: 1px solid var(--accent); }
+.seat.selected-r { background: var(--blue); color: #fff; border: 1px solid var(--blue); }
+.seat.aisle { background: transparent; border: none; cursor: default; pointer-events: none; }
+.seat-gap { width: 12px; flex-shrink: 0; }
+
+/* ── Booking Bar ── */
+.booking-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 14px 20px 28px;
+}
+.booking-summary {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.summary-seats {
+  font-size: 13px; color: var(--muted);
+}
+.summary-seats strong { color: var(--text); }
+.summary-price {
+  font-size: 20px; font-weight: 600; color: var(--accent);
+}
+.summary-price small { font-size: 11px; color: var(--muted); font-weight: 400; }
+.book-btn {
+  width: 100%; padding: 14px;
+  background: var(--accent); color: #000;
+  border: none; border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.book-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.book-btn:not(:disabled):active { opacity: 0.85; }
+
+/* ── Legend ── */
+.legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  padding: 0 12px 12px; justify-content: center;
+}
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.leg-dot { width: 14px; height: 12px; border-radius: 3px; }
+
+/* ── Checkout Screen ── */
+.checkout-header {
+  padding: 48px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--muted);
+  font-size: 13px; cursor: pointer; margin-bottom: 20px;
+  font-family: 'DM Sans', sans-serif; padding: 0;
+}
+.checkout-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; color: var(--text);
+}
+.checkout-body { flex: 1; padding: 20px; overflow-y: auto; }
+.checkout-section { margin-bottom: 20px; }
+.checkout-label {
+  font-size: 11px; letter-spacing: 1px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.seat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.seat-chip {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 5px 10px;
+  font-size: 12px; color: var(--text);
+}
+.seat-chip.prem { border-color: rgba(232,164,53,0.4); color: var(--accent); }
+.price-rows { display: flex; flex-direction: column; gap: 8px; }
+.price-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: var(--muted);
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.price-row:last-child { border-bottom: none; }
+.price-row.total { color: var(--text); font-weight: 500; font-size: 15px; }
+.price-row span:last-child { color: var(--text); }
+.price-row.total span:last-child { color: var(--accent); font-size: 18px; }
+
+.input-field {
+  width: 100%; background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 12px 14px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--accent); }
+.input-field::placeholder { color: var(--muted); }
+
+.pay-modes { display: flex; flex-direction: column; gap: 8px; }
+.pay-mode {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.pay-mode.selected { border-color: var(--accent); background: var(--accent-dim); }
+.pay-mode-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; background: var(--surface); flex-shrink: 0;
+}
+.pay-mode-info { flex: 1; }
+.pay-mode-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.pay-mode-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.pay-mode-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; flex-shrink: 0;
+}
+.pay-mode.selected .pay-mode-check {
+  background: var(--accent); border-color: var(--accent); color: #000;
+}
+
+.timer-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(232,85,85,0.1); border: 1px solid rgba(232,85,85,0.2);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.timer-text { font-size: 12px; color: var(--red); flex: 1; }
+.timer-count { font-size: 14px; font-weight: 600; color: var(--red); font-variant-numeric: tabular-nums; }
+
+/* ── Confirmation Screen ── */
+.confirm-screen {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px;
+  text-align: center;
+}
+.confirm-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--green-dim); border: 2px solid var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin-bottom: 20px;
+  animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.confirm-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px; margin-bottom: 8px;
+}
+.confirm-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+.confirm-card {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  padding: 20px; text-align: left; margin-bottom: 16px;
+}
+.confirm-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-row span:first-child { color: var(--muted); }
+.confirm-row span:last-child { color: var(--text); font-weight: 500; }
+.qr-placeholder {
+  width: 100%; aspect-ratio: 1;
+  background: var(--surface2); border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; margin-bottom: 16px;
+  border: 1px solid var(--border2);
+}
+.qr-grid {
+  display: grid; grid-template-columns: repeat(7,1fr); gap: 3px;
+  width: 120px;
+}
+.qr-cell {
+  aspect-ratio: 1; border-radius: 2px;
+  background: #1a1a1a;
+}
+.qr-cell.empty { background: transparent; }
+.wa-btn {
+  width: 100%; padding: 14px;
+  background: #1da851; color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.home-btn {
+  width: 100%; padding: 12px;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border2); border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; cursor: pointer; margin-top: 8px;
+}
+
+/* ── Availability bar ── */
+.avail-bar {
+  margin: 0 20px 16px;
+  background: var(--surface2); border-radius: 4px;
+  height: 4px; overflow: hidden;
+}
+.avail-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.5s; }
+.avail-text {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--muted);
+  margin: 0 20px 6px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1: SEAT MAP
+══════════════════════════════════════ -->
+<div class="screen active" id="screen-map">
+  <div class="event-hero">
+    <div class="event-tag">✦ Navaratri 2025</div>
+    <div class="event-title">Garba Night<br><em style="font-style:italic;color:var(--accent)">Grand Celebration</em></div>
+    <div class="event-meta">
+      <div class="meta-row"><span class="meta-icon">📅</span><span>Saturday, 2 October 2025 · 7:00 PM</span></div>
+      <div class="meta-row"><span class="meta-icon">📍</span><span>Sayaji Hall, Vadodara</span></div>
+      <div class="meta-row"><span class="meta-icon">🎟</span><span>₹200 onwards · 847 seats</span></div>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <button class="sec-pill active" onclick="filterSection('all')">
+      <div class="sec-dot" style="background:var(--muted)"></div> All sections
+    </button>
+    <button class="sec-pill" onclick="filterSection('premium')">
+      <div class="sec-dot" style="background:var(--accent)"></div> Premium ₹400
+    </button>
+    <button class="sec-pill" onclick="filterSection('regular')">
+      <div class="sec-dot" style="background:var(--blue)"></div> Regular ₹200
+    </button>
+  </div>
+
+  <div class="avail-text"><span id="avail-label">Filling fast</span><span id="avail-count"></span></div>
+  <div class="avail-bar"><div class="avail-fill" id="avail-fill"></div></div>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(232,164,53,0.2);border:1px solid rgba(232,164,53,0.4)"></div>Premium</div>
+    <div class="leg-item"><div class="leg-dot" style="background:rgba(91,141,238,0.15);border:1px solid rgba(91,141,238,0.3)"></div>Regular</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--surface2)"></div>Booked</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Selected</div>
+  </div>
+
+  <div class="seat-map-wrap" id="seat-map"></div>
+
+  <div class="booking-bar">
+    <div class="booking-summary">
+      <div class="summary-seats" id="summary-seats">Select seats to book</div>
+      <div class="summary-price" id="summary-price"></div>
+    </div>
+    <button class="book-btn" id="book-btn" disabled onclick="goCheckout()">Select seats to continue</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2: CHECKOUT
+══════════════════════════════════════ -->
+<div class="screen" id="screen-checkout">
+  <div class="checkout-header">
+    <button class="back-btn" onclick="goBack('screen-map')">← Back to seat map</button>
+    <div class="checkout-title">Confirm your booking</div>
+  </div>
+  <div class="checkout-body">
+
+    <div class="timer-bar">
+      <span style="font-size:16px">⏱</span>
+      <span class="timer-text">Seats held for</span>
+      <span class="timer-count" id="timer">10:00</span>
+    </div>
+
+    <div class="checkout-section">
+      <div class="checkout-label">Your seats</div>
+      <div class="seat-chips" id="checkout-seats"></div>
+    </div>
+
+    <div class="checkout-section">
+      <div class="checkout-label">Price breakdown</div>
+      <div class="price-rows" id="price-rows"></div>
+    </div>
+
+    <div class="checkout-section">
+      <div class="checkout-label">Your details</div>
+      <input class="input-field" type="text" placeholder="Full name" id="inp-name">
+      <input class="input-field" type="tel" placeholder="Mobile number" id="inp-phone" maxlength="10">
+    </div>
+
+    <div class="checkout-section">
+      <div class="checkout-label">Payment method</div>
+      <div class="pay-modes">
+        <div class="pay-mode selected" id="pm-upi" onclick="selectPayMode('upi')">
+          <div class="pay-mode-icon">⚡</div>
+          <div class="pay-mode-info">
+            <div class="pay-mode-name">UPI / PhonePe / GPay</div>
+            <div class="pay-mode-sub">Instant · No extra charges</div>
+          </div>
+          <div class="pay-mode-check">✓</div>
+        </div>
+        <div class="pay-mode" id="pm-card" onclick="selectPayMode('card')">
+          <div class="pay-mode-icon">💳</div>
+          <div class="pay-mode-info">
+            <div class="pay-mode-name">Debit / Credit card</div>
+            <div class="pay-mode-sub">Visa, Mastercard, RuPay</div>
+          </div>
+          <div class="pay-mode-check">✓</div>
+        </div>
+        <div class="pay-mode" id="pm-nb" onclick="selectPayMode('nb')">
+          <div class="pay-mode-icon">🏦</div>
+          <div class="pay-mode-info">
+            <div class="pay-mode-name">Net banking</div>
+            <div class="pay-mode-sub">All major banks supported</div>
+          </div>
+          <div class="pay-mode-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="book-btn" id="pay-btn" onclick="goConfirm()" style="margin-bottom:32px">
+      Pay ₹<span id="pay-amount">0</span> & confirm seats
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3: CONFIRMATION
+══════════════════════════════════════ -->
+<div class="screen" id="screen-confirm">
+  <div class="confirm-screen">
+    <div class="confirm-icon">✓</div>
+    <div class="confirm-title">Booking confirmed!</div>
+    <div class="confirm-sub">Your QR ticket has been sent to<br>your WhatsApp. Show it at the gate.</div>
+
+    <div class="qr-placeholder">
+      <div class="qr-grid" id="qr-grid"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">BKG-2025-<span id="booking-id"></span></div>
+    </div>
+
+    <div class="confirm-card">
+      <div class="confirm-row"><span>Event</span><span>Garba Night 2025</span></div>
+      <div class="confirm-row"><span>Date</span><span>2 Oct · 7:00 PM</span></div>
+      <div class="confirm-row"><span>Venue</span><span>Sayaji Hall</span></div>
+      <div class="confirm-row"><span>Seats</span><span id="conf-seats">—</span></div>
+      <div class="confirm-row"><span>Name</span><span id="conf-name">—</span></div>
+      <div class="confirm-row"><span>Amount paid</span><span id="conf-amount" style="color:var(--accent)">—</span></div>
+    </div>
+
+    <button class="wa-btn">
+      <span style="font-size:18px">📱</span> View ticket on WhatsApp
+    </button>
+    <button class="home-btn" onclick="resetApp()">← Book more seats</button>
+  </div>
+</div>
+
+<script>
+// ── Seat Data ──
+const LAYOUT = [
+  { section: 'Premium', rows: [
+    { r:'A', seats:[1,2,3,null,4,5,6,7,8,null,9,10,11], type:'premium', booked:[3,7,10] },
+    { r:'B', seats:[1,2,3,null,4,5,6,7,8,null,9,10,11], type:'premium', booked:[1,5,11] },
+  ]},
+  { section: 'Regular', rows: [
+    { r:'C', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[2,8] },
+    { r:'D', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[4,9,12] },
+    { r:'E', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[1,6] },
+    { r:'F', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[3,7,10] },
+    { r:'G', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[2,5,11] },
+    { r:'H', seats:[1,2,3,4,null,5,6,7,8,null,9,10,11,12], type:'regular', booked:[4,8] },
+  ]}
+];
+
+const PRICES = { premium: 400, regular: 200 };
+let selected = {};
+let timerInterval = null;
+let timerSec = 600;
+let payMode = 'upi';
+
+function totalSeats() {
+  let t = 0;
+  LAYOUT.forEach(sec => sec.rows.forEach(row => {
+    row.seats.forEach(s => { if(s !== null) t++; });
+  }));
+  return t;
+}
+function bookedSeats() {
+  let b = 0;
+  LAYOUT.forEach(sec => sec.rows.forEach(row => b += row.booked.length));
+  return b;
+}
+
+function renderMap() {
+  const map = document.getElementById('seat-map');
+  map.innerHTML = '';
+  const frag = document.createDocumentFragment();
+
+  const stageDiv = document.createElement('div');
+  stageDiv.className = 'stage-label';
+  stageDiv.textContent = 'STAGE';
+  frag.appendChild(stageDiv);
+
+  LAYOUT.forEach(sec => {
+    const block = document.createElement('div');
+    block.className = 'section-block';
+    block.dataset.section = sec.section.toLowerCase();
+
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.textContent = sec.section + ' — ₹' + PRICES[sec.rows[0].type];
+    block.appendChild(title);
+
+    sec.rows.forEach(row => {
+      const rowDiv = document.createElement('div');
+      rowDiv.className = 'seat-row';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'row-label';
+      lbl.textContent = row.r;
+      rowDiv.appendChild(lbl);
+
+      row.seats.forEach(s => {
+        if (s === null) {
+          const gap = document.createElement('div');
+          gap.className = 'seat-gap';
+          rowDiv.appendChild(gap);
+          return;
+        }
+        const key = row.r + s;
+        const btn = document.createElement('button');
+        btn.className = 'seat';
+        btn.textContent = s;
+        const isBooked = row.booked.includes(s);
+        const isSel = !!selected[key];
+        if (isBooked) {
+          btn.classList.add('booked');
+          btn.disabled = true;
+        } else if (isSel) {
+          btn.classList.add(row.type === 'premium' ? 'selected-p' : 'selected-r');
+        } else {
+          btn.classList.add(row.type === 'premium' ? 'available-p' : 'available-r');
+        }
+        btn.onclick = () => toggleSeat(key, row.type, s, row.r);
+        rowDiv.appendChild(btn);
+      });
+      block.appendChild(rowDiv);
+    });
+    frag.appendChild(block);
+  });
+  map.appendChild(frag);
+  updateBar();
+  updateSummary();
+}
+
+function toggleSeat(key, type, num, rowLetter) {
+  if (selected[key]) {
+    delete selected[key];
+  } else {
+    if (Object.keys(selected).length >= 6) {
+      alert('Maximum 6 seats per booking');
+      return;
+    }
+    selected[key] = { type, num, row: rowLetter, price: PRICES[type] };
+  }
+  renderMap();
+}
+
+function updateSummary() {
+  const keys = Object.keys(selected);
+  const total = keys.reduce((s, k) => s + selected[k].price, 0);
+  const btn = document.getElementById('book-btn');
+  const sumSeats = document.getElementById('summary-seats');
+  const sumPrice = document.getElementById('summary-price');
+
+  if (keys.length === 0) {
+    sumSeats.innerHTML = 'Select seats to book';
+    sumPrice.innerHTML = '';
+    btn.disabled = true;
+    btn.textContent = 'Select seats to continue';
+  } else {
+    const labels = keys.sort().join(', ');
+    sumSeats.innerHTML = `<strong>${keys.length} seat${keys.length>1?'s':''}</strong> · ${labels}`;
+    sumPrice.innerHTML = `₹${total.toLocaleString('en-IN')}<small>/total</small>`;
+    btn.disabled = false;
+    btn.textContent = `Book ${keys.length} seat${keys.length>1?'s':''} →`;
+  }
+  document.getElementById('pay-amount').textContent = total.toLocaleString('en-IN');
+}
+
+function updateBar() {
+  const t = totalSeats(), b = bookedSeats() + Object.keys(selected).length;
+  const pct = Math.round((b / t) * 100);
+  const remaining = t - b;
+  document.getElementById('avail-fill').style.width = pct + '%';
+  document.getElementById('avail-count').textContent = remaining + ' seats left';
+  document.getElementById('avail-label').textContent = pct > 75 ? '🔥 Filling fast' : pct > 50 ? 'Selling well' : 'Available';
+}
+
+function filterSection(sec) {
+  document.querySelectorAll('.sec-pill').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.section-block').forEach(b => {
+    b.style.display = (sec === 'all' || b.dataset.section === sec) ? 'block' : 'none';
+  });
+}
+
+function goCheckout() {
+  const keys = Object.keys(selected);
+  if (!keys.length) return;
+
+  // Build seat chips
+  const chipsEl = document.getElementById('checkout-seats');
+  chipsEl.innerHTML = '';
+  let premCount = 0, regCount = 0;
+  keys.sort().forEach(k => {
+    const s = selected[k];
+    const chip = document.createElement('div');
+    chip.className = 'seat-chip' + (s.type === 'premium' ? ' prem' : '');
+    chip.textContent = k + ' (' + (s.type === 'premium' ? 'Premium' : 'Regular') + ')';
+    chipsEl.appendChild(chip);
+    if (s.type === 'premium') premCount++; else regCount++;
+  });
+
+  // Price breakdown
+  const priceEl = document.getElementById('price-rows');
+  priceEl.innerHTML = '';
+  const addRow = (label, val) => {
+    const row = document.createElement('div');
+    row.className = 'price-row' + (label === 'Total' ? ' total' : '');
+    row.innerHTML = `<span>${label}</span><span>₹${val.toLocaleString('en-IN')}</span>`;
+    priceEl.appendChild(row);
+  };
+  if (premCount) addRow(`Premium × ${premCount}`, premCount * 400);
+  if (regCount) addRow(`Regular × ${regCount}`, regCount * 200);
+  const total = keys.reduce((s, k) => s + selected[k].price, 0);
+  addRow('Platform fee', 0);
+  addRow('Total', total);
+
+  document.getElementById('pay-amount').textContent = total.toLocaleString('en-IN');
+  showScreen('screen-checkout');
+  startTimer();
+}
+
+function startTimer() {
+  timerSec = 600;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSec--;
+    const m = Math.floor(timerSec / 60);
+    const s = timerSec % 60;
+    document.getElementById('timer').textContent = m + ':' + String(s).padStart(2, '0');
+    if (timerSec <= 0) {
+      clearInterval(timerInterval);
+      alert('Your seat hold has expired. Please select seats again.');
+      selected = {};
+      showScreen('screen-map');
+      renderMap();
+    }
+  }, 1000);
+}
+
+function selectPayMode(mode) {
+  payMode = mode;
+  ['upi','card','nb'].forEach(m => {
+    document.getElementById('pm-' + m).classList.toggle('selected', m === mode);
+  });
+}
+
+function goConfirm() {
+  const name = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim();
+  if (!name) { alert('Please enter your name'); return; }
+  if (phone.length < 10) { alert('Please enter a valid 10-digit mobile number'); return; }
+
+  clearInterval(timerInterval);
+
+  // Fill confirm screen
+  const keys = Object.keys(selected).sort();
+  document.getElementById('conf-seats').textContent = keys.join(', ');
+  document.getElementById('conf-name').textContent = name;
+  const total = keys.reduce((s, k) => s + selected[k].price, 0);
+  document.getElementById('conf-amount').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('booking-id').textContent = Math.floor(Math.random() * 90000 + 10000);
+
+  // Generate pseudo QR
+  const qrEl = document.getElementById('qr-grid');
+  qrEl.innerHTML = '';
+  for (let i = 0; i < 49; i++) {
+    const cell = document.createElement('div');
+    const corner = [0,1,2,7,8,9,14,6,13,20,42,43,44,49,48,47,41,35,36,37,38];
+    cell.className = 'qr-cell' + (Math.random() > 0.45 || corner.includes(i) ? '' : ' empty');
+    qrEl.appendChild(cell);
+  }
+
+  showScreen('screen-confirm');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goBack(id) {
+  clearInterval(timerInterval);
+  showScreen(id);
+}
+
+function resetApp() {
+  selected = {};
+  clearInterval(timerInterval);
+  renderMap();
+  showScreen('screen-map');
+}
+
+// Init
+renderMap();
+</script>
+</body>
+</html>
