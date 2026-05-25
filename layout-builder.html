@@ -158,6 +158,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <div class="sec-cards" id="sec-cards"><div style="font-size:11px;color:var(--muted);">Select a hall to begin</div></div>
   <div class="atool" id="atool" style="display:none;">Painting: <strong id="atool-name"></strong></div>
+  <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Right-click any seat (or long press on mobile) to set its number</div>
 </div>
 
 <div class="fine-tools">
@@ -279,6 +280,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
 </div>
 
+<!-- MODAL: Renumber seat -->
+<div class="overlay" id="modal-renum">
+  <div class="modal">
+    <div class="mtitle">Set seat number</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+      Type the seat number for this position.<br>
+      All seats <strong>before</strong> this will become empty.<br>
+      All seats <strong>after</strong> will auto-renumber in sequence.
+    </div>
+    <div class="mf">
+      <div class="ml">Start numbering from</div>
+      <input class="mi" type="number" id="renum-val" min="1" placeholder="e.g. 1" style="font-size:20px;font-weight:600;text-align:center;">
+    </div>
+    <div class="mbtns">
+      <button class="mbtn" onclick="closeModal('modal-renum')">Cancel</button>
+      <button class="mbtn pri" onclick="applyRenum()">Apply →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const COLORS=['#c8860a','#2b6fd4','#2e9e60','#cc3333','#7c3aed','#0891b2','#d97706','#be185d','#065f46','#1e40af'];
 
@@ -286,6 +307,7 @@ const COLORS=['#c8860a','#2b6fd4','#2e9e60','#cc3333','#7c3aed','#0891b2','#d977
 const sb = window.supabase.createClient('https://jqqnnkzozjskziaizajg.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg');
 const HALL_IDS = { sayjirao: '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a' };
 let sections=[], rows=[], fineTool=null, activeSecId=null, pickedColor=COLORS[0], painting=false, hallName='', gapSize=1;
+let renumRowIdx=null, renumCellIdx=null;
 let history=[];
 function saveHistory(){history.push(JSON.stringify({rows,sections}));if(history.length>30)history.shift();}
 function undoLast(){if(!history.length){alert('Nothing to undo.');return;}const prev=JSON.parse(history.pop());rows=prev.rows;sections=prev.sections;activeSecId=sections[0]?.id||null;render();renderSecs();}
@@ -294,15 +316,36 @@ function undoLast(){if(!history.length){alert('Nothing to undo.');return;}const 
 // {type:'row', label, cells:[{t:'seat'|'blocked'|'vgap', secId, gapW}]}
 // {type:'hpass', height:1|2|3}
 
-function pickHall(){
+async function pickHall(){
   const v=document.getElementById('hall-sel').value;
   if(!v)return;
   const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',sayaji:'Sayaji Hall, Vadodara',townhall:'Town Hall, Vadodara',baroda:'Baroda Club Auditorium',nirmala:'Nirmala Convent Hall'};
   hallName=names[v];
   document.getElementById('empty-hint').style.display='none';
   document.getElementById('stage-wrap').style.display='block';
-  if(v==='sayaji') loadDemo();
-  else{rows=[];sections=[];render();renderSecs();}
+  if(v==='sayjirao'){
+    // Load existing layout from Supabase if available
+    rows=[];sections=[];render();renderSecs();
+    const {data:hall}=await sb.from('halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
+    if(hall&&hall.layout_json&&hall.layout_json.rows&&hall.layout_json.rows.length>0){
+      const confirm_load=confirm('Existing layout found in Supabase ('+hall.layout_json.rows.filter(r=>r.type==="row").length+' rows). Load it?');
+      if(confirm_load){
+        rows=hall.layout_json.rows;
+        sections=hall.layout_json.sections||[];
+        activeSecId=sections[0]?.id||null;
+        render();renderSecs();
+        alert('Layout loaded! You can now edit and save.');
+        return;
+      }
+    }
+    // Blank canvas — just stage
+    rows=[];sections=[];render();renderSecs();
+    alert('Blank canvas ready. Start adding rows from the bottom bar. Remember: AA first (near stage), then BB, A, B... Z last (back of hall).');
+  } else if(v==='sayaji'){
+    loadDemo();
+  } else {
+    rows=[];sections=[];render();renderSecs();
+  }
 }
 
 function loadDemo(){
@@ -380,7 +423,7 @@ function paintCell(ri,ci){
   if(!cell)return;
   if(!painting) saveHistory(); // save once per drag
 
-  if(fineTool==='erase'){cell.t='seat';cell.secId=null;}
+  if(fineTool==='erase'){cell.t='empty';cell.secId=null;}
   else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;}
   // vpass handled by bottom bar insertVGap()
   else if(activeSecId){cell.t='seat';cell.secId=activeSecId;}
@@ -495,13 +538,24 @@ function render(){
         btn.style.cssText='background:var(--s2);color:#bbb;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);';
         btn.textContent='✕';
       } else {
-        btn.className='seat empty';btn.textContent='·';btn.style.boxShadow='inset 0 0 0 1px #ccc';
+        btn.className='seat empty';btn.style.cssText='background:transparent;border:none;box-shadow:none;cursor:default;width:16px;height:15px;flex-shrink:0;';
       }
       if(cell.t!=='vgap') seatNum++;
 
-      btn.addEventListener('mousedown',e=>{e.preventDefault();painting=true;paintCell(ri,ci);});
+      btn.addEventListener('mousedown',e=>{
+        if(e.button===2){e.preventDefault();openRenum(ri,ci);return;}
+        e.preventDefault();painting=true;paintCell(ri,ci);
+      });
+      btn.addEventListener('contextmenu',e=>{e.preventDefault();openRenum(ri,ci);});
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
-      btn.addEventListener('touchstart',e=>{e.preventDefault();painting=true;paintCell(ri,ci);},{passive:false});
+      // Long press for touch devices
+      let pressTimer;
+      btn.addEventListener('touchstart',e=>{
+        pressTimer=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);
+        painting=true;paintCell(ri,ci);
+      },{passive:false});
+      btn.addEventListener('touchend',()=>clearTimeout(pressTimer));
+      btn.addEventListener('touchmove',()=>clearTimeout(pressTimer));
       rowDiv.appendChild(btn);
     });
 
@@ -844,6 +898,51 @@ function doSave(){
   a.click();
   closeModal('modal-save');
   alert('✓ Layout saved!\nUpload this JSON to Supabase when backend is connected.');
+}
+
+function openRenum(ri, ci) {
+  renumRowIdx = ri;
+  renumCellIdx = ci;
+  document.getElementById('renum-val').value = '';
+  showModal('modal-renum');
+  setTimeout(() => document.getElementById('renum-val').focus(), 100);
+}
+
+function applyRenum() {
+  const startNum = parseInt(document.getElementById('renum-val').value);
+  if (isNaN(startNum) || startNum < 1) { alert('Enter a valid seat number.'); return; }
+
+  const row = rows[renumRowIdx];
+  if (!row || row.type !== 'row') return;
+
+  // Find all non-vgap cells with their indices
+  let seatCells = []; // {cellIdx, cell}
+  row.cells.forEach((cell, ci) => {
+    if (cell.t !== 'vgap') seatCells.push({ cellIdx: ci, cell });
+  });
+
+  // Find position of clicked cell in seatCells
+  const clickedPos = seatCells.findIndex(s => s.cellIdx === renumCellIdx);
+  if (clickedPos === -1) return;
+
+  // Erase all cells before clicked position
+  for (let i = 0; i < clickedPos; i++) {
+    seatCells[i].cell.t = 'empty';
+    seatCells[i].cell.secId = null;
+    seatCells[i].cell.sn = null;
+  }
+
+  // Renumber from clicked position onwards (skip empty cells already erased)
+  let num = startNum;
+  for (let i = clickedPos; i < seatCells.length; i++) {
+    const cell = seatCells[i].cell;
+    if (cell.t === 'empty') continue; // skip already empty
+    cell.sn = num++;
+  }
+
+  closeModal('modal-renum');
+  render();
+  renderSecs();
 }
 
 function showModal(id){document.getElementById(id).classList.add('show');}
