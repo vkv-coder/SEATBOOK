@@ -28,7 +28,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .hbtn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;}
 
 /* SECTIONS PANEL */
-.sec-panel{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
+.sec-panel{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;max-height:130px;overflow-y:auto;}
 .sec-panel-hdr{font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .add-sec-btn{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .sec-cards{display:flex;flex-direction:column;gap:5px;}
@@ -135,7 +135,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 <div class="topbar">
   <div><div class="tlogo">SeatBook</div><div class="tsub">Layout Builder · Admin only</div></div>
-  <button class="save-btn" onclick="showSave()">💾 Save</button>
+  <div style="display:flex;gap:6px;align-items:center;"><button onclick="undoLast()" style="background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">↩ Undo</button><button class="save-btn" onclick="showSave()">💾 Save</button></div>
 </div>
 
 <div class="hall-bar">
@@ -163,7 +163,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block seat</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
-  <button class="ftool" onclick="undoLast()" style="margin-left:auto;color:#555;border-color:#bbb;">↩ Undo</button>
 </div>
 
 <div class="stats-bar">
