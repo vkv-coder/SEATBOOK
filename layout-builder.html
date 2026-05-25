@@ -159,17 +159,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <div class="fine-tools">
-  <div class="flbl">Fine:</div>
-  <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block</button>
-  <button class="ftool vp" id="ft-vpass" onclick="setFine('vpass')">⎸ V-gap</button>
+  <div class="flbl">Paint:</div>
+  <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block seat</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
-  <button class="ftool red" onclick="clearAll()">Clear</button>
-</div>
-<div class="gap-size-row" id="gap-size-row" style="display:none;">
-  <div class="flbl">Gap width:</div>
-  <button class="gsz active" id="gs1" onclick="setGapSize(1)">Narrow</button>
-  <button class="gsz" id="gs2" onclick="setGapSize(2)">Medium</button>
-  <button class="gsz" id="gs3" onclick="setGapSize(3)">Wide</button>
+  <button class="ftool red" onclick="clearAll()">Clear all</button>
 </div>
 
 <div class="stats-bar">
@@ -340,7 +333,7 @@ function setFine(t){
   fineTool=fineTool===t?null:t;
   document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
   if(fineTool){document.getElementById('ft-'+t).classList.add('active');}
-  document.getElementById('gap-size-row').style.display=(fineTool==='vpass')?'flex':'none';
+  // gap-size-row removed
   renderSecs();
 }
 
