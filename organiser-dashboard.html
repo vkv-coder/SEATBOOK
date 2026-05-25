@@ -165,11 +165,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="login-logo">SeatBook</div>
     <div class="login-sub">Organiser portal</div>
     <div class="login-card" id="card-email">
-      <div class="login-title">Welcome back</div>
+      <div class="login-title">Organiser login</div>
       <div class="login-desc">Enter your registered email address</div>
       <input class="input-field" type="email" placeholder="your@email.com" id="inp-email">
-      <div class="err-msg" id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
+      <div class="err-msg" id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-top:6px;"></div>
       <button class="btn-primary" onclick="sendOTP()" id="send-otp-btn">Send OTP →</button>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px;">New organiser?</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+          Register with us to start using Khursilo for your events.
+        </div>
+        <a href="mailto:vkvcoder.support@gmail.com" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;">
+          📧 vkvcoder.support@gmail.com
+        </a>
+        <a href="https://wa.me/919327243611" target="_blank" style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#25d366;text-decoration:none;font-weight:500;">
+          📱 WhatsApp: 93272 43611
+        </a>
+      </div>
     </div>
     <div class="login-card" id="card-otp" style="display:none;">
       <div class="login-title">Enter OTP</div>
@@ -404,7 +416,7 @@ async function sendOTP() {
     .eq('email_1', email)
     .single();
   if (orgErr || !org) {
-    errEl.textContent = 'Email not registered. Contact Khursilo admin to register.';
+    errEl.innerHTML = 'Email not registered. <br>Contact us to register: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
     errEl.style.display = 'block';
     return;
   }
