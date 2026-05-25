@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>SeatBook — Organiser Dashboard</title>
+<title>Khursilo — Organiser Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -162,14 +162,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <!-- ══ SCREEN: LOGIN ══ -->
 <div class="screen active" id="screen-login">
   <div class="login-wrap">
-    <div class="login-logo">SeatBook</div>
+    <div class="login-logo">Khursilo</div>
     <div class="login-sub">Organiser portal</div>
     <div class="login-card" id="card-email">
       <div class="login-title">Organiser login</div>
       <div class="login-desc">Enter your registered email address</div>
       <input class="input-field" type="email" placeholder="your@email.com" id="inp-email">
       <div class="err-msg" id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-top:6px;"></div>
-      <button class="btn-primary" onclick="sendOTP()" id="send-otp-btn">Send OTP →</button>
+      <button class="btn-primary" onclick="sendOTP()" id="send-otp-btn">Send login link →</button>
+      <div style="margin-top:10px;background:#f0f7ff;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.6;">
+        📧 You will receive an email from <strong>khursilo</strong> with subject <strong>"Your Magic Link"</strong>. 
+        Click the <strong>"Log In"</strong> button in that email to access your dashboard. 
+        It is safe and secure — no password needed.
+      </div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
         <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px;">New organiser?</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.6;">
@@ -184,12 +189,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div class="login-card" id="card-otp" style="display:none;">
-      <div class="login-title">Enter OTP</div>
-      <div class="login-desc" id="otp-sent-to">OTP sent to your email</div>
-      <input class="input-field" type="number" placeholder="6-digit OTP" id="inp-otp" maxlength="6" style="font-size:20px;font-weight:600;letter-spacing:4px;text-align:center;">
+      <div class="login-title">Check your email</div>
+      <div class="login-desc" id="otp-sent-to">Login link sent to your email</div>
+      <div style="text-align:center;padding:20px 0;font-size:40px;">📧</div>
+      <div style="background:#f0f7ff;border-radius:8px;padding:12px;font-size:12px;color:#444;line-height:1.7;margin-bottom:12px;">
+        ✅ Email sent from <strong>khursilo</strong><br>
+        📌 Subject: <strong>"Your Magic Link"</strong><br>
+        👆 Click <strong>"Log In"</strong> in the email<br>
+        ⚠️ Check spam if not in inbox
+      </div>
       <div class="err-msg" id="otp-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
-      <button class="btn-primary" onclick="verifyOTP()" id="verify-btn">Verify & Login →</button>
-      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);">Didn't get OTP? <span style="color:var(--accent);cursor:pointer;" onclick="resendOTP()">Resend</span></div>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted);">Didn't receive? <span style="color:var(--accent);cursor:pointer;" onclick="resendOTP()">Resend email</span></div>
+      <div style="text-align:center;margin-top:6px;font-size:12px;color:var(--muted);"><span style="color:var(--accent);cursor:pointer;" onclick="goBackToEmail()">← Use different email</span></div>
     </div>
   </div>
 </div>
@@ -197,7 +208,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <!-- ══ SCREEN: DASHBOARD ══ -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar">
-    <div class="topbar-logo">SeatBook</div>
+    <div class="topbar-logo">Khursilo</div>
     <div class="topbar-user">
       <div class="avatar" id="user-avatar">VD</div>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -421,7 +432,7 @@ async function sendOTP() {
     return;
   }
   console.log('Sending OTP to:', email);
-  btn.textContent = 'Sending...';
+  btn.textContent = 'Sending link...';
   btn.disabled = true;
   // Send OTP directly — check organiser status after login
   const { error } = await sb.auth.signInWithOtp({
@@ -429,7 +440,7 @@ async function sendOTP() {
     options: { shouldCreateUser: false }
   });
   if (error) {
-    btn.textContent = 'Send OTP →';
+    btn.textContent = 'Send login link →';
     btn.disabled = false;
     if (error.message.includes('Signups not allowed')) {
       errEl.innerHTML = 'Email not registered with Khursilo.<br>Contact us: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
@@ -440,14 +451,14 @@ async function sendOTP() {
     return;
   }
   // Visual feedback
-  btn.textContent = '✓ OTP Sent!';
+  btn.textContent = '✓ Link sent!';
   btn.style.background = '#2e9e60';
   setTimeout(() => {
     document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email + ' — check inbox & spam';
     document.getElementById('card-email').style.display = 'none';
     document.getElementById('card-otp').style.display = 'block';
     document.getElementById('inp-otp').focus();
-    btn.textContent = 'Send OTP →';
+    btn.textContent = 'Send login link →';
     btn.style.background = '';
     btn.disabled = false;
   }, 1500);
@@ -487,8 +498,13 @@ async function verifyOTP() {
 
 async function resendOTP() {
   const email = document.getElementById('inp-email').value.trim();
-  await sb.auth.signInWithOtp({ email });
-  alert('OTP resent to ' + email);
+  await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  alert('Login link resent to ' + email);
+}
+
+function goBackToEmail() {
+  document.getElementById('card-email').style.display = 'block';
+  document.getElementById('card-otp').style.display = 'none';
 }
 
 async function logout() {
