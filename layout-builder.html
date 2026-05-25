@@ -165,6 +165,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="flbl">Paint:</div>
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block seat</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
+  <button class="ftool" onclick="openRenumManual()" style="color:#6366f1;border-color:rgba(99,102,241,0.3);">⟳ Renumber</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
 </div>
 
@@ -283,15 +284,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <!-- MODAL: Renumber seat -->
 <div class="overlay" id="modal-renum">
   <div class="modal">
-    <div class="mtitle">Set seat number</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
-      Type the seat number for this position.<br>
-      All seats <strong>before</strong> this will become empty.<br>
-      All seats <strong>after</strong> will auto-renumber in sequence.
+    <div class="mtitle">Renumber seats</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+      Set a new seat number at any position in a row.<br>
+      Seats <strong>before</strong> it become empty · Seats <strong>after</strong> renumber in sequence.
+    </div>
+    <div class="mr2">
+      <div>
+        <div class="ml">Row label</div>
+        <input class="mi" type="text" id="renum-row" placeholder="e.g. A" maxlength="3" style="text-transform:uppercase;font-weight:600;text-align:center;">
+      </div>
+      <div>
+        <div class="ml">At position (current seat no.)</div>
+        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 6" min="1" style="font-weight:600;text-align:center;">
+      </div>
     </div>
     <div class="mf">
-      <div class="ml">Start numbering from</div>
-      <input class="mi" type="number" id="renum-val" min="1" placeholder="e.g. 1" style="font-size:20px;font-weight:600;text-align:center;">
+      <div class="ml">Change to seat number</div>
+      <input class="mi" type="number" id="renum-val" placeholder="e.g. 1" min="1" style="font-size:20px;font-weight:600;text-align:center;">
+    </div>
+    <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:10px;">
+      Example: Row <strong>A</strong> · Position <strong>6</strong> → <strong>1</strong><br>
+      → Seats 1-5 become empty, seat 6 becomes 1, 7 becomes 2...
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-renum')">Cancel</button>
@@ -903,44 +917,78 @@ function doSave(){
 function openRenum(ri, ci) {
   renumRowIdx = ri;
   renumCellIdx = ci;
+  // Pre-fill row label and current seat number
+  const row = rows[ri];
+  if (row && row.type === 'row') {
+    document.getElementById('renum-row').value = row.label;
+    const cell = row.cells[ci];
+    if (cell && cell.sn) document.getElementById('renum-pos').value = cell.sn;
+  }
   document.getElementById('renum-val').value = '';
   showModal('modal-renum');
   setTimeout(() => document.getElementById('renum-val').focus(), 100);
 }
 
+// Also allow opening renumber dialog without right-click via toolbar button
+function openRenumManual() {
+  renumRowIdx = null;
+  renumCellIdx = null;
+  document.getElementById('renum-row').value = '';
+  document.getElementById('renum-pos').value = '';
+  document.getElementById('renum-val').value = '';
+  showModal('modal-renum');
+  setTimeout(() => document.getElementById('renum-row').focus(), 100);
+}
+
 function applyRenum() {
-  const startNum = parseInt(document.getElementById('renum-val').value);
-  if (isNaN(startNum) || startNum < 1) { alert('Enter a valid seat number.'); return; }
+  const rowLabel = document.getElementById('renum-row').value.trim().toUpperCase();
+  const atPos = parseInt(document.getElementById('renum-pos').value);
+  const newNum = parseInt(document.getElementById('renum-val').value);
 
-  const row = rows[renumRowIdx];
-  if (!row || row.type !== 'row') return;
+  if (!rowLabel) { alert('Enter a row label (e.g. A).'); return; }
+  if (isNaN(atPos) || atPos < 1) { alert('Enter the current seat position number.'); return; }
+  if (isNaN(newNum) || newNum < 1) { alert('Enter the new seat number.'); return; }
 
-  // Find all non-vgap cells with their indices
-  let seatCells = []; // {cellIdx, cell}
-  row.cells.forEach((cell, ci) => {
+  // Find the row
+  const rowData = rows.find(r => r.type === 'row' && r.label === rowLabel);
+  if (!rowData) { alert('Row ' + rowLabel + ' not found.'); return; }
+
+  // Get all non-vgap cells in order
+  let seatCells = [];
+  rowData.cells.forEach((cell, ci) => {
     if (cell.t !== 'vgap') seatCells.push({ cellIdx: ci, cell });
   });
 
-  // Find position of clicked cell in seatCells
-  const clickedPos = seatCells.findIndex(s => s.cellIdx === renumCellIdx);
-  if (clickedPos === -1) return;
+  // Find the cell at position atPos (by current sn or by index)
+  let targetIdx = seatCells.findIndex(s => s.cell.sn === atPos);
+  if (targetIdx === -1) {
+    // fallback: use position index (1-based)
+    targetIdx = atPos - 1;
+  }
+  if (targetIdx < 0 || targetIdx >= seatCells.length) {
+    alert('Position ' + atPos + ' not found in row ' + rowLabel); return;
+  }
 
-  // Erase all cells before clicked position
-  for (let i = 0; i < clickedPos; i++) {
+  // Erase all seats before target
+  for (let i = 0; i < targetIdx; i++) {
     seatCells[i].cell.t = 'empty';
     seatCells[i].cell.secId = null;
     seatCells[i].cell.sn = null;
   }
 
-  // Renumber from clicked position onwards (skip empty cells already erased)
-  let num = startNum;
-  for (let i = clickedPos; i < seatCells.length; i++) {
+  // Renumber from target onwards
+  let num = newNum;
+  for (let i = targetIdx; i < seatCells.length; i++) {
     const cell = seatCells[i].cell;
-    if (cell.t === 'empty') continue; // skip already empty
+    if (cell.t === 'empty') continue;
     cell.sn = num++;
   }
 
   closeModal('modal-renum');
+  // Clear fields
+  document.getElementById('renum-row').value = '';
+  document.getElementById('renum-pos').value = '';
+  document.getElementById('renum-val').value = '';
   render();
   renderSecs();
 }
