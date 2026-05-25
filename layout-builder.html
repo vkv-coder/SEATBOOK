@@ -189,7 +189,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <button class="ar-btn red" onclick="delLastRow()">− Row</button>
   </div>
   <div style="display:flex;gap:5px;width:100%;align-items:center;">
-    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-passage after:</span>
+    <span style="font-size:11px;color:#6366f1;font-weight:600;white-space:nowrap;">⎸ V-gap in row:</span>
+    <select class="ar-in" id="vgap-row" style="width:52px;"><option value="">Row</option></select>
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap;">after seat</span>
+    <input class="ar-in" type="number" id="vgap-seat" placeholder="#" min="1" style="width:44px;">
+    <select class="ar-in" id="vgap-size" style="width:70px;">
+      <option value="1">Narrow</option>
+      <option value="2" selected>Medium</option>
+      <option value="3">Wide</option>
+    </select>
+    <button class="ar-btn" style="background:#6366f1;" onclick="insertVGap()">＋</button>
+  </div>
+  <div style="display:flex;gap:5px;width:100%;align-items:center;">
+    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-gap after row:</span>
     <select class="ar-in" id="hgap-after" style="flex:1;">
       <option value="">— select row —</option>
     </select>
