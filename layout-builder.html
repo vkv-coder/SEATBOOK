@@ -443,20 +443,36 @@ function render(){
 
     rowData.cells.forEach((cell,ci)=>{
       if(cell.t==='vgap'){
-        const gap=document.createElement('div');
-        gap.className=`vgap w${cell.gapW}`;
-        gap.title='Click to delete this passage gap';
-        gap.style.cssText+='cursor:pointer;position:relative;';
-        // Show delete indicator on hover
-        gap.onmouseenter=function(){this.style.background='rgba(204,51,51,0.15)';};
-        gap.onmouseleave=function(){this.style.background='transparent';};
-        gap.onclick=function(e){
+        // Wrap vgap in a slightly wider clickable container for easier interaction
+        const gapWrap=document.createElement('div');
+        gapWrap.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:'+(cell.gapW===1?10:cell.gapW===2?16:24)+'px;height:22px;border-radius:2px;transition:background 0.15s;';
+        gapWrap.title='Click to delete this gap';
+        // Inner visual gap line
+        const gapLine=document.createElement('div');
+        gapLine.style.cssText='width:'+(cell.gapW===1?2:cell.gapW===2?4:6)+'px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;';
+        gapWrap.appendChild(gapLine);
+        gapWrap.onmouseenter=function(){
+          this.style.background='rgba(204,51,51,0.12)';
+          gapLine.style.background='rgba(204,51,51,0.5)';
+        };
+        gapWrap.onmouseleave=function(){
+          this.style.background='transparent';
+          gapLine.style.background='transparent';
+        };
+        gapWrap.onclick=function(e){
           e.stopPropagation();
           saveHistory();
           rowData.cells.splice(ci,1);
           render();renderSecs();
         };
-        rowDiv.appendChild(gap);
+        gapWrap.addEventListener('touchstart',function(e){
+          e.stopPropagation();
+          e.preventDefault();
+          saveHistory();
+          rowData.cells.splice(ci,1);
+          render();renderSecs();
+        },{passive:false});
+        rowDiv.appendChild(gapWrap);
         return;
       }
       const btn=document.createElement('button');
