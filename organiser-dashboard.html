@@ -437,7 +437,10 @@ async function sendOTP() {
   // Send OTP directly — check organiser status after login
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false }
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: 'https://khursilo.in/organiser-dashboard.html'
+    }
   });
   if (error) {
     btn.textContent = 'Send login link →';
