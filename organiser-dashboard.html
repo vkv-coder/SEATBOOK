@@ -391,10 +391,17 @@ function filterBookings(filter, btn) {
 }
 
 // ── Supabase Init ──
-const supabase = window.supabase.createClient(
-  'https://jqqnnkzozjskziaizajg.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
-);
+let supabase;
+try {
+  supabase = window.supabase.createClient(
+    'https://jqqnnkzozjskziaizajg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+  );
+  console.log('Supabase initialized OK');
+} catch(e) {
+  console.error('Supabase init failed:', e);
+  alert('System error: ' + e.message);
+}
 
 let currentOrganiser = null;
 
@@ -409,6 +416,11 @@ async function sendOTP() {
     errEl.style.display = 'block';
     return;
   }
+  if (!supabase) {
+    alert('System not ready. Please refresh the page.');
+    return;
+  }
+  console.log('Sending OTP to:', email);
   // Check if email exists in organisers table
   const { data: org, error: orgErr } = await supabase
     .from('organisers')
@@ -434,18 +446,28 @@ async function sendOTP() {
   btn.textContent = 'Sending...';
   btn.disabled = true;
   const { error } = await supabase.auth.signInWithOtp({ email });
-  btn.textContent = 'Send OTP →';
-  btn.disabled = false;
   if (error) {
+    btn.textContent = 'Send OTP →';
+    btn.disabled = false;
     errEl.textContent = 'Failed to send OTP: ' + error.message;
     errEl.style.display = 'block';
     return;
   }
+  // Visual feedback — button turns green
+  btn.textContent = '✓ OTP Sent!';
+  btn.style.background = '#2e9e60';
+  btn.disabled = true;
   currentOrganiser = org;
-  document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email;
-  document.getElementById('card-email').style.display = 'none';
-  document.getElementById('card-otp').style.display = 'block';
-  document.getElementById('inp-otp').focus();
+  // After 1.5s switch to OTP screen
+  setTimeout(() => {
+    document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email + ' — check inbox & spam';
+    document.getElementById('card-email').style.display = 'none';
+    document.getElementById('card-otp').style.display = 'block';
+    document.getElementById('inp-otp').focus();
+    btn.textContent = 'Send OTP →';
+    btn.style.background = '';
+    btn.disabled = false;
+  }, 1500);
 }
 
 async function verifyOTP() {
