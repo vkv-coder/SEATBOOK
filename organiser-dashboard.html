@@ -421,44 +421,27 @@ async function sendOTP() {
     return;
   }
   console.log('Sending OTP to:', email);
-  // Check if email exists in organisers table
-  const { data: org, error: orgErr } = await sb
-    .from('organisers')
-    .select('id, name, status, email_1')
-    .eq('email_1', email)
-    .single();
-  if (orgErr || !org) {
-    errEl.innerHTML = 'Email not registered. <br>Contact us to register: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (org.status === 'suspended') {
-    errEl.textContent = 'Your account is suspended. Contact Khursilo admin.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (org.status === 'pending') {
-    errEl.textContent = 'Your account is pending approval. Contact Khursilo admin.';
-    errEl.style.display = 'block';
-    return;
-  }
-  // Send OTP via Supabase
   btn.textContent = 'Sending...';
   btn.disabled = true;
-  const { error } = await sb.auth.signInWithOtp({ email });
+  // Send OTP directly — check organiser status after login
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false }
+  });
   if (error) {
     btn.textContent = 'Send OTP →';
     btn.disabled = false;
-    errEl.textContent = 'Failed to send OTP: ' + error.message;
+    if (error.message.includes('Signups not allowed')) {
+      errEl.innerHTML = 'Email not registered with Khursilo.<br>Contact us: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
+    } else {
+      errEl.textContent = 'Error: ' + error.message;
+    }
     errEl.style.display = 'block';
     return;
   }
-  // Visual feedback — button turns green
+  // Visual feedback
   btn.textContent = '✓ OTP Sent!';
   btn.style.background = '#2e9e60';
-  btn.disabled = true;
-  currentOrganiser = org;
-  // After 1.5s switch to OTP screen
   setTimeout(() => {
     document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email + ' — check inbox & spam';
     document.getElementById('card-email').style.display = 'none';
