@@ -66,7 +66,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;}
 
 /* CANVAS */
-.canvas-outer{flex:1;overflow:auto;padding:10px 6px 100px;-webkit-overflow-scrolling:touch;}
+.canvas-outer{flex:1;overflow:auto;padding:10px 6px 160px;-webkit-overflow-scrolling:touch;}
 .stage-wrap{text-align:center;margin-bottom:10px;}
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
@@ -103,10 +103,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .row-price{font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;flex-shrink:0;margin-left:3px;white-space:nowrap;}
 
 /* ADD ROW BAR */
-.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:20;flex-shrink:0;}
-.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;flex-shrink:0;pointer-events:all;}
+.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;pointer-events:all;position:relative;z-index:101;}
 .ar-in:focus{border-color:var(--accent);}
-.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;pointer-events:all;position:relative;z-index:101;}
 .ar-btn.red{background:var(--red);}
 .ar-btn.col{background:var(--blue);}
 
@@ -179,7 +179,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="grid-area" id="grid-area"></div>
 </div>
 
-<div class="add-row-bar" style="flex-direction:column;gap:6px;">
+<div class="add-row-bar">
   <div style="display:flex;gap:5px;width:100%;">
     <input class="ar-in" type="text" id="ar-lbl" placeholder="Row label" maxlength="4" style="width:65px;">
     <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:55px;" value="">
