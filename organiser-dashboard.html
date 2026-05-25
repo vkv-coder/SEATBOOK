@@ -461,24 +461,28 @@ async function loginWithSession(session) {
       .eq('email_1', email.toUpperCase())
       .single();
     console.log('Org2 (uppercase):', org2);
-    if (org2 && org2.status === 'active') {
-      currentOrganiser = org2;
-      const initials = org2.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      document.getElementById('user-avatar').textContent = initials;
-      history.replaceState(null, '', window.location.pathname);
-      showScreen('screen-dashboard');
-      renderBookings('all');
-      return;
+    if (org2) {
+      if (org2.status === 'active') {
+        currentOrganiser = org2;
+        const initials = org2.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        document.getElementById('user-avatar').textContent = initials;
+        history.replaceState(null, '', window.location.pathname);
+        showScreen('screen-dashboard');
+        renderBookings('all');
+        return;
+      } else {
+        await sb.auth.signOut();
+        const errEl = document.getElementById('email-err');
+        if (errEl) { errEl.textContent = 'Account ' + org2.status + '. Contact admin.'; errEl.style.display = 'block'; }
+        return;
+      }
     }
     await sb.auth.signOut();
     const errEl = document.getElementById('email-err');
-    if (errEl) {
-      errEl.textContent = 'Email not registered. Logged in as: ' + email;
-      errEl.style.display = 'block';
-    }
+    if (errEl) { errEl.textContent = 'Email not registered.'; errEl.style.display = 'block'; }
     return;
   }
-  if (org.status !== 'active') {
+  if (org.status.toLowerCase() !== 'active') {
     await sb.auth.signOut();
     const errEl = document.getElementById('email-err');
     if (errEl) {
