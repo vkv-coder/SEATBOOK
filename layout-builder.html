@@ -103,7 +103,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .row-price{font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;flex-shrink:0;margin-left:3px;white-space:nowrap;}
 
 /* ADD ROW BAR */
-.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;gap:5px;z-index:20;flex-shrink:0;}
+.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:20;flex-shrink:0;}
 .ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;}
 .ar-in:focus{border-color:var(--accent);}
 .ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;}
@@ -162,7 +162,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="flbl">Fine:</div>
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block</button>
   <button class="ftool vp" id="ft-vpass" onclick="setFine('vpass')">⎸ V-gap</button>
-  <button class="ftool hp" id="ft-hpass" onclick="setFine('hpass')">≡ H-gap</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
   <button class="ftool red" onclick="clearAll()">Clear</button>
 </div>
@@ -187,13 +186,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="grid-area" id="grid-area"></div>
 </div>
 
-<div class="add-row-bar">
-  <input class="ar-in" type="text" id="ar-lbl" placeholder="Row label" maxlength="4" style="width:70px;">
-  <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:58px;" value="">
-  <button class="ar-btn" onclick="addRow()">＋ Row</button>
-  <button class="ar-btn col" onclick="addColAll()">＋ Col</button>
-  <button class="ar-btn col" onclick="delColAll()">− Col</button>
-  <button class="ar-btn red" onclick="delLastRow()">− Row</button>
+<div class="add-row-bar" style="flex-direction:column;gap:6px;">
+  <div style="display:flex;gap:5px;width:100%;">
+    <input class="ar-in" type="text" id="ar-lbl" placeholder="Row label" maxlength="4" style="width:65px;">
+    <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:55px;" value="">
+    <button class="ar-btn" onclick="addRow()">＋ Row</button>
+    <button class="ar-btn col" onclick="addColAll()">＋ Col</button>
+    <button class="ar-btn col" onclick="delColAll()">− Col</button>
+    <button class="ar-btn red" onclick="delLastRow()">− Row</button>
+  </div>
+  <div style="display:flex;gap:5px;width:100%;align-items:center;">
+    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-passage after:</span>
+    <select class="ar-in" id="hgap-after" style="flex:1;">
+      <option value="">— select row —</option>
+    </select>
+    <select class="ar-in" id="hgap-size" style="width:80px;">
+      <option value="1">Narrow</option>
+      <option value="2" selected>Medium</option>
+      <option value="3">Wide</option>
+    </select>
+    <button class="ar-btn col" onclick="insertHGap()">＋ Gap</button>
+  </div>
 </div>
 
 <!-- MODAL: Section -->
@@ -327,7 +340,7 @@ function setFine(t){
   fineTool=fineTool===t?null:t;
   document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
   if(fineTool){document.getElementById('ft-'+t).classList.add('active');}
-  document.getElementById('gap-size-row').style.display=(fineTool==='vpass'||fineTool==='hpass')?'flex':'none';
+  document.getElementById('gap-size-row').style.display=(fineTool==='vpass')?'flex':'none';
   renderSecs();
 }
 
@@ -346,10 +359,7 @@ function paintCell(ri,ci){
 
   if(fineTool==='erase'){cell.t='seat';cell.secId=null;}
   else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;}
-  else if(fineTool==='vpass'){
-    // Insert vertical gap to LEFT of this cell
-    row.cells.splice(ci,0,{t:'vgap',gapW:gapSize});
-  }
+  // vpass handled by bottom bar insertVGap()
   else if(activeSecId){cell.t='seat';cell.secId=activeSecId;}
   render();renderSecs();
 }
@@ -440,15 +450,7 @@ function render(){
       rowDiv.appendChild(btn);
     });
 
-    // H-pass insert button — data-ri attribute avoids closure bug
-    const isHpass=fineTool==='hpass';
-    const hpBtn=document.createElement('button');
-    hpBtn.setAttribute('data-ri', ri);
-    hpBtn.style.cssText='width:18px;height:14px;border-radius:3px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-left:4px;background:'+(isHpass?'#0891b2':'#ddd')+';color:'+(isHpass?'#fff':'#aaa')+';';
-    hpBtn.textContent='≡';
-    hpBtn.title='Insert horizontal passage below row '+rowData.label;
-    hpBtn.className='hpass-insert-btn';
-    rowDiv.appendChild(hpBtn);
+
 
     // Price tags on right
     const prices=Object.values(rowSecPrices);
@@ -472,18 +474,10 @@ function render(){
   });
 
   document.addEventListener('mouseup',()=>painting=false);
-  // H-gap button global handler — uses data-ri to avoid closure issues
-  document.querySelectorAll('.hpass-insert-btn').forEach(btn=>{
-    btn.onclick=function(e){
-      e.stopPropagation();
-      if(fineTool!=='hpass'){alert('Select the ≡ H-gap tool first (in toolbar), then click the ≡ button on a row.');return;}
-      const idx=parseInt(this.getAttribute('data-ri'));
-      rows.splice(idx+1,0,{type:'hpass',height:gapSize});
-      render();renderSecs();
-    };
-  });
+
   document.getElementById('st-total').textContent=total;
   document.getElementById('st-rows').textContent=rows.filter(r=>r.type==='row').length;
+  updateHGapSelect();
 }
 
 // ── Sections ──
@@ -556,7 +550,7 @@ function renderSecs(){
   const active=sections.find(s=>s.id===activeSecId);
   if(fineTool){
     atl.style.display='block';
-    atn.textContent={blocked:'Blocking seat',vpass:'V-passage (click seat to insert gap left)',hpass:'H-passage (click row end to insert)',erase:'Erasing'}[fineTool]||fineTool;
+    atn.textContent={blocked:'Blocking seat',vpass:'V-passage — click any seat to insert gap to its left',erase:'Erasing seat'}[fineTool]||fineTool;
   } else if(active){
     atl.style.display='block';
     atn.textContent=`${active.name} (${active.mode==='free'?'Free':'₹'+active.price})`;
@@ -608,6 +602,68 @@ function addColAll(){
     r.cells.push({t:'seat',secId:sec?sec.id:null});
   });
   render();renderSecs();
+}
+
+function updateHGapSelect(){
+  // Update H-gap row dropdown
+  const hsel=document.getElementById('hgap-after');
+  if(hsel){
+    const prev=hsel.value;
+    hsel.innerHTML='<option value="">— row —</option>';
+    rows.forEach((r,i)=>{
+      if(r.type!=='row')return;
+      const opt=document.createElement('option');
+      opt.value=i;
+      opt.textContent='After '+r.label;
+      if(String(i)===prev)opt.selected=true;
+      hsel.appendChild(opt);
+    });
+  }
+  // Update V-gap row dropdown
+  const vsel=document.getElementById('vgap-row');
+  if(vsel){
+    const prev=vsel.value;
+    vsel.innerHTML='<option value="">Row</option>';
+    rows.filter(r=>r.type==='row').forEach(r=>{
+      const opt=document.createElement('option');
+      opt.value=r.label;
+      opt.textContent=r.label;
+      if(r.label===prev)opt.selected=true;
+      vsel.appendChild(opt);
+    });
+  }
+}
+
+function insertVGap(){
+  const rowLabel=document.getElementById('vgap-row').value;
+  const afterSeat=parseInt(document.getElementById('vgap-seat').value);
+  const sz=parseInt(document.getElementById('vgap-size').value)||2;
+  if(!rowLabel){alert('Select which row to insert V-gap in.');return;}
+  if(isNaN(afterSeat)||afterSeat<1){alert('Enter seat number after which to insert gap.');return;}
+  // Find the row
+  const rowIdx=rows.findIndex(r=>r.type==='row'&&r.label===rowLabel);
+  if(rowIdx===-1){alert('Row not found.');return;}
+  const row=rows[rowIdx];
+  // Count to the Nth seat (skip vgaps)
+  let seatCount=0;
+  let insertAt=-1;
+  for(let i=0;i<row.cells.length;i++){
+    if(row.cells[i].t!=='vgap') seatCount++;
+    if(seatCount===afterSeat){insertAt=i+1;break;}
+  }
+  if(insertAt===-1){alert('Seat number '+afterSeat+' not found in row '+rowLabel);return;}
+  row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});
+  render();renderSecs();
+}
+
+function insertHGap(){
+  const sel=document.getElementById('hgap-after');
+  const sz=parseInt(document.getElementById('hgap-size').value)||2;
+  const ri=parseInt(sel.value);
+  if(isNaN(ri)){alert('Select which row to insert passage after.');return;}
+  rows.splice(ri+1,0,{type:'hpass',height:sz});
+  render();renderSecs();
+  updateHGapSelect();
 }
 
 function delColAll(){
