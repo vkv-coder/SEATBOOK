@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>SeatBook — Organiser Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #f5f5f3;
@@ -163,22 +164,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   <div class="login-wrap">
     <div class="login-logo">SeatBook</div>
     <div class="login-sub">Organiser portal</div>
-    <div class="login-card" id="card-phone">
+    <div class="login-card" id="card-email">
       <div class="login-title">Welcome back</div>
-      <div class="login-desc">Enter your registered mobile number</div>
-      <input class="input-field" type="tel" placeholder="+91 98765 43210" id="inp-mobile" maxlength="13">
-      <button class="btn-primary" onclick="sendOTP()">Send OTP →</button>
+      <div class="login-desc">Enter your registered email address</div>
+      <input class="input-field" type="email" placeholder="your@email.com" id="inp-email">
+      <div class="err-msg" id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
+      <button class="btn-primary" onclick="sendOTP()" id="send-otp-btn">Send OTP →</button>
     </div>
     <div class="login-card" id="card-otp" style="display:none;">
       <div class="login-title">Enter OTP</div>
-      <div class="login-desc" id="otp-sent-to">Sent to your number</div>
-      <div class="otp-row">
-        <input class="otp-input" maxlength="1" type="tel" oninput="otpNext(this,1)">
-        <input class="otp-input" maxlength="1" type="tel" oninput="otpNext(this,2)">
-        <input class="otp-input" maxlength="1" type="tel" oninput="otpNext(this,3)">
-        <input class="otp-input" maxlength="1" type="tel" oninput="otpNext(this,4)">
-      </div>
-      <button class="btn-primary" onclick="verifyOTP()">Verify & Login →</button>
+      <div class="login-desc" id="otp-sent-to">OTP sent to your email</div>
+      <input class="input-field" type="number" placeholder="6-digit OTP" id="inp-otp" maxlength="6" style="font-size:20px;font-weight:600;letter-spacing:4px;text-align:center;">
+      <div class="err-msg" id="otp-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
+      <button class="btn-primary" onclick="verifyOTP()" id="verify-btn">Verify & Login →</button>
       <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);">Didn't get OTP? <span style="color:var(--accent);cursor:pointer;" onclick="resendOTP()">Resend</span></div>
     </div>
   </div>
@@ -380,42 +378,110 @@ function filterBookings(filter, btn) {
   renderBookings(filter);
 }
 
+// ── Supabase Init ──
+const supabase = window.supabase.createClient(
+  'https://jqqnnkzozjskziaizajg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+);
+
+let currentOrganiser = null;
+
 // ── Login ──
-function sendOTP() {
-  const mob = document.getElementById('inp-mobile').value.trim();
-  if (mob.length < 10) { alert('Enter a valid mobile number'); return; }
-  document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + mob;
-  document.getElementById('card-phone').style.display = 'none';
-  document.getElementById('card-otp').style.display = 'block';
-  document.querySelector('.otp-input').focus();
-}
-
-function otpNext(el, idx) {
-  if (el.value.length === 1 && idx < 4) {
-    document.querySelectorAll('.otp-input')[idx].focus();
+async function sendOTP() {
+  const email = document.getElementById('inp-email').value.trim();
+  const errEl = document.getElementById('email-err');
+  const btn = document.getElementById('send-otp-btn');
+  errEl.style.display = 'none';
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
   }
+  // Check if email exists in organisers table
+  const { data: org, error: orgErr } = await supabase
+    .from('organisers')
+    .select('id, name, status, email_1')
+    .eq('email_1', email)
+    .single();
+  if (orgErr || !org) {
+    errEl.textContent = 'Email not registered. Contact Khursilo admin to register.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (org.status === 'suspended') {
+    errEl.textContent = 'Your account is suspended. Contact Khursilo admin.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (org.status === 'pending') {
+    errEl.textContent = 'Your account is pending approval. Contact Khursilo admin.';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Send OTP via Supabase
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  const { error } = await supabase.auth.signInWithOtp({ email });
+  btn.textContent = 'Send OTP →';
+  btn.disabled = false;
+  if (error) {
+    errEl.textContent = 'Failed to send OTP: ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  currentOrganiser = org;
+  document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email;
+  document.getElementById('card-email').style.display = 'none';
+  document.getElementById('card-otp').style.display = 'block';
+  document.getElementById('inp-otp').focus();
 }
 
-function verifyOTP() {
-  const otp = [...document.querySelectorAll('.otp-input')].map(i=>i.value).join('');
-  if (otp.length < 4) { alert('Enter the 4-digit OTP'); return; }
-  document.getElementById('user-avatar').textContent = 'VD';
+async function verifyOTP() {
+  const otp = document.getElementById('inp-otp').value.trim();
+  const errEl = document.getElementById('otp-err');
+  const btn = document.getElementById('verify-btn');
+  errEl.style.display = 'none';
+  if (otp.length < 6) {
+    errEl.textContent = 'Enter the 6-digit OTP from your email.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.textContent = 'Verifying...';
+  btn.disabled = true;
+  const email = document.getElementById('inp-email').value.trim();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token: otp,
+    type: 'email'
+  });
+  btn.textContent = 'Verify & Login →';
+  btn.disabled = false;
+  if (error) {
+    errEl.textContent = 'Invalid OTP. Please try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  // Login success
+  const initials = currentOrganiser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
   showScreen('screen-dashboard');
   renderBookings('all');
 }
 
-function resendOTP() {
-  document.querySelectorAll('.otp-input').forEach(i => i.value = '');
-  document.querySelector('.otp-input').focus();
-  alert('OTP resent!');
+async function resendOTP() {
+  const email = document.getElementById('inp-email').value.trim();
+  await supabase.auth.signInWithOtp({ email });
+  alert('OTP resent to ' + email);
 }
 
-function logout() {
+async function logout() {
+  await supabase.auth.signOut();
+  currentOrganiser = null;
   showScreen('screen-login');
-  document.getElementById('card-phone').style.display = 'block';
+  document.getElementById('card-email').style.display = 'block';
   document.getElementById('card-otp').style.display = 'none';
-  document.getElementById('inp-mobile').value = '';
-  document.querySelectorAll('.otp-input').forEach(i => i.value = '');
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-otp').value = '';
 }
 
 // ── Gate check-in ──
