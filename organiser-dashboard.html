@@ -445,17 +445,44 @@ window.addEventListener('load', async () => {
 
 async function loginWithSession(session) {
   const email = session.user.email;
+  console.log('Session email:', email);
   // Fetch organiser details
-  const { data: org } = await sb
+  const { data: org, error: orgErr } = await sb
     .from('organisers')
     .select('id, name, status, email_1')
     .ilike('email_1', email)
     .single();
-  if (!org || org.status !== 'active') {
+  console.log('Org data:', org, 'Error:', orgErr);
+  if (orgErr || !org) {
+    // Try direct match as fallback
+    const { data: org2 } = await sb
+      .from('organisers')
+      .select('id, name, status, email_1')
+      .eq('email_1', email.toUpperCase())
+      .single();
+    console.log('Org2 (uppercase):', org2);
+    if (org2 && org2.status === 'active') {
+      currentOrganiser = org2;
+      const initials = org2.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('user-avatar').textContent = initials;
+      history.replaceState(null, '', window.location.pathname);
+      showScreen('screen-dashboard');
+      renderBookings('all');
+      return;
+    }
     await sb.auth.signOut();
     const errEl = document.getElementById('email-err');
     if (errEl) {
-      errEl.textContent = org ? 'Account ' + org.status + '. Contact admin.' : 'Email not registered.';
+      errEl.textContent = 'Email not registered. Logged in as: ' + email;
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  if (org.status !== 'active') {
+    await sb.auth.signOut();
+    const errEl = document.getElementById('email-err');
+    if (errEl) {
+      errEl.textContent = 'Account ' + org.status + '. Contact admin.';
       errEl.style.display = 'block';
     }
     return;
@@ -463,7 +490,6 @@ async function loginWithSession(session) {
   currentOrganiser = org;
   const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = initials;
-  // Clear hash from URL
   history.replaceState(null, '', window.location.pathname);
   showScreen('screen-dashboard');
   renderBookings('all');
