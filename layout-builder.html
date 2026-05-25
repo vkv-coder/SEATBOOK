@@ -163,6 +163,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block seat</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
+  <button class="ftool" onclick="undoLast()" style="margin-left:auto;color:#555;border-color:#bbb;">↩ Undo</button>
 </div>
 
 <div class="stats-bar">
@@ -280,6 +281,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <script>
 const COLORS=['#c8860a','#2b6fd4','#2e9e60','#cc3333','#7c3aed','#0891b2','#d97706','#be185d','#065f46','#1e40af'];
 let sections=[], rows=[], fineTool=null, activeSecId=null, pickedColor=COLORS[0], painting=false, hallName='', gapSize=1;
+let history=[];
+function saveHistory(){history.push(JSON.stringify({rows,sections}));if(history.length>30)history.shift();}
+function undoLast(){if(!history.length){alert('Nothing to undo.');return;}const prev=JSON.parse(history.pop());rows=prev.rows;sections=prev.sections;activeSecId=sections[0]?.id||null;render();renderSecs();}
 
 // Each row item is either:
 // {type:'row', label, cells:[{t:'seat'|'blocked'|'vgap', secId, gapW}]}
@@ -369,6 +373,7 @@ function paintCell(ri,ci){
   if(row.type!=='row')return;
   const cell=row.cells[ci];
   if(!cell)return;
+  if(!painting) saveHistory(); // save once per drag
 
   if(fineTool==='erase'){cell.t='seat';cell.secId=null;}
   else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;}
@@ -397,9 +402,16 @@ function render(){
       hrow.className='hpass-row';
       const hlbl=document.createElement('div');
       hlbl.className='hpass-row-lbl';
-      hlbl.textContent='≡';
-      hlbl.title='Click to delete this passage';
-      hlbl.onclick=()=>{if(confirm('Delete this passage?')){rows.splice(ri,1);render();renderSecs();}};
+      hlbl.textContent='✕';
+      hlbl.title='Click to delete this horizontal passage';
+      hlbl.style.cursor='pointer';
+      hlbl.style.color='#cc3333';
+      const capturedRiH=ri;
+      hlbl.onclick=function(){
+        saveHistory();
+        rows.splice(capturedRiH,1);
+        render();renderSecs();
+      };
       hrow.appendChild(hlbl);
       // Fill with passage cells matching approx width
       for(let i=0;i<40;i++){
@@ -434,8 +446,17 @@ function render(){
       if(cell.t==='vgap'){
         const gap=document.createElement('div');
         gap.className=`vgap w${cell.gapW}`;
-        gap.title='Click to remove gap';
-        gap.onclick=()=>{rowData.cells.splice(ci,1);render();renderSecs();};
+        gap.title='Click to delete this passage gap';
+        gap.style.cssText+='cursor:pointer;position:relative;';
+        // Show delete indicator on hover
+        gap.onmouseenter=function(){this.style.background='rgba(204,51,51,0.15)';};
+        gap.onmouseleave=function(){this.style.background='transparent';};
+        gap.onclick=function(e){
+          e.stopPropagation();
+          saveHistory();
+          rowData.cells.splice(ci,1);
+          render();renderSecs();
+        };
         rowDiv.appendChild(gap);
         return;
       }
@@ -592,6 +613,7 @@ function delSec(id,e){
 
 // ── Row management ──
 function addRow(){
+  saveHistory();
   const lbl=(document.getElementById('ar-lbl').value.trim().toUpperCase())||nextLabel();
   const cnt=parseInt(document.getElementById('ar-seats').value)||35;
   const cells=[];
@@ -609,6 +631,7 @@ function addRow(){
 }
 
 function addColAll(){
+  saveHistory();
   const sec=sections.find(s=>s.id===activeSecId);
   rows.forEach(r=>{
     if(r.type!=='row')return;
@@ -649,6 +672,7 @@ function updateHGapSelect(){
   }
 
 function insertVGap(){
+  saveHistory();
   const fromRow=document.getElementById('vgap-from-row').value;
   const toRow=document.getElementById('vgap-to-row').value||fromRow;
   const position=document.getElementById('vgap-position').value; // 'before' or 'after'
@@ -686,7 +710,9 @@ function insertVGap(){
   render();renderSecs();
 }
 
+
 function insertHGap(){
+  saveHistory();
   const fromLabel=document.getElementById('hgap-from').value;
   const toLabel=document.getElementById('hgap-to').value;
   const sz=parseInt(document.getElementById('hgap-size').value)||2;
@@ -708,6 +734,7 @@ function insertHGap(){
 }
 
 function delColAll(){
+  saveHistory();
   rows.forEach(r=>{
     if(r.type!=='row')return;
     // Remove last non-vgap cell
@@ -719,6 +746,7 @@ function delColAll(){
 }
 
 function delLastRow(){
+  saveHistory();
   if(!rows.length)return;
   const last=rows[rows.length-1];
   if(!confirm('Delete last '+(last.type==='hpass'?'passage':'row '+last.label)+'?'))return;
@@ -737,6 +765,7 @@ function nextLabel(){
 }
 
 function clearAll(){
+  saveHistory();
   if(confirm('Clear all seats?')){
     rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat')c.secId=null;});});
     render();renderSecs();
