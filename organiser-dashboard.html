@@ -150,6 +150,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .gate-result-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .gate-result-detail { font-size: 13px; opacity: 0.7; }
 
+/* ── PROFILE SCREEN ── */
+.profile-screen{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.profile-hero{background:linear-gradient(135deg,#1a1a1a 0%,#333 100%);border-radius:var(--radius);padding:20px;color:#fff;text-align:center;}
+.profile-hero-icon{font-size:48px;margin-bottom:8px;}
+.profile-hero-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px;}
+.profile-hero-sub{font-size:13px;opacity:0.7;}
+.profile-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;}
+.profile-card-title{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.profile-save-btn{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px;}
+.profile-save-btn:active{opacity:0.85;}
+
 /* ── FILTER TABS ── */
 .filter-tabs { display: flex; gap: 6px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
 .filter-tabs::-webkit-scrollbar { display: none; }
@@ -202,6 +213,55 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted);">Didn't receive? <span style="color:var(--accent);cursor:pointer;" onclick="resendOTP()">Resend email</span></div>
       <div style="text-align:center;margin-top:6px;font-size:12px;color:var(--muted);"><span style="color:var(--accent);cursor:pointer;" onclick="goBackToEmail()">← Use different email</span></div>
     </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: PROFILE ══ -->
+<div class="screen" id="screen-profile">
+  <div class="topbar">
+    <div class="topbar-logo">Khursilo</div>
+    <div style="font-size:12px;color:var(--muted);">Complete your profile</div>
+  </div>
+  <div class="profile-screen">
+    <div class="profile-hero">
+      <div class="profile-hero-icon">👋</div>
+      <div class="profile-hero-title">Welcome to Khursilo!</div>
+      <div class="profile-hero-sub">Please complete your profile to continue</div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-card-title">👤 Organisation details</div>
+      <div class="field-group">
+        <div class="field-label">Organisation / Group name *</div>
+        <input class="input-field" type="text" id="prof-org-name" placeholder="e.g. Vadodara Drama Circle">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Contact person name *</div>
+        <input class="input-field" type="text" id="prof-contact-name" placeholder="Your full name">
+      </div>
+      <div class="field-group" style="margin:0;">
+        <div class="field-label">Mobile number *</div>
+        <input class="input-field" type="tel" id="prof-mobile" placeholder="98765 43210" maxlength="10">
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <div class="profile-card-title">🔑 Razorpay account <span style="font-size:11px;color:var(--muted);font-weight:400;">(for paid events)</span></div>
+      <div style="background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#1a4a8a;margin-bottom:12px;line-height:1.5;">
+        ℹ️ Ticket payments go directly to your Razorpay account. You can add these later if running free events only.
+      </div>
+      <div class="field-group">
+        <div class="field-label">Razorpay Key ID</div>
+        <input class="input-field" type="text" id="prof-rzp-key" placeholder="rzp_live_XXXXXXXXXXXX" style="font-family:monospace;font-size:13px;">
+      </div>
+      <div class="field-group" style="margin:0;">
+        <div class="field-label">Razorpay Key Secret</div>
+        <input class="input-field" type="password" id="prof-rzp-secret" placeholder="••••••••••••••••" style="font-family:monospace;font-size:13px;">
+      </div>
+    </div>
+
+    <button class="profile-save-btn" onclick="saveProfile()">Save & go to dashboard →</button>
+    <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px;">You can update these details anytime from your dashboard</div>
   </div>
 </div>
 
@@ -467,8 +527,13 @@ async function loginWithSession(session) {
         const initials = org2.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
         document.getElementById('user-avatar').textContent = initials;
         history.replaceState(null, '', window.location.pathname);
-        showScreen('screen-dashboard');
-        renderBookings('all');
+        // Check if profile complete
+        if(!org2.contact_1_mobile) {
+          showScreen('screen-profile');
+        } else {
+          showScreen('screen-dashboard');
+          renderBookings('all');
+        }
         return;
       } else {
         await sb.auth.signOut();
@@ -495,8 +560,13 @@ async function loginWithSession(session) {
   const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = initials;
   history.replaceState(null, '', window.location.pathname);
-  showScreen('screen-dashboard');
-  renderBookings('all');
+  // Check if profile complete
+  if(!org.contact_1_mobile) {
+    showScreen('screen-profile');
+  } else {
+    showScreen('screen-dashboard');
+    renderBookings('all');
+  }
 }
 
 // ── Login ──
@@ -522,7 +592,7 @@ async function sendOTP() {
     email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: 'https://khursilo.in/organiser-dashboard.html'
+      emailRedirectTo: 'https://khursilo.in'
     }
   });
   if (error) {
