@@ -449,7 +449,7 @@ async function loginWithSession(session) {
   const { data: org } = await sb
     .from('organisers')
     .select('id, name, status, email_1')
-    .eq('email_1', email)
+    .ilike('email_1', email)
     .single();
   if (!org || org.status !== 'active') {
     await sb.auth.signOut();
