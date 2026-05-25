@@ -189,28 +189,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <button class="ar-btn red" onclick="delLastRow()">− Row</button>
   </div>
   <div style="display:flex;gap:5px;width:100%;align-items:center;">
-    <span style="font-size:11px;color:#6366f1;font-weight:600;white-space:nowrap;">⎸ V-gap in row:</span>
-    <select class="ar-in" id="vgap-row" style="width:52px;"><option value="">Row</option></select>
-    <span style="font-size:11px;color:var(--muted);white-space:nowrap;">after seat</span>
-    <input class="ar-in" type="number" id="vgap-seat" placeholder="#" min="1" style="width:44px;">
-    <select class="ar-in" id="vgap-size" style="width:70px;">
+    <span style="font-size:11px;color:#6366f1;font-weight:600;white-space:nowrap;">⎸ V-gap:</span>
+    <span style="font-size:10px;color:var(--muted);">row</span>
+    <select class="ar-in" id="vgap-from-row" style="width:40px;"><option value="">from</option></select>
+    <span style="font-size:10px;color:var(--muted);">to</span>
+    <select class="ar-in" id="vgap-to-row" style="width:40px;"><option value="">to</option></select>
+    <select class="ar-in" id="vgap-position" style="width:56px;">
+      <option value="before">Before</option>
+      <option value="after">After</option>
+    </select>
+    <span style="font-size:10px;color:var(--muted);">seat</span>
+    <input class="ar-in" type="number" id="vgap-seat-no" placeholder="#" min="1" style="width:40px;">
+    <select class="ar-in" id="vgap-size" style="width:62px;">
       <option value="1">Narrow</option>
       <option value="2" selected>Medium</option>
       <option value="3">Wide</option>
     </select>
-    <button class="ar-btn" style="background:#6366f1;" onclick="insertVGap()">＋</button>
+    <button class="ar-btn" style="background:#6366f1;padding:7px 8px;" onclick="insertVGap()">＋</button>
   </div>
   <div style="display:flex;gap:5px;width:100%;align-items:center;">
-    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-gap after row:</span>
-    <select class="ar-in" id="hgap-after" style="flex:1;">
-      <option value="">— select row —</option>
-    </select>
-    <select class="ar-in" id="hgap-size" style="width:80px;">
+    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-gap:</span>
+    <span style="font-size:10px;color:var(--muted);white-space:nowrap;">row</span>
+    <select class="ar-in" id="hgap-from" style="width:44px;"><option value="">from</option></select>
+    <span style="font-size:10px;color:var(--muted);">to</span>
+    <select class="ar-in" id="hgap-to" style="width:44px;"><option value="">to</option></select>
+    <select class="ar-in" id="hgap-size" style="width:68px;">
       <option value="1">Narrow</option>
       <option value="2" selected>Medium</option>
       <option value="3">Wide</option>
     </select>
-    <button class="ar-btn col" onclick="insertHGap()">＋ Gap</button>
+    <button class="ar-btn col" onclick="insertHGap()">＋</button>
   </div>
 </div>
 
@@ -610,63 +618,91 @@ function addColAll(){
 }
 
 function updateHGapSelect(){
-  // Update H-gap row dropdown
-  const hsel=document.getElementById('hgap-after');
-  if(hsel){
-    const prev=hsel.value;
-    hsel.innerHTML='<option value="">— row —</option>';
-    rows.forEach((r,i)=>{
-      if(r.type!=='row')return;
-      const opt=document.createElement('option');
-      opt.value=i;
-      opt.textContent='After '+r.label;
-      if(String(i)===prev)opt.selected=true;
-      hsel.appendChild(opt);
-    });
-  }
-  // Update V-gap row dropdown
-  const vsel=document.getElementById('vgap-row');
-  if(vsel){
-    const prev=vsel.value;
-    vsel.innerHTML='<option value="">Row</option>';
+  // Update H-gap from/to dropdowns
+  ['hgap-from','hgap-to'].forEach((id,idx)=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
     rows.filter(r=>r.type==='row').forEach(r=>{
       const opt=document.createElement('option');
       opt.value=r.label;
       opt.textContent=r.label;
       if(r.label===prev)opt.selected=true;
-      vsel.appendChild(opt);
+      sel.appendChild(opt);
     });
+  });
+  // Update V-gap row dropdowns
+  ['vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
+    rows.filter(r=>r.type==='row').forEach(r=>{
+      const opt=document.createElement('option');
+      opt.value=r.label;
+      opt.textContent=r.label;
+      if(r.label===prev)opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
   }
-}
 
 function insertVGap(){
-  const rowLabel=document.getElementById('vgap-row').value;
-  const afterSeat=parseInt(document.getElementById('vgap-seat').value);
+  const fromRow=document.getElementById('vgap-from-row').value;
+  const toRow=document.getElementById('vgap-to-row').value||fromRow;
+  const position=document.getElementById('vgap-position').value; // 'before' or 'after'
+  const seatNo=parseInt(document.getElementById('vgap-seat-no').value);
   const sz=parseInt(document.getElementById('vgap-size').value)||2;
-  if(!rowLabel){alert('Select which row to insert V-gap in.');return;}
-  if(isNaN(afterSeat)||afterSeat<1){alert('Enter seat number after which to insert gap.');return;}
-  // Find the row
-  const rowIdx=rows.findIndex(r=>r.type==='row'&&r.label===rowLabel);
-  if(rowIdx===-1){alert('Row not found.');return;}
-  const row=rows[rowIdx];
-  // Count to the Nth seat (skip vgaps)
-  let seatCount=0;
-  let insertAt=-1;
-  for(let i=0;i<row.cells.length;i++){
-    if(row.cells[i].t!=='vgap') seatCount++;
-    if(seatCount===afterSeat){insertAt=i+1;break;}
-  }
-  if(insertAt===-1){alert('Seat number '+afterSeat+' not found in row '+rowLabel);return;}
-  row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});
+  if(!fromRow){alert('Select from row.');return;}
+  if(isNaN(seatNo)||seatNo<1){alert('Enter seat number.');return;}
+  let count=0;
+  rows.forEach(row=>{
+    if(row.type!=='row')return;
+    if(row.label<fromRow||row.label>toRow)return;
+    // Count seats skipping vgaps to find target position
+    let seatCount=0, insertAt=-1;
+    for(let i=0;i<row.cells.length;i++){
+      if(row.cells[i].t!=='vgap') seatCount++;
+      if(position==='before'&&seatCount===seatNo){
+        // Insert BEFORE this seat = at index i (before current cell)
+        insertAt=i;
+        break;
+      }
+      if(position==='after'&&seatCount===seatNo){
+        // Insert AFTER this seat = at index i+1
+        insertAt=i+1;
+        break;
+      }
+    }
+    // Special case: before seat 1 = insert at position 0
+    if(position==='before'&&seatNo===1) insertAt=0;
+    if(insertAt!==-1){
+      row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});
+      count++;
+    }
+  });
+  if(count===0){alert('No matching seats found in selected rows.');return;}
   render();renderSecs();
 }
 
 function insertHGap(){
-  const sel=document.getElementById('hgap-after');
+  const fromLabel=document.getElementById('hgap-from').value;
+  const toLabel=document.getElementById('hgap-to').value;
   const sz=parseInt(document.getElementById('hgap-size').value)||2;
-  const ri=parseInt(sel.value);
-  if(isNaN(ri)){alert('Select which row to insert passage after.');return;}
-  rows.splice(ri+1,0,{type:'hpass',height:sz});
+  if(!fromLabel){alert('Select from row.');return;}
+  const endLabel=toLabel||fromLabel;
+  // Find row indices for range — go bottom to top to preserve indices
+  const rowIndices=[];
+  rows.forEach((r,i)=>{
+    if(r.type!=='row')return;
+    if(r.label>=fromLabel&&r.label<=endLabel) rowIndices.push(i);
+  });
+  if(!rowIndices.length){alert('No rows found in range.');return;}
+  // Insert from bottom to top so indices stay valid
+  rowIndices.reverse().forEach(ri=>{
+    rows.splice(ri+1,0,{type:'hpass',height:sz});
+  });
   render();renderSecs();
   updateHGapSelect();
 }
