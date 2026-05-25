@@ -391,13 +391,13 @@ function filterBookings(filter, btn) {
 }
 
 // ── Supabase Init ──
-let supabase;
+let sb;
 try {
-  supabase = window.supabase.createClient(
+  sb = window.supabase.createClient(
     'https://jqqnnkzozjskziaizajg.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
   );
-  console.log('Supabase initialized OK');
+  console.log('Supabase initialized OK'); supabase=sb;
 } catch(e) {
   console.error('Supabase init failed:', e);
   alert('System error: ' + e.message);
@@ -416,13 +416,13 @@ async function sendOTP() {
     errEl.style.display = 'block';
     return;
   }
-  if (!supabase) {
+  if (!sb) {
     alert('System not ready. Please refresh the page.');
     return;
   }
   console.log('Sending OTP to:', email);
   // Check if email exists in organisers table
-  const { data: org, error: orgErr } = await supabase
+  const { data: org, error: orgErr } = await sb
     .from('organisers')
     .select('id, name, status, email_1')
     .eq('email_1', email)
@@ -445,7 +445,7 @@ async function sendOTP() {
   // Send OTP via Supabase
   btn.textContent = 'Sending...';
   btn.disabled = true;
-  const { error } = await supabase.auth.signInWithOtp({ email });
+  const { error } = await sb.auth.signInWithOtp({ email });
   if (error) {
     btn.textContent = 'Send OTP →';
     btn.disabled = false;
@@ -483,7 +483,7 @@ async function verifyOTP() {
   btn.textContent = 'Verifying...';
   btn.disabled = true;
   const email = document.getElementById('inp-email').value.trim();
-  const { data, error } = await supabase.auth.verifyOtp({
+  const { data, error } = await sb.auth.verifyOtp({
     email,
     token: otp,
     type: 'email'
@@ -504,12 +504,12 @@ async function verifyOTP() {
 
 async function resendOTP() {
   const email = document.getElementById('inp-email').value.trim();
-  await supabase.auth.signInWithOtp({ email });
+  await sb.auth.signInWithOtp({ email });
   alert('OTP resent to ' + email);
 }
 
 async function logout() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   currentOrganiser = null;
   showScreen('screen-login');
   document.getElementById('card-email').style.display = 'block';
