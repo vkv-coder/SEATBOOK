@@ -408,13 +408,66 @@ try {
     'https://jqqnnkzozjskziaizajg.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
   );
-  console.log('Supabase initialized OK'); supabase=sb;
+  console.log('Supabase initialized OK');
 } catch(e) {
   console.error('Supabase init failed:', e);
   alert('System error: ' + e.message);
 }
 
 let currentOrganiser = null;
+
+// ── Auto-login from magic link ──
+window.addEventListener('load', async () => {
+  if (!sb) return;
+  // Check if returning from magic link (hash contains access_token)
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    console.log('Magic link detected — logging in...');
+    // Supabase auto-processes the hash and sets session
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (session && session.user) {
+      await loginWithSession(session);
+    } else {
+      // Small delay then retry
+      setTimeout(async () => {
+        const { data: { session: s2 } } = await sb.auth.getSession();
+        if (s2) await loginWithSession(s2);
+      }, 1000);
+    }
+    return;
+  }
+  // Check if already logged in (existing session)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && session.user) {
+    await loginWithSession(session);
+  }
+});
+
+async function loginWithSession(session) {
+  const email = session.user.email;
+  // Fetch organiser details
+  const { data: org } = await sb
+    .from('organisers')
+    .select('id, name, status, email_1')
+    .eq('email_1', email)
+    .single();
+  if (!org || org.status !== 'active') {
+    await sb.auth.signOut();
+    const errEl = document.getElementById('email-err');
+    if (errEl) {
+      errEl.textContent = org ? 'Account ' + org.status + '. Contact admin.' : 'Email not registered.';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
+  currentOrganiser = org;
+  const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  // Clear hash from URL
+  history.replaceState(null, '', window.location.pathname);
+  showScreen('screen-dashboard');
+  renderBookings('all');
+}
 
 // ── Login ──
 async function sendOTP() {
