@@ -440,19 +440,14 @@ function render(){
       rowDiv.appendChild(btn);
     });
 
-    // H-pass insert button — always visible on every row
-    const hpBtn=document.createElement('button');
+    // H-pass insert button — data-ri attribute avoids closure bug
     const isHpass=fineTool==='hpass';
+    const hpBtn=document.createElement('button');
+    hpBtn.setAttribute('data-ri', ri);
     hpBtn.style.cssText='width:18px;height:14px;border-radius:3px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-left:4px;background:'+(isHpass?'#0891b2':'#ddd')+';color:'+(isHpass?'#fff':'#aaa')+';';
     hpBtn.textContent='≡';
     hpBtn.title='Insert horizontal passage below row '+rowData.label;
-    const capturedRi=ri;
-    hpBtn.onclick=function(e){
-      e.stopPropagation();
-      if(fineTool!=='hpass'){alert('Select the ≡ H-gap tool first, then click ≡ button on any row.');return;}
-      rows.splice(capturedRi+1,0,{type:'hpass',height:gapSize});
-      render();renderSecs();
-    };
+    hpBtn.className='hpass-insert-btn';
     rowDiv.appendChild(hpBtn);
 
     // Price tags on right
@@ -477,6 +472,16 @@ function render(){
   });
 
   document.addEventListener('mouseup',()=>painting=false);
+  // H-gap button global handler — uses data-ri to avoid closure issues
+  document.querySelectorAll('.hpass-insert-btn').forEach(btn=>{
+    btn.onclick=function(e){
+      e.stopPropagation();
+      if(fineTool!=='hpass'){alert('Select the ≡ H-gap tool first (in toolbar), then click the ≡ button on a row.');return;}
+      const idx=parseInt(this.getAttribute('data-ri'));
+      rows.splice(idx+1,0,{type:'hpass',height:gapSize});
+      render();renderSecs();
+    };
+  });
   document.getElementById('st-total').textContent=total;
   document.getElementById('st-rows').textContent=rows.filter(r=>r.type==='row').length;
 }
