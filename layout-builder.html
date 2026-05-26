@@ -36,7 +36,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .scinfo{flex:1;min-width:0;}
 .scname{font-size:12px;font-weight:600;color:var(--text);}
 .scmeta{font-size:10px;color:var(--muted);margin-top:1px;}
-.scprice{font-size:11px;font-weight:700;padding:2px 7px;border-radius:8px;flex-shrink:0;}
 .scdel{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0;flex-shrink:0;}
 .scdel:hover{color:var(--red);}
 .atool{font-size:11px;color:var(--muted);margin-top:6px;}
@@ -56,7 +55,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stat-n{font-size:13px;font-weight:600;}
 .stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;}
 
-.canvas-outer{flex:1;overflow:auto;padding:10px 6px 170px;-webkit-overflow-scrolling:touch;}
+.canvas-outer{flex:1;overflow:auto;padding:10px 6px 180px;-webkit-overflow-scrolling:touch;}
 .stage-wrap{text-align:center;margin-bottom:10px;}
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
@@ -81,13 +80,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 .row-price{font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;flex-shrink:0;margin-left:3px;white-space:nowrap;}
 
-.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;flex-shrink:0;pointer-events:all;}
-.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;pointer-events:all;position:relative;z-index:101;}
+/* ADD ROW BAR — 2 lines */
+.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;pointer-events:all;}
+.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 7px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;pointer-events:all;}
 .ar-in:focus{border-color:var(--accent);}
-.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;pointer-events:all;position:relative;z-index:101;}
+.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:6px 9px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;pointer-events:all;}
 .ar-btn.red{background:var(--red);}
 .ar-btn.col{background:var(--blue);}
+.ar-btn.grn{background:var(--green);}
+.ar-row{display:flex;gap:5px;width:100%;align-items:center;}
+.ar-label{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
 
+/* MODALS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-end;}
 .overlay.show{display:flex;}
 .modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:18px;width:100%;max-height:90vh;overflow-y:auto;}
@@ -121,9 +125,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <option value="">— Select hall —</option>
     <option value="sayjirao">Sayjirao Nagar Gruha, Akota, Vadodara</option>
     <option value="sayaji">Sayaji Hall, Vadodara (demo)</option>
-    <option value="townhall">Town Hall, Vadodara (demo)</option>
-    <option value="baroda">Baroda Club Auditorium (demo)</option>
-    <option value="nirmala">Nirmala Convent Hall (demo)</option>
   </select>
   <button class="hbtn" onclick="showModal('modal-hall')">+ New</button>
 </div>
@@ -135,12 +136,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <div class="sec-cards" id="sec-cards"><div style="font-size:11px;color:var(--muted);">Select a hall to begin</div></div>
   <div class="atool" id="atool" style="display:none;">Painting: <strong id="atool-name"></strong></div>
-  <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Right-click any seat (or long press on mobile) to set its number</div>
+  <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Right-click any seat (or long press on mobile) to renumber</div>
 </div>
 
 <div class="fine-tools">
   <div class="flbl">Paint:</div>
-  <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block seat</button>
+  <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
   <button class="ftool" onclick="openRenumManual()" style="color:#6366f1;border-color:rgba(99,102,241,0.3);">⟳ Renumber</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
@@ -152,7 +153,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div id="st-secs" style="display:contents;"></div>
 </div>
 
-<div class="canvas-outer" id="canvas-outer">
+<div class="canvas-outer">
   <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12px;" id="empty-hint">Select a hall above to start building</div>
   <div class="stage-wrap" id="stage-wrap" style="display:none;">
     <div class="stage-box">STAGE</div><div class="stage-line"></div>
@@ -160,73 +161,84 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="grid-area" id="grid-area"></div>
 </div>
 
+<!-- ADD ROW BAR -->
 <div class="add-row-bar">
-  <div style="display:flex;gap:5px;width:100%;">
-    <input class="ar-in" type="text" id="ar-lbl" placeholder="Row label" maxlength="4" style="width:65px;">
-    <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:55px;" value="">
-    <button class="ar-btn" onclick="addRow()">＋ Row</button>
-    <button class="ar-btn col" onclick="addColAll()">＋ Col</button>
-    <button class="ar-btn col" onclick="delColAll()">− Col</button>
-    <button class="ar-btn red" onclick="delLastRow()">− Row</button>
-  </div>
-  <div style="display:flex;gap:5px;width:100%;align-items:center;">
-    <span style="font-size:11px;color:#6366f1;font-weight:600;white-space:nowrap;">⎸ V-gap:</span>
-    <span style="font-size:10px;color:var(--muted);">row</span>
-    <select class="ar-in" id="vgap-from-row" style="width:40px;"><option value="">from</option></select>
-    <span style="font-size:10px;color:var(--muted);">to</span>
-    <select class="ar-in" id="vgap-to-row" style="width:40px;"><option value="">to</option></select>
-    <select class="ar-in" id="vgap-position" style="width:56px;">
+  <!-- Line 1: Row insert controls -->
+  <div class="ar-row">
+    <input class="ar-in" type="text" id="ar-lbl" placeholder="Label e.g. AA" maxlength="4" style="width:72px;text-transform:uppercase;">
+    <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:52px;">
+    <select class="ar-in" id="ar-position" style="width:60px;">
       <option value="before">Before</option>
       <option value="after">After</option>
+      <option value="end" selected>End ↓</option>
     </select>
-    <span style="font-size:10px;color:var(--muted);">seat</span>
-    <input class="ar-in" type="number" id="vgap-seat-no" placeholder="#" min="1" style="width:40px;">
-    <select class="ar-in" id="vgap-size" style="width:62px;">
-      <option value="1">Narrow</option>
-      <option value="2" selected>Medium</option>
-      <option value="3">Wide</option>
+    <select class="ar-in" id="ar-ref-row" style="flex:1;">
+      <option value="">— row —</option>
     </select>
-    <button class="ar-btn" style="background:#6366f1;padding:7px 8px;" onclick="insertVGap()">＋</button>
+    <button class="ar-btn grn" onclick="addRow()">＋ Row</button>
   </div>
-  <div style="display:flex;gap:5px;width:100%;align-items:center;">
-    <span style="font-size:11px;color:#0891b2;font-weight:600;white-space:nowrap;">≡ H-gap:</span>
-    <span style="font-size:10px;color:var(--muted);white-space:nowrap;">row</span>
-    <select class="ar-in" id="hgap-from" style="width:44px;"><option value="">from</option></select>
-    <span style="font-size:10px;color:var(--muted);">to</span>
-    <select class="ar-in" id="hgap-to" style="width:44px;"><option value="">to</option></select>
-    <select class="ar-in" id="hgap-size" style="width:68px;">
-      <option value="1">Narrow</option>
-      <option value="2" selected>Medium</option>
-      <option value="3">Wide</option>
-    </select>
-    <button class="ar-btn col" onclick="insertHGap()">＋</button>
+  <!-- Line 2: Col and gap controls -->
+  <div class="ar-row">
+    <button class="ar-btn col" onclick="addColAll()" style="flex:1;">＋ Col</button>
+    <button class="ar-btn col" onclick="delColAll()" style="flex:1;">− Col</button>
+    <button class="ar-btn red" onclick="delLastRow()" style="flex:1;">− Row</button>
+    <button class="ar-btn" onclick="showModal('modal-gaps')" style="background:#6366f1;flex:1;">Gaps ↕↔</button>
   </div>
 </div>
 
-<!-- MODAL: Section — paint-based, no range -->
+<!-- MODAL: Gaps -->
+<div class="overlay" id="modal-gaps">
+  <div class="modal">
+    <div class="mtitle">Insert gaps / passages</div>
+    <!-- V-gap -->
+    <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:6px;">⎸ Vertical gap (aisle between seats)</div>
+    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+      <span style="font-size:10px;color:var(--muted);">Row</span>
+      <select class="mi" id="vgap-from-row" style="width:48px;padding:5px 6px;font-size:11px;"></select>
+      <span style="font-size:10px;color:var(--muted);">to</span>
+      <select class="mi" id="vgap-to-row" style="width:48px;padding:5px 6px;font-size:11px;"></select>
+      <select class="mi" id="vgap-position" style="width:60px;padding:5px 6px;font-size:11px;">
+        <option value="before">Before</option>
+        <option value="after">After</option>
+      </select>
+      <span style="font-size:10px;color:var(--muted);">seat</span>
+      <input class="mi" type="number" id="vgap-seat-no" placeholder="#" min="1" style="width:44px;padding:5px 6px;font-size:11px;">
+      <select class="mi" id="vgap-size" style="width:68px;padding:5px 6px;font-size:11px;">
+        <option value="1">Narrow</option>
+        <option value="2" selected>Medium</option>
+        <option value="3">Wide</option>
+      </select>
+      <button class="ar-btn" style="background:#6366f1;" onclick="insertVGap()">＋ Add</button>
+    </div>
+    <!-- H-gap -->
+    <div style="font-size:11px;font-weight:600;color:#0891b2;margin-bottom:6px;">≡ Horizontal gap (passage between rows)</div>
+    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:10px;color:var(--muted);">Row</span>
+      <select class="mi" id="hgap-from" style="width:48px;padding:5px 6px;font-size:11px;"></select>
+      <span style="font-size:10px;color:var(--muted);">to</span>
+      <select class="mi" id="hgap-to" style="width:48px;padding:5px 6px;font-size:11px;"></select>
+      <select class="mi" id="hgap-size" style="width:68px;padding:5px 6px;font-size:11px;">
+        <option value="1">Narrow</option>
+        <option value="2" selected>Medium</option>
+        <option value="3">Wide</option>
+      </select>
+      <button class="ar-btn col" onclick="insertHGap()">＋ Add</button>
+    </div>
+    <div class="mbtns"><button class="mbtn" onclick="closeModal('modal-gaps')">Close</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Section -->
 <div class="overlay" id="modal-sec">
   <div class="modal">
-    <div class="mtitle" id="sec-mtitle">Add seat section</div>
+    <div class="mtitle">Add seat section</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
-      Define a category (name + colour + price).<br>
-      Then <strong>select it and paint seats</strong> directly on the grid.
+      Define a category with a colour.<br>
+      Select it, then <strong>paint seats</strong> on the grid. Prices are set at event creation.
     </div>
     <div class="mf">
       <div class="ml">Section name *</div>
       <input class="mi" id="sec-name" placeholder="e.g. Premium, Regular, VIP, Corner">
-    </div>
-    <div class="mr2">
-      <div>
-        <div class="ml">Mode</div>
-        <select class="mi" id="sec-mode">
-          <option value="paid">💳 Paid</option>
-          <option value="free">🎁 Free / Reserved</option>
-        </select>
-      </div>
-      <div>
-        <div class="ml">Price ₹ per seat</div>
-        <input class="mi" type="number" id="sec-price" placeholder="e.g. 400">
-      </div>
     </div>
     <div class="mf">
       <div class="ml">Colour</div>
@@ -245,7 +257,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="mtitle">Add new hall</div>
     <div class="mf"><div class="ml">Hall name *</div><input class="mi" id="nh-name" placeholder="e.g. Navrang Hall"></div>
     <div class="mf"><div class="ml">City</div><input class="mi" id="nh-city" placeholder="e.g. Vadodara"></div>
-    <div class="mf" style="margin:0;"><div class="ml">Capacity (approx)</div><input class="mi" type="number" id="nh-cap" placeholder="e.g. 400"></div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-hall')">Cancel</button>
       <button class="mbtn pri" onclick="createHall()">Create & start mapping</button>
@@ -270,13 +281,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
 </div>
 
-<!-- MODAL: Renumber seat -->
+<!-- MODAL: Renumber -->
 <div class="overlay" id="modal-renum">
   <div class="modal">
     <div class="mtitle">Renumber seats</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-      Set a new seat number at any position in a row.<br>
-      Seats <strong>before</strong> it become empty · Seats <strong>after</strong> renumber in sequence.
+      Seats <strong>before</strong> target become empty · Seats <strong>from</strong> target renumber in sequence.
     </div>
     <div class="mr2">
       <div>
@@ -306,40 +316,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <script>
 const COLORS=['#c8860a','#2b6fd4','#2e9e60','#cc3333','#7c3aed','#0891b2','#d97706','#be185d','#065f46','#1e40af'];
 
-const sb = window.supabase.createClient(
+const sb=window.supabase.createClient(
   'https://jqqnnkzozjskziaizajg.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
 );
-const HALL_IDS = { sayjirao: '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a' };
+const HALL_IDS={sayjirao:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'};
 
-let sections=[], rows=[], fineTool=null, activeSecId=null, pickedColor=COLORS[0];
-let painting=false, hallName='', currentHallKey='';
+let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0];
+let painting=false,hallName='',currentHallKey='';
 let history=[];
 
 function saveHistory(){
   history.push(JSON.stringify({rows,sections}));
-  if(history.length>30) history.shift();
+  if(history.length>30)history.shift();
 }
 function undoLast(){
   if(!history.length){alert('Nothing to undo.');return;}
   const prev=JSON.parse(history.pop());
-  rows=prev.rows; sections=prev.sections;
+  rows=prev.rows;sections=prev.sections;
   activeSecId=sections[0]?.id||null;
-  render(); renderSecs();
+  render();renderSecs();
 }
 
-// ── Hall picker ──
+// ── Hall ──
 async function pickHall(){
   const v=document.getElementById('hall-sel').value;
-  if(!v) return;
+  if(!v)return;
   currentHallKey=v;
-  const names={
-    sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',
-    sayaji:'Sayaji Hall, Vadodara',
-    townhall:'Town Hall, Vadodara',
-    baroda:'Baroda Club Auditorium',
-    nirmala:'Nirmala Convent Hall'
-  };
+  const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',sayaji:'Sayaji Hall, Vadodara'};
   hallName=names[v];
   document.getElementById('empty-hint').style.display='none';
   document.getElementById('stage-wrap').style.display='block';
@@ -347,8 +351,8 @@ async function pickHall(){
   if(v==='sayjirao'){
     rows=[];sections=[];render();renderSecs();
     const {data:hall}=await sb.from('halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
-    if(hall&&hall.layout_json&&hall.layout_json.rows&&hall.layout_json.rows.length>0){
-      const ok=confirm('Existing layout found ('+hall.layout_json.rows.filter(r=>r.type==="row").length+' rows). Load it?');
+    if(hall&&hall.layout_json&&hall.layout_json.rows?.length>0){
+      const ok=confirm('Existing layout found ('+hall.layout_json.rows.filter(r=>r.type==='row').length+' rows). Load it?');
       if(ok){
         rows=hall.layout_json.rows;
         sections=hall.layout_json.sections||[];
@@ -358,18 +362,16 @@ async function pickHall(){
       }
     }
     rows=[];sections=[];render();renderSecs();
-    alert('Blank canvas ready. Add sections first, then paint seats.');
+    alert('Blank canvas ready. Add a section first, then add rows and paint.');
   } else if(v==='sayaji'){
     loadDemo();
-  } else {
-    rows=[];sections=[];render();renderSecs();
   }
 }
 
 function loadDemo(){
   sections=[
-    {id:'s1',name:'Premium',color:'#c8860a',mode:'paid',price:'400'},
-    {id:'s2',name:'Regular',color:'#2b6fd4',mode:'paid',price:'200'},
+    {id:'s1',name:'Premium',color:'#c8860a'},
+    {id:'s2',name:'Regular',color:'#2b6fd4'},
   ];
   rows=[];
   for(let ri=0;ri<23;ri++){
@@ -377,13 +379,25 @@ function loadDemo(){
     const sec=ri<3?sections[0]:sections[1];
     const cells=[];
     for(let si=0;si<35;si++){
-      if(si===8||si===26) cells.push({t:'vgap',gapW:2});
+      if(si===8||si===26)cells.push({t:'vgap',gapW:2});
       cells.push({t:'seat',secId:sec.id});
     }
     rows.push({type:'row',label:lbl,cells});
-    if(ri===2) rows.push({type:'hpass',height:2});
+    if(ri===2)rows.push({type:'hpass',height:2});
   }
   activeSecId='s1';
+  render();renderSecs();
+}
+
+function createHall(){
+  const n=document.getElementById('nh-name').value.trim();
+  const c=document.getElementById('nh-city').value.trim();
+  if(!n){alert('Enter hall name');return;}
+  hallName=n+(c?', '+c:'');
+  rows=[];sections=[];
+  document.getElementById('empty-hint').style.display='none';
+  document.getElementById('stage-wrap').style.display='block';
+  closeModal('modal-hall');
   render();renderSecs();
 }
 
@@ -391,30 +405,24 @@ function loadDemo(){
 function setFine(t){
   fineTool=fineTool===t?null:t;
   document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
-  if(fineTool) document.getElementById('ft-'+t).classList.add('active');
+  if(fineTool)document.getElementById('ft-'+t).classList.add('active');
   renderSecs();
 }
 
 // ── Paint ──
 function paintCell(ri,ci){
   const row=rows[ri];
-  if(row.type!=='row') return;
+  if(row.type!=='row')return;
   const cell=row.cells[ci];
-  if(!cell||cell.t==='vgap') return;
-  if(!painting) saveHistory();
-
-  if(fineTool==='erase'){
-    cell.t='empty'; cell.secId=null; cell.sn=null;
-  } else if(fineTool==='blocked'){
-    cell.t='blocked'; cell.secId=null; cell.sn=null;
-  } else if(activeSecId){
-    cell.t='seat'; cell.secId=activeSecId;
-  }
+  if(!cell||cell.t==='vgap')return;
+  if(!painting)saveHistory();
+  if(fineTool==='erase'){cell.t='empty';cell.secId=null;cell.sn=null;}
+  else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;cell.sn=null;}
+  else if(activeSecId){cell.t='seat';cell.secId=activeSecId;}
   render();renderSecs();
 }
 
 // ── RENDER ──
-// KEY FIX: use cell.sn if set; empty cells do NOT increment counter
 function render(){
   const grid=document.getElementById('grid-area');
   grid.innerHTML='';
@@ -427,64 +435,46 @@ function render(){
       const hlbl=document.createElement('div');
       hlbl.className='hpass-row-lbl';
       hlbl.textContent='✕';
-      hlbl.title='Click to delete this passage';
-      hlbl.onclick=function(){
-        saveHistory();
-        rows.splice(ri,1);
-        render();renderSecs();
-      };
+      hlbl.title='Delete this passage';
+      hlbl.onclick=()=>{saveHistory();rows.splice(ri,1);render();renderSecs();};
       hrow.appendChild(hlbl);
       for(let i=0;i<40;i++){
         const c=document.createElement('div');
         c.className=`hpass-cell h${rowData.height}`;
-        c.style.width='16px'; c.style.marginRight='2px';
+        c.style.width='16px';c.style.marginRight='2px';
         hrow.appendChild(c);
       }
       grid.appendChild(hrow);
       return;
     }
 
-    // Normal row
     const rowDiv=document.createElement('div');
     rowDiv.className='grid-row';
-
     const lbl=document.createElement('div');
-    lbl.className='row-lbl'; lbl.textContent=rowData.label;
+    lbl.className='row-lbl';lbl.textContent=rowData.label;
     lbl.title='Click to delete row';
     lbl.onclick=()=>delRow(ri);
     rowDiv.appendChild(lbl);
 
-    // ── seat counter logic ──
-    // If any cell in this row has .sn set, use sn-mode; else auto-count
     const hasSn=rowData.cells.some(c=>c.t==='seat'&&c.sn!=null);
     let autoCounter=1;
     let rowSecPrices={};
 
     rowData.cells.forEach((cell,ci)=>{
       if(cell.t==='vgap'){
-        const gapWrap=document.createElement('div');
         const w=cell.gapW===1?8:cell.gapW===2?14:20;
-        gapWrap.style.cssText=`display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:${w}px;height:14px;border-radius:0;transition:background 0.15s;`;
-        gapWrap.title='Click to delete this gap';
-        const gapLine=document.createElement('div');
         const lw=cell.gapW===1?2:cell.gapW===2?4:6;
-        gapLine.style.cssText=`width:${lw}px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;`;
-        gapWrap.appendChild(gapLine);
-        gapWrap.onmouseenter=function(){this.style.background='rgba(204,51,51,0.12)';gapLine.style.background='rgba(204,51,51,0.5)';};
-        gapWrap.onmouseleave=function(){this.style.background='transparent';gapLine.style.background='transparent';};
-        gapWrap.onclick=function(e){
-          e.stopPropagation();
-          saveHistory();
-          rowData.cells.splice(ci,1);
-          render();renderSecs();
-        };
-        gapWrap.addEventListener('touchstart',function(e){
-          e.stopPropagation();e.preventDefault();
-          saveHistory();
-          rowData.cells.splice(ci,1);
-          render();renderSecs();
-        },{passive:false});
-        rowDiv.appendChild(gapWrap);
+        const gw=document.createElement('div');
+        gw.style.cssText=`display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:${w}px;height:14px;transition:background 0.15s;`;
+        gw.title='Click to delete gap';
+        const gl=document.createElement('div');
+        gl.style.cssText=`width:${lw}px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;`;
+        gw.appendChild(gl);
+        gw.onmouseenter=()=>{gw.style.background='rgba(204,51,51,0.12)';gl.style.background='rgba(204,51,51,0.5)';};
+        gw.onmouseleave=()=>{gw.style.background='transparent';gl.style.background='transparent';};
+        gw.onclick=e=>{e.stopPropagation();saveHistory();rowData.cells.splice(ci,1);render();renderSecs();};
+        gw.addEventListener('touchstart',e=>{e.stopPropagation();e.preventDefault();saveHistory();rowData.cells.splice(ci,1);render();renderSecs();},{passive:false});
+        rowDiv.appendChild(gw);
         return;
       }
 
@@ -493,26 +483,18 @@ function render(){
       const sec=sections.find(s=>s.id===cell.secId);
 
       if(cell.t==='seat'&&sec){
-        // ── FIXED: display number ──
-        let displayNum;
-        if(hasSn){
-          displayNum = cell.sn!=null ? cell.sn : ''; // empty cells show blank
-        } else {
-          displayNum = autoCounter;
-        }
+        const displayNum=hasSn?(cell.sn!=null?cell.sn:''):autoCounter;
         btn.style.cssText=`background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
         btn.textContent=displayNum;
         total++;
-        if(!rowSecPrices[sec.id]) rowSecPrices[sec.id]={sec,count:0};
+        if(!rowSecPrices[sec.id])rowSecPrices[sec.id]={sec,count:0};
         rowSecPrices[sec.id].count++;
-        // Only increment autoCounter for actual seats
-        if(!hasSn) autoCounter++;
+        if(!hasSn)autoCounter++;
       } else if(cell.t==='blocked'){
         btn.style.cssText='background:var(--s2);color:#bbb;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);';
         btn.textContent='✕';
-        if(!hasSn) autoCounter++; // blocked seats still take up a number slot
+        if(!hasSn)autoCounter++;
       } else {
-        // empty — no number, no increment
         btn.className='seat empty';
       }
 
@@ -522,49 +504,35 @@ function render(){
       });
       btn.addEventListener('contextmenu',e=>{e.preventDefault();openRenum(ri,ci);});
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
-      let pressTimer;
-      btn.addEventListener('touchstart',e=>{
-        pressTimer=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);
-        painting=true;paintCell(ri,ci);
-      },{passive:false});
-      btn.addEventListener('touchend',()=>clearTimeout(pressTimer));
-      btn.addEventListener('touchmove',()=>clearTimeout(pressTimer));
+      let pt;
+      btn.addEventListener('touchstart',e=>{pt=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);painting=true;paintCell(ri,ci);},{passive:false});
+      btn.addEventListener('touchend',()=>clearTimeout(pt));
+      btn.addEventListener('touchmove',()=>clearTimeout(pt));
       rowDiv.appendChild(btn);
     });
 
-    // Price tags
-    const prices=Object.values(rowSecPrices);
-    if(prices.length===1){
+    // Price tags per section in this row
+    Object.values(rowSecPrices).forEach(p=>{
       const tag=document.createElement('div');
       tag.className='row-price';
-      tag.style.cssText=`background:${prices[0].sec.color}18;color:${prices[0].sec.color};`;
-      tag.textContent=prices[0].sec.mode==='free'?'Free':'₹'+prices[0].sec.price;
+      tag.style.cssText=`background:${p.sec.color}18;color:${p.sec.color};`;
+      tag.textContent=p.sec.name+(Object.keys(rowSecPrices).length>1?' ×'+p.count:'');
       rowDiv.appendChild(tag);
-    } else if(prices.length>1){
-      prices.forEach(p=>{
-        const tag=document.createElement('div');
-        tag.className='row-price';
-        tag.style.cssText=`background:${p.sec.color}18;color:${p.sec.color};`;
-        tag.textContent=(p.sec.mode==='free'?'Free':'₹'+p.sec.price)+' ×'+p.count;
-        rowDiv.appendChild(tag);
-      });
-    }
+    });
 
     grid.appendChild(rowDiv);
   });
 
   document.addEventListener('mouseup',()=>painting=false);
-
   document.getElementById('st-total').textContent=total;
   document.getElementById('st-rows').textContent=rows.filter(r=>r.type==='row').length;
+  updateRefRowSelect();
   updateGapSelects();
 }
 
 // ── Sections ──
 function openAddSec(){
-  document.getElementById('sec-mtitle').textContent='Add seat section';
-  ['sec-name','sec-price'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('sec-mode').value='paid';
+  document.getElementById('sec-name').value='';
   pickedColor=COLORS[sections.length%COLORS.length];
   buildSwatches();
   showModal('modal-sec');
@@ -583,11 +551,9 @@ function buildSwatches(){
 
 function saveSec(){
   const name=document.getElementById('sec-name').value.trim();
-  const mode=document.getElementById('sec-mode').value;
-  const price=document.getElementById('sec-price').value.trim();
   if(!name){alert('Enter a section name.');return;}
   const id='s'+Date.now();
-  sections.push({id,name,color:pickedColor,mode,price});
+  sections.push({id,name,color:pickedColor});
   activeSecId=id;
   closeModal('modal-sec');
   render();renderSecs();
@@ -597,35 +563,32 @@ function renderSecs(){
   const w=document.getElementById('sec-cards');w.innerHTML='';
   if(!sections.length){
     w.innerHTML='<div style="font-size:11px;color:var(--muted);">No sections yet — add one above</div>';
+    document.getElementById('atool').style.display='none';
+    document.getElementById('st-secs').innerHTML='';
     return;
   }
   sections.forEach(sec=>{
+    let cnt=0;
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
     const card=document.createElement('div');
     card.className='sec-card'+(activeSecId===sec.id?' sel':'');
     card.style.borderColor=activeSecId===sec.id?sec.color:'';
     card.style.background=activeSecId===sec.id?sec.color+'12':'';
-    const priceLabel=sec.mode==='free'?'Free':'₹'+sec.price;
-    // Count seats
-    let cnt=0;
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
     card.innerHTML=`
       <div class="scdot" style="background:${sec.color};"></div>
       <div class="scinfo">
         <div class="scname">${sec.name}</div>
-        <div class="scmeta">${sec.mode==='free'?'Free/Reserved':'Paid'} · ${cnt} seats painted</div>
+        <div class="scmeta">${cnt} seats painted</div>
       </div>
-      <div class="scprice" style="background:${sec.color}18;color:${sec.color};">${priceLabel}</div>
       <button class="scdel" onclick="delSec('${sec.id}',event)">✕</button>`;
     card.onclick=()=>{
-      activeSecId=sec.id;
-      fineTool=null;
+      activeSecId=sec.id;fineTool=null;
       document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
       renderSecs();
     };
     w.appendChild(card);
   });
 
-  // Active tool label
   const atl=document.getElementById('atool');
   const atn=document.getElementById('atool-name');
   const active=sections.find(s=>s.id===activeSecId);
@@ -635,13 +598,10 @@ function renderSecs(){
     atn.style.color='var(--text)';
   } else if(active){
     atl.style.display='block';
-    atn.textContent=`${active.name} (${active.mode==='free'?'Free':'₹'+active.price})`;
+    atn.textContent=active.name;
     atn.style.color=active.color;
-  } else {
-    atl.style.display='none';
-  }
+  } else {atl.style.display='none';}
 
-  // Stats per section
   const sw=document.getElementById('st-secs');sw.innerHTML='';
   sections.forEach(sec=>{
     let cnt=0;
@@ -658,23 +618,64 @@ function delSec(id,e){
   if(!confirm('Delete section? Seats will be unassigned.'))return;
   sections=sections.filter(s=>s.id!==id);
   rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===id){c.secId=null;}});});
-  if(activeSecId===id) activeSecId=sections[0]?.id||null;
+  if(activeSecId===id)activeSecId=sections[0]?.id||null;
   render();renderSecs();
 }
 
-// ── Row management ──
+// ── Row reference dropdown ──
+function updateRefRowSelect(){
+  const sel=document.getElementById('ar-ref-row');
+  if(!sel)return;
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— row —</option>';
+  rows.filter(r=>r.type==='row').forEach(r=>{
+    const opt=document.createElement('option');
+    opt.value=r.label;opt.textContent=r.label;
+    if(r.label===prev)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Add Row — insert anywhere ──
 function addRow(){
   saveHistory();
   const lbl=(document.getElementById('ar-lbl').value.trim().toUpperCase())||nextLabel();
   const cnt=parseInt(document.getElementById('ar-seats').value)||35;
+  const position=document.getElementById('ar-position').value; // before | after | end
+  const refRow=document.getElementById('ar-ref-row').value;
+
+  // Build cells
   const cells=[];
   for(let i=0;i<cnt;i++){
-    if(cnt>16&&(i===8||i===cnt-9)) cells.push({t:'vgap',gapW:2});
+    // Auto vgap at ~seat 9 and ~seat cnt-8 for wide rows
+    if(cnt>16&&(i===8||i===cnt-9))cells.push({t:'vgap',gapW:2});
     cells.push({t:'seat',secId:activeSecId||null});
   }
-  rows.push({type:'row',label:lbl,cells});
+  const newRow={type:'row',label:lbl,cells};
+
+  if(position==='end'||!refRow){
+    rows.push(newRow);
+  } else {
+    // Find index of reference row
+    const refIdx=rows.findIndex(r=>r.type==='row'&&r.label===refRow);
+    if(refIdx===-1){
+      rows.push(newRow);
+    } else if(position==='before'){
+      rows.splice(refIdx,0,newRow);
+    } else { // after
+      rows.splice(refIdx+1,0,newRow);
+    }
+  }
+
   document.getElementById('ar-lbl').value='';
   render();renderSecs();
+}
+
+function nextLabel(){
+  const rowItems=rows.filter(r=>r.type==='row');
+  if(!rowItems.length)return'A';
+  const l=rowItems[rowItems.length-1].label;
+  return l.length===1&&l<'Z'?String.fromCharCode(l.charCodeAt(0)+1):l+"'";
 }
 
 function addColAll(){
@@ -706,14 +707,7 @@ function delLastRow(){
 }
 
 function delRow(ri){
-  if(confirm('Delete row '+rows[ri].label+'?')){rows.splice(ri,1);render();renderSecs();}
-}
-
-function nextLabel(){
-  const rowItems=rows.filter(r=>r.type==='row');
-  if(!rowItems.length)return'A';
-  const l=rowItems[rowItems.length-1].label;
-  return l.length===1&&l<'Z'?String.fromCharCode(l.charCodeAt(0)+1):l+"'";
+  if(confirm('Delete row '+rows[ri].label+'?')){saveHistory();rows.splice(ri,1);render();renderSecs();}
 }
 
 function clearAll(){
@@ -724,23 +718,13 @@ function clearAll(){
   }
 }
 
-// ── Gap tools ──
+// ── Gap selects ──
 function updateGapSelects(){
-  ['hgap-from','hgap-to'].forEach((id,idx)=>{
+  ['hgap-from','hgap-to','vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
     const sel=document.getElementById(id);if(!sel)return;
     const prev=sel.value;
-    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
-    rows.filter(r=>r.type==='row').forEach(r=>{
-      const opt=document.createElement('option');
-      opt.value=r.label;opt.textContent=r.label;
-      if(r.label===prev)opt.selected=true;
-      sel.appendChild(opt);
-    });
-  });
-  ['vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
-    const sel=document.getElementById(id);if(!sel)return;
-    const prev=sel.value;
-    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
+    const isFrom=idx===0||idx===2;
+    sel.innerHTML='<option value="">'+(isFrom?'from':'to')+'</option>';
     rows.filter(r=>r.type==='row').forEach(r=>{
       const opt=document.createElement('option');
       opt.value=r.label;opt.textContent=r.label;
@@ -765,11 +749,11 @@ function insertVGap(){
     if(row.label<fromRow||row.label>toRow)return;
     let seatCount=0,insertAt=-1;
     for(let i=0;i<row.cells.length;i++){
-      if(row.cells[i].t!=='vgap') seatCount++;
+      if(row.cells[i].t!=='vgap')seatCount++;
       if(position==='before'&&seatCount===seatNo){insertAt=i;break;}
       if(position==='after'&&seatCount===seatNo){insertAt=i+1;break;}
     }
-    if(position==='before'&&seatNo===1) insertAt=0;
+    if(position==='before'&&seatNo===1)insertAt=0;
     if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
   });
   if(count===0){alert('No matching seats found.');return;}
@@ -779,42 +763,17 @@ function insertVGap(){
 function insertHGap(){
   saveHistory();
   const fromLabel=document.getElementById('hgap-from').value;
-  const toLabel=document.getElementById('hgap-to').value;
+  const toLabel=document.getElementById('hgap-to').value||fromLabel;
   const sz=parseInt(document.getElementById('hgap-size').value)||2;
   if(!fromLabel){alert('Select from row.');return;}
-  const endLabel=toLabel||fromLabel;
   const rowIndices=[];
-  rows.forEach((r,i)=>{
-    if(r.type!=='row')return;
-    if(r.label>=fromLabel&&r.label<=endLabel) rowIndices.push(i);
-  });
-  if(!rowIndices.length){alert('No rows found in range.');return;}
-  rowIndices.reverse().forEach(ri=>{
-    rows.splice(ri+1,0,{type:'hpass',height:sz});
-  });
+  rows.forEach((r,i)=>{if(r.type!=='row')return;if(r.label>=fromLabel&&r.label<=toLabel)rowIndices.push(i);});
+  if(!rowIndices.length){alert('No rows found.');return;}
+  rowIndices.reverse().forEach(ri=>{rows.splice(ri+1,0,{type:'hpass',height:sz});});
   render();renderSecs();
 }
 
-// ── Hall ──
-function createHall(){
-  const n=document.getElementById('nh-name').value.trim();
-  const c=document.getElementById('nh-city').value.trim();
-  if(!n){alert('Enter hall name');return;}
-  hallName=n+(c?', '+c:'');
-  rows=[];sections=[];
-  for(let ri=0;ri<23;ri++){
-    const lbl=String.fromCharCode(65+ri);
-    const cells=[];
-    for(let si=0;si<35;si++) cells.push({t:'seat',secId:null});
-    rows.push({type:'row',label:lbl,cells});
-  }
-  document.getElementById('empty-hint').style.display='none';
-  document.getElementById('stage-wrap').style.display='block';
-  closeModal('modal-hall');
-  render();renderSecs();
-}
-
-// ── Save to Supabase ──
+// ── Save ──
 function showSave(){
   if(!rows.length){alert('Nothing to save.');return;}
   let total=0;
@@ -830,7 +789,6 @@ function showSave(){
     row.style.cssText='display:flex;align-items:center;gap:7px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);';
     row.innerHTML=`<div style="width:9px;height:9px;border-radius:2px;background:${sec.color};flex-shrink:0;"></div>
       <span style="flex:1;font-weight:600;">${sec.name}</span>
-      <span style="color:${sec.color};font-weight:700;">${sec.mode==='free'?'Free':'₹'+sec.price}</span>
       <span style="color:var(--muted);">${cnt} seats</span>`;
     sum.appendChild(row);
   });
@@ -838,28 +796,20 @@ function showSave(){
 }
 
 async function doSave(){
-  const hallKey=currentHallKey;
-  const hallId=HALL_IDS[hallKey];
+  const hallId=HALL_IDS[currentHallKey];
   const data={hall:hallName,sections,rows,savedAt:new Date().toISOString()};
-
   if(hallId){
-    // Save to Supabase
     const {error}=await sb.from('halls').update({layout_json:data}).eq('id',hallId);
-    if(error){
-      alert('Supabase error: '+error.message);
-      return;
-    }
+    if(error){alert('Supabase error: '+error.message);return;}
     closeModal('modal-save');
     alert('✓ Layout saved to Supabase!');
   } else {
-    // Fallback: download JSON
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
     a.download=(hallName||'hall').replace(/[^a-z0-9]/gi,'_')+'_layout.json';
     a.click();
     closeModal('modal-save');
-    alert('✓ Layout downloaded as JSON.');
   }
 }
 
@@ -868,18 +818,10 @@ function openRenum(ri,ci){
   const row=rows[ri];
   if(row&&row.type==='row'){
     document.getElementById('renum-row').value=row.label;
-    // Find current seat number at this cell
-    let sn=0;
     const hasSn=row.cells.some(c=>c.t==='seat'&&c.sn!=null);
-    if(hasSn){
-      sn=row.cells[ci].sn||'';
-    } else {
-      let counter=0;
-      for(let i=0;i<=ci;i++){
-        if(row.cells[i].t!=='vgap'&&row.cells[i].t!=='empty') counter++;
-      }
-      sn=counter;
-    }
+    let sn=0;
+    if(hasSn){sn=row.cells[ci].sn||'';}
+    else{let counter=0;for(let i=0;i<=ci;i++){if(row.cells[i].t!=='vgap'&&row.cells[i].t!=='empty')counter++;}sn=counter;}
     document.getElementById('renum-pos').value=sn||'';
   }
   document.getElementById('renum-val').value='';
@@ -899,56 +841,29 @@ function applyRenum(){
   const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
   const atPos=parseInt(document.getElementById('renum-pos').value);
   const newNum=parseInt(document.getElementById('renum-val').value);
-
-  if(!rowLabel){alert('Enter a row label (e.g. A).');return;}
-  if(isNaN(atPos)||atPos<1){alert('Enter the current seat position number.');return;}
-  if(isNaN(newNum)||newNum<1){alert('Enter the new seat number.');return;}
-
+  if(!rowLabel){alert('Enter row label.');return;}
+  if(isNaN(atPos)||atPos<1){alert('Enter current seat position.');return;}
+  if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
-  // Get all non-vgap cells in order with their index
   const seatCells=[];
-  rowData.cells.forEach((cell,ci)=>{
-    if(cell.t!=='vgap') seatCells.push({ci,cell});
-  });
-
-  // Find target by matching current displayed number
-  // First check if any cells already have .sn set
+  rowData.cells.forEach((cell,ci)=>{if(cell.t!=='vgap')seatCells.push({ci,cell});});
   const hasSn=seatCells.some(s=>s.cell.sn!=null);
-  let targetIdx=-1;
-
-  if(hasSn){
-    // Find cell whose .sn === atPos
-    targetIdx=seatCells.findIndex(s=>s.cell.sn===atPos);
-  }
-  if(targetIdx===-1){
-    // fallback: treat atPos as 1-based position index
-    targetIdx=atPos-1;
-  }
-
-  if(targetIdx<0||targetIdx>=seatCells.length){
-    alert('Position '+atPos+' not found in row '+rowLabel);return;
-  }
+  let targetIdx=hasSn?seatCells.findIndex(s=>s.cell.sn===atPos):-1;
+  if(targetIdx===-1)targetIdx=atPos-1;
+  if(targetIdx<0||targetIdx>=seatCells.length){alert('Position not found.');return;}
 
   saveHistory();
-
-  // Seats BEFORE target → empty
   for(let i=0;i<targetIdx;i++){
-    seatCells[i].cell.t='empty';
-    seatCells[i].cell.secId=null;
-    seatCells[i].cell.sn=null;
+    seatCells[i].cell.t='empty';seatCells[i].cell.secId=null;seatCells[i].cell.sn=null;
   }
-
-  // Seats FROM target onwards → assign sn sequentially
-  // Skip empty cells — they keep their empty status
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
-    if(cell.t==='empty') continue; // already empty, skip
+    if(cell.t==='empty')continue;
     cell.sn=num++;
   }
-
   closeModal('modal-renum');
   document.getElementById('renum-row').value='';
   document.getElementById('renum-pos').value='';
@@ -956,7 +871,10 @@ function applyRenum(){
   render();renderSecs();
 }
 
-function showModal(id){document.getElementById(id).classList.add('show');}
+function showModal(id){
+  document.getElementById(id).classList.add('show');
+  updateGapSelects();
+}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 window.addEventListener('DOMContentLoaded',()=>{
