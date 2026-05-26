@@ -17,18 +17,15 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
 
-/* TOPBAR */
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;flex-shrink:0;}
 .tlogo{font-family:'DM Serif Display',serif;font-size:17px;}
 .tsub{font-size:10px;color:var(--muted);}
 .save-btn{background:var(--green);color:#fff;border:none;border-radius:var(--rsm);padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
 
-/* HALL BAR */
 .hall-bar{background:var(--white);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;gap:8px;flex-shrink:0;}
 .hsel{flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;}
 .hbtn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;}
 
-/* SECTIONS PANEL */
 .sec-panel{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;max-height:130px;overflow-y:auto;}
 .sec-panel-hdr{font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .add-sec-btn{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
@@ -45,29 +42,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .atool{font-size:11px;color:var(--muted);margin-top:6px;}
 .atool strong{color:var(--text);}
 
-/* FINE + PASSAGE TOOLS */
 .fine-tools{background:var(--white);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;flex-shrink:0;}
 .flbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-right:2px;flex-shrink:0;}
 .ftool{padding:4px 8px;font-size:11px;font-weight:500;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .ftool.active{background:var(--text);color:#fff;border-color:var(--text);}
 .ftool.bl.active{background:#888;border-color:#888;}
 .ftool.era.active{background:var(--red);border-color:var(--red);}
-.ftool.vp.active{background:#6366f1;border-color:#6366f1;color:#fff;}
-.ftool.hp.active{background:#0891b2;border-color:#0891b2;color:#fff;}
 .ftool.red{color:var(--red);border-color:rgba(204,51,51,0.3);}
-.gap-size-row{display:flex;gap:4px;align-items:center;padding:0 14px 7px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
-.gsz{padding:3px 8px;font-size:11px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
-.gsz.active{background:var(--text);color:#fff;border-color:var(--text);}
 
-/* STATS */
 .stats-bar{display:flex;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
 .stat{flex:1;padding:6px 3px;text-align:center;border-right:1px solid var(--border);}
 .stat:last-child{border-right:none;}
 .stat-n{font-size:13px;font-weight:600;}
 .stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;}
 
-/* CANVAS */
-.canvas-outer{flex:1;overflow:auto;padding:10px 6px 160px;-webkit-overflow-scrolling:touch;}
+.canvas-outer{flex:1;overflow:auto;padding:10px 6px 170px;-webkit-overflow-scrolling:touch;}
 .stage-wrap{text-align:center;margin-bottom:10px;}
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
@@ -75,35 +64,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .grid-area{display:flex;flex-direction:column;gap:0;width:max-content;line-height:0;font-size:0;}
 .grid-row{display:flex;align-items:stretch;gap:2px;margin-bottom:0;line-height:0;}
 
-/* Row label */
 .row-lbl{font-size:9px;color:var(--muted);width:14px;text-align:center;flex-shrink:0;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .row-lbl:hover{color:var(--red);}
 
-/* Seats */
 .seat{width:16px;height:14px;border-radius:0;border:none;outline:1px solid rgba(255,255,255,0.3);outline-offset:-1px;cursor:pointer;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;flex-grow:0;transition:transform 0.08s;line-height:14px;}
 .seat:active{transform:scale(0.85);}
-.seat.empty{background:transparent;border:1px dashed #ccc;color:#ccc;}
+.seat.empty{background:transparent;border:none;box-shadow:none;cursor:default;width:16px;height:15px;flex-shrink:0;}
 .seat.blocked{background:var(--s2);color:#bbb;border:1px solid var(--border2);}
 
-/* Vertical gap (passage) */
-.vgap{flex-shrink:0;display:flex;align-items:center;justify-content:center;background:transparent;border-radius:2px;cursor:pointer;}
-.vgap.w1{width:6px;}
-.vgap.w2{width:12px;}
-.vgap.w3{width:20px;}
-.vgap:hover{background:rgba(0,0,0,0.04);}
-
-/* Horizontal passage row */
 .hpass-row{display:flex;align-items:center;gap:2px;margin-bottom:0;}
 .hpass-cell{background:transparent;flex-shrink:0;}
 .hpass-cell.h1{height:6px;}
 .hpass-cell.h2{height:12px;}
 .hpass-cell.h3{height:20px;}
-.hpass-row-lbl{font-size:8px;color:#0891b2;width:14px;text-align:center;flex-shrink:0;font-weight:700;}
+.hpass-row-lbl{font-size:8px;color:#cc3333;width:14px;text-align:center;flex-shrink:0;font-weight:700;cursor:pointer;}
 
-/* Price tag */
 .row-price{font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;flex-shrink:0;margin-left:3px;white-space:nowrap;}
 
-/* ADD ROW BAR */
 .add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;flex-shrink:0;pointer-events:all;}
 .ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;pointer-events:all;position:relative;z-index:101;}
 .ar-in:focus{border-color:var(--accent);}
@@ -111,7 +88,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .ar-btn.red{background:var(--red);}
 .ar-btn.col{background:var(--blue);}
 
-/* MODALS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-end;}
 .overlay.show{display:flex;}
 .modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:18px;width:100%;max-height:90vh;overflow-y:auto;}
@@ -121,7 +97,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .mi{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;}
 .mi:focus{border-color:var(--accent);}
 .mr2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;}
-.mr4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:9px;}
 .mbtns{display:flex;gap:7px;margin-top:12px;}
 .mbtn{flex:1;padding:10px;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);}
 .mbtn.pri{background:var(--text);color:#fff;border-color:var(--text);}
@@ -129,14 +104,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
 .swatch{width:26px;height:26px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:transform 0.1s;}
 .swatch.picked{border-color:var(--text);transform:scale(1.2);}
-.range-note{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div><div class="tlogo">SeatBook</div><div class="tsub">Layout Builder · Admin only</div></div>
-  <div style="display:flex;gap:6px;align-items:center;"><button onclick="undoLast()" style="background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">↩ Undo</button><button class="save-btn" onclick="showSave()">💾 Save</button></div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <button onclick="undoLast()" style="background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">↩ Undo</button>
+    <button class="save-btn" onclick="showSave()">💾 Save</button>
+  </div>
 </div>
 
 <div class="hall-bar">
@@ -226,23 +203,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
 </div>
 
-<!-- MODAL: Section -->
+<!-- MODAL: Section — paint-based, no range -->
 <div class="overlay" id="modal-sec">
   <div class="modal">
     <div class="mtitle" id="sec-mtitle">Add seat section</div>
-    <div class="mf"><div class="ml">Section name *</div><input class="mi" id="sec-name" placeholder="e.g. Premium, Regular, VIP, Sponsor"></div>
-    <div class="ml" style="margin-bottom:6px;">Seat range * <span class="range-note">(e.g. A1 to A10 — or A to C for full rows)</span></div>
-    <div class="mr2">
-      <div><div class="ml">From (e.g. A1 or A)</div><input class="mi" id="sec-from" placeholder="A1" maxlength="5"></div>
-      <div><div class="ml">To (e.g. A22 or C)</div><input class="mi" id="sec-to" placeholder="A22" maxlength="5"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+      Define a category (name + colour + price).<br>
+      Then <strong>select it and paint seats</strong> directly on the grid.
+    </div>
+    <div class="mf">
+      <div class="ml">Section name *</div>
+      <input class="mi" id="sec-name" placeholder="e.g. Premium, Regular, VIP, Corner">
     </div>
     <div class="mr2">
-      <div><div class="ml">Mode</div>
-        <select class="mi" id="sec-mode"><option value="paid">💳 Paid</option><option value="free">🎁 Free/Reserved</option></select>
+      <div>
+        <div class="ml">Mode</div>
+        <select class="mi" id="sec-mode">
+          <option value="paid">💳 Paid</option>
+          <option value="free">🎁 Free / Reserved</option>
+        </select>
       </div>
-      <div><div class="ml">Price ₹ per seat</div><input class="mi" type="number" id="sec-price" placeholder="e.g. 400"></div>
+      <div>
+        <div class="ml">Price ₹ per seat</div>
+        <input class="mi" type="number" id="sec-price" placeholder="e.g. 400">
+      </div>
     </div>
-    <div class="mf"><div class="ml">Colour</div><div class="swatches" id="swatches"></div></div>
+    <div class="mf">
+      <div class="ml">Colour</div>
+      <div class="swatches" id="swatches"></div>
+    </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-sec')">Cancel</button>
       <button class="mbtn pri" onclick="saveSec()">Save section</button>
@@ -276,7 +265,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Total seats: <strong id="sv-total">0</strong> · Rows: <strong id="sv-rows">0</strong></div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-save')">Cancel</button>
-      <button class="mbtn grn" onclick="doSave()">✓ Save JSON</button>
+      <button class="mbtn grn" onclick="doSave()">✓ Save to Supabase</button>
     </div>
   </div>
 </div>
@@ -305,7 +294,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     </div>
     <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:10px;">
       Example: Row <strong>A</strong> · Position <strong>6</strong> → <strong>1</strong><br>
-      → Seats 1-5 become empty, seat 6 becomes 1, 7 becomes 2...
+      → Seats 1–5 become empty, seat 6 becomes 1, 7 becomes 2…
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-renum')">Cancel</button>
@@ -317,44 +306,59 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <script>
 const COLORS=['#c8860a','#2b6fd4','#2e9e60','#cc3333','#7c3aed','#0891b2','#d97706','#be185d','#065f46','#1e40af'];
 
-// Supabase
-const sb = window.supabase.createClient('https://jqqnnkzozjskziaizajg.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg');
+const sb = window.supabase.createClient(
+  'https://jqqnnkzozjskziaizajg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+);
 const HALL_IDS = { sayjirao: '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a' };
-let sections=[], rows=[], fineTool=null, activeSecId=null, pickedColor=COLORS[0], painting=false, hallName='', gapSize=1;
-let renumRowIdx=null, renumCellIdx=null;
+
+let sections=[], rows=[], fineTool=null, activeSecId=null, pickedColor=COLORS[0];
+let painting=false, hallName='', currentHallKey='';
 let history=[];
-function saveHistory(){history.push(JSON.stringify({rows,sections}));if(history.length>30)history.shift();}
-function undoLast(){if(!history.length){alert('Nothing to undo.');return;}const prev=JSON.parse(history.pop());rows=prev.rows;sections=prev.sections;activeSecId=sections[0]?.id||null;render();renderSecs();}
 
-// Each row item is either:
-// {type:'row', label, cells:[{t:'seat'|'blocked'|'vgap', secId, gapW}]}
-// {type:'hpass', height:1|2|3}
+function saveHistory(){
+  history.push(JSON.stringify({rows,sections}));
+  if(history.length>30) history.shift();
+}
+function undoLast(){
+  if(!history.length){alert('Nothing to undo.');return;}
+  const prev=JSON.parse(history.pop());
+  rows=prev.rows; sections=prev.sections;
+  activeSecId=sections[0]?.id||null;
+  render(); renderSecs();
+}
 
+// ── Hall picker ──
 async function pickHall(){
   const v=document.getElementById('hall-sel').value;
-  if(!v)return;
-  const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',sayaji:'Sayaji Hall, Vadodara',townhall:'Town Hall, Vadodara',baroda:'Baroda Club Auditorium',nirmala:'Nirmala Convent Hall'};
+  if(!v) return;
+  currentHallKey=v;
+  const names={
+    sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',
+    sayaji:'Sayaji Hall, Vadodara',
+    townhall:'Town Hall, Vadodara',
+    baroda:'Baroda Club Auditorium',
+    nirmala:'Nirmala Convent Hall'
+  };
   hallName=names[v];
   document.getElementById('empty-hint').style.display='none';
   document.getElementById('stage-wrap').style.display='block';
+
   if(v==='sayjirao'){
-    // Load existing layout from Supabase if available
     rows=[];sections=[];render();renderSecs();
     const {data:hall}=await sb.from('halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
     if(hall&&hall.layout_json&&hall.layout_json.rows&&hall.layout_json.rows.length>0){
-      const confirm_load=confirm('Existing layout found in Supabase ('+hall.layout_json.rows.filter(r=>r.type==="row").length+' rows). Load it?');
-      if(confirm_load){
+      const ok=confirm('Existing layout found ('+hall.layout_json.rows.filter(r=>r.type==="row").length+' rows). Load it?');
+      if(ok){
         rows=hall.layout_json.rows;
         sections=hall.layout_json.sections||[];
         activeSecId=sections[0]?.id||null;
         render();renderSecs();
-        alert('Layout loaded! You can now edit and save.');
         return;
       }
     }
-    // Blank canvas — just stage
     rows=[];sections=[];render();renderSecs();
-    alert('Blank canvas ready. Start adding rows from the bottom bar. Remember: AA first (near stage), then BB, A, B... Z last (back of hall).');
+    alert('Blank canvas ready. Add sections first, then paint seats.');
   } else if(v==='sayaji'){
     loadDemo();
   } else {
@@ -364,8 +368,8 @@ async function pickHall(){
 
 function loadDemo(){
   sections=[
-    {id:'s1',name:'Premium',from:'A1',to:'C35',color:'#c8860a',mode:'paid',price:'400'},
-    {id:'s2',name:'Regular',from:'D1',to:'W35',color:'#2b6fd4',mode:'paid',price:'200'},
+    {id:'s1',name:'Premium',color:'#c8860a',mode:'paid',price:'400'},
+    {id:'s2',name:'Regular',color:'#2b6fd4',mode:'paid',price:'200'},
   ];
   rows=[];
   for(let ri=0;ri<23;ri++){
@@ -377,81 +381,40 @@ function loadDemo(){
       cells.push({t:'seat',secId:sec.id});
     }
     rows.push({type:'row',label:lbl,cells});
-    if(ri===2) rows.push({type:'hpass',height:2}); // passage after row C
+    if(ri===2) rows.push({type:'hpass',height:2});
   }
   activeSecId='s1';
   render();renderSecs();
-}
-
-// ── Section helpers ──
-function parseRef(ref){
-  ref=ref.trim().toUpperCase();
-  const m=ref.match(/^([A-Z]{1,2})(\d*)$/);
-  if(!m)return null;
-  return{row:m[1],seat:m[2]?parseInt(m[2]):null};
-}
-
-function seatInRange(rowLabel,seatNum,sec){
-  const f=parseRef(sec.from),t=parseRef(sec.to);
-  if(!f||!t)return false;
-  // Row-only range (no seat number)
-  if(f.seat===null&&t.seat===null){
-    return rowLabel>=f.row&&rowLabel<=t.row;
-  }
-  // Same row range
-  if(f.row===t.row){
-    if(rowLabel!==f.row)return false;
-    return seatNum>=f.seat&&seatNum<=t.seat;
-  }
-  // Cross-row range
-  if(rowLabel>f.row&&rowLabel<t.row)return true;
-  if(rowLabel===f.row)return f.seat===null||seatNum>=f.seat;
-  if(rowLabel===t.row)return t.seat===null||seatNum<=t.seat;
-  return false;
-}
-
-function getSecForSeat(rowLabel,seatNum){
-  return sections.find(s=>seatInRange(rowLabel,seatNum,s))||null;
 }
 
 // ── Tools ──
 function setFine(t){
   fineTool=fineTool===t?null:t;
   document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
-  if(fineTool){document.getElementById('ft-'+t).classList.add('active');}
-  // gap-size-row removed
+  if(fineTool) document.getElementById('ft-'+t).classList.add('active');
   renderSecs();
-}
-
-function setGapSize(n){
-  gapSize=n;
-  document.querySelectorAll('.gsz').forEach(b=>b.classList.remove('active'));
-  document.getElementById('gs'+n).classList.add('active');
 }
 
 // ── Paint ──
 function paintCell(ri,ci){
   const row=rows[ri];
-  if(row.type!=='row')return;
+  if(row.type!=='row') return;
   const cell=row.cells[ci];
-  if(!cell)return;
-  if(!painting) saveHistory(); // save once per drag
+  if(!cell||cell.t==='vgap') return;
+  if(!painting) saveHistory();
 
-  if(fineTool==='erase'){cell.t='empty';cell.secId=null;}
-  else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;}
-  // vpass handled by bottom bar insertVGap()
-  else if(activeSecId){cell.t='seat';cell.secId=activeSecId;}
+  if(fineTool==='erase'){
+    cell.t='empty'; cell.secId=null; cell.sn=null;
+  } else if(fineTool==='blocked'){
+    cell.t='blocked'; cell.secId=null; cell.sn=null;
+  } else if(activeSecId){
+    cell.t='seat'; cell.secId=activeSecId;
+  }
   render();renderSecs();
 }
 
-function paintHPass(ri){
-  if(fineTool!=='hpass')return;
-  // Insert horizontal passage BELOW this row
-  rows.splice(ri+1,0,{type:'hpass',height:gapSize});
-  render();renderSecs();
-}
-
-// ── Render ──
+// ── RENDER ──
+// KEY FIX: use cell.sn if set; empty cells do NOT increment counter
 function render(){
   const grid=document.getElementById('grid-area');
   grid.innerHTML='';
@@ -459,32 +422,24 @@ function render(){
 
   rows.forEach((rowData,ri)=>{
     if(rowData.type==='hpass'){
-      // Horizontal passage row
       const hrow=document.createElement('div');
       hrow.className='hpass-row';
       const hlbl=document.createElement('div');
       hlbl.className='hpass-row-lbl';
       hlbl.textContent='✕';
-      hlbl.title='Click to delete this horizontal passage';
-      hlbl.style.cursor='pointer';
-      hlbl.style.color='#cc3333';
-      const capturedRiH=ri;
+      hlbl.title='Click to delete this passage';
       hlbl.onclick=function(){
         saveHistory();
-        rows.splice(capturedRiH,1);
+        rows.splice(ri,1);
         render();renderSecs();
       };
       hrow.appendChild(hlbl);
-      // Fill with passage cells matching approx width
       for(let i=0;i<40;i++){
         const c=document.createElement('div');
         c.className=`hpass-cell h${rowData.height}`;
-        c.style.width='16px';
-        c.style.marginRight='2px';
+        c.style.width='16px'; c.style.marginRight='2px';
         hrow.appendChild(c);
       }
-      // Click to insert another hpass
-      hrow.addEventListener('click',()=>paintHPass(ri));
       grid.appendChild(hrow);
       return;
     }
@@ -493,35 +448,30 @@ function render(){
     const rowDiv=document.createElement('div');
     rowDiv.className='grid-row';
 
-    // Row label
     const lbl=document.createElement('div');
-    lbl.className='row-lbl';lbl.textContent=rowData.label;
+    lbl.className='row-lbl'; lbl.textContent=rowData.label;
     lbl.title='Click to delete row';
     lbl.onclick=()=>delRow(ri);
     rowDiv.appendChild(lbl);
 
-    // Cells
-    let seatNum=1;
+    // ── seat counter logic ──
+    // If any cell in this row has .sn set, use sn-mode; else auto-count
+    const hasSn=rowData.cells.some(c=>c.t==='seat'&&c.sn!=null);
+    let autoCounter=1;
     let rowSecPrices={};
 
     rowData.cells.forEach((cell,ci)=>{
       if(cell.t==='vgap'){
-        // Wrap vgap in a slightly wider clickable container for easier interaction
         const gapWrap=document.createElement('div');
-        gapWrap.style.cssText='display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:'+(cell.gapW===1?8:cell.gapW===2?14:20)+'px;height:14px;border-radius:0;transition:background 0.15s;';
+        const w=cell.gapW===1?8:cell.gapW===2?14:20;
+        gapWrap.style.cssText=`display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:${w}px;height:14px;border-radius:0;transition:background 0.15s;`;
         gapWrap.title='Click to delete this gap';
-        // Inner visual gap line
         const gapLine=document.createElement('div');
-        gapLine.style.cssText='width:'+(cell.gapW===1?2:cell.gapW===2?4:6)+'px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;';
+        const lw=cell.gapW===1?2:cell.gapW===2?4:6;
+        gapLine.style.cssText=`width:${lw}px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;`;
         gapWrap.appendChild(gapLine);
-        gapWrap.onmouseenter=function(){
-          this.style.background='rgba(204,51,51,0.12)';
-          gapLine.style.background='rgba(204,51,51,0.5)';
-        };
-        gapWrap.onmouseleave=function(){
-          this.style.background='transparent';
-          gapLine.style.background='transparent';
-        };
+        gapWrap.onmouseenter=function(){this.style.background='rgba(204,51,51,0.12)';gapLine.style.background='rgba(204,51,51,0.5)';};
+        gapWrap.onmouseleave=function(){this.style.background='transparent';gapLine.style.background='transparent';};
         gapWrap.onclick=function(e){
           e.stopPropagation();
           saveHistory();
@@ -529,8 +479,7 @@ function render(){
           render();renderSecs();
         };
         gapWrap.addEventListener('touchstart',function(e){
-          e.stopPropagation();
-          e.preventDefault();
+          e.stopPropagation();e.preventDefault();
           saveHistory();
           rowData.cells.splice(ci,1);
           render();renderSecs();
@@ -538,23 +487,34 @@ function render(){
         rowDiv.appendChild(gapWrap);
         return;
       }
+
       const btn=document.createElement('button');
       btn.className='seat';
       const sec=sections.find(s=>s.id===cell.secId);
 
       if(cell.t==='seat'&&sec){
+        // ── FIXED: display number ──
+        let displayNum;
+        if(hasSn){
+          displayNum = cell.sn!=null ? cell.sn : ''; // empty cells show blank
+        } else {
+          displayNum = autoCounter;
+        }
         btn.style.cssText=`background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
-        btn.textContent=seatNum;
+        btn.textContent=displayNum;
         total++;
         if(!rowSecPrices[sec.id]) rowSecPrices[sec.id]={sec,count:0};
         rowSecPrices[sec.id].count++;
+        // Only increment autoCounter for actual seats
+        if(!hasSn) autoCounter++;
       } else if(cell.t==='blocked'){
         btn.style.cssText='background:var(--s2);color:#bbb;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);';
         btn.textContent='✕';
+        if(!hasSn) autoCounter++; // blocked seats still take up a number slot
       } else {
-        btn.className='seat empty';btn.style.cssText='background:transparent;border:none;box-shadow:none;cursor:default;width:16px;height:15px;flex-shrink:0;';
+        // empty — no number, no increment
+        btn.className='seat empty';
       }
-      if(cell.t!=='vgap') seatNum++;
 
       btn.addEventListener('mousedown',e=>{
         if(e.button===2){e.preventDefault();openRenum(ri,ci);return;}
@@ -562,7 +522,6 @@ function render(){
       });
       btn.addEventListener('contextmenu',e=>{e.preventDefault();openRenum(ri,ci);});
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
-      // Long press for touch devices
       let pressTimer;
       btn.addEventListener('touchstart',e=>{
         pressTimer=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);
@@ -573,9 +532,7 @@ function render(){
       rowDiv.appendChild(btn);
     });
 
-
-
-    // Price tags on right
+    // Price tags
     const prices=Object.values(rowSecPrices);
     if(prices.length===1){
       const tag=document.createElement('div');
@@ -600,16 +557,17 @@ function render(){
 
   document.getElementById('st-total').textContent=total;
   document.getElementById('st-rows').textContent=rows.filter(r=>r.type==='row').length;
-  updateHGapSelect();
+  updateGapSelects();
 }
 
 // ── Sections ──
 function openAddSec(){
   document.getElementById('sec-mtitle').textContent='Add seat section';
-  ['sec-name','sec-from','sec-to','sec-price'].forEach(id=>document.getElementById(id).value='');
+  ['sec-name','sec-price'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sec-mode').value='paid';
   pickedColor=COLORS[sections.length%COLORS.length];
-  buildSwatches();showModal('modal-sec');
+  buildSwatches();
+  showModal('modal-sec');
 }
 
 function buildSwatches(){
@@ -625,60 +583,64 @@ function buildSwatches(){
 
 function saveSec(){
   const name=document.getElementById('sec-name').value.trim();
-  const from=document.getElementById('sec-from').value.trim().toUpperCase();
-  const to=document.getElementById('sec-to').value.trim().toUpperCase();
   const mode=document.getElementById('sec-mode').value;
   const price=document.getElementById('sec-price').value.trim();
-  if(!name||!from||!to){alert('Fill section name and seat range');return;}
+  if(!name){alert('Enter a section name.');return;}
   const id='s'+Date.now();
-  const sec={id,name,from,to,color:pickedColor,mode,price};
-  sections.push(sec);
+  sections.push({id,name,color:pickedColor,mode,price});
   activeSecId=id;
-  // Auto-paint matching seats
-  rows.forEach(row=>{
-    if(row.type!=='row')return;
-    let sn=1;
-    row.cells.forEach(cell=>{
-      if(cell.t==='vgap')return;
-      if(seatInRange(row.label,sn,sec)&&cell.t==='seat'){cell.secId=id;}
-      sn++;
-    });
-  });
-  closeModal('modal-sec');render();renderSecs();
+  closeModal('modal-sec');
+  render();renderSecs();
 }
 
 function renderSecs(){
   const w=document.getElementById('sec-cards');w.innerHTML='';
-  if(!sections.length){w.innerHTML='<div style="font-size:11px;color:var(--muted);">No sections yet</div>';return;}
+  if(!sections.length){
+    w.innerHTML='<div style="font-size:11px;color:var(--muted);">No sections yet — add one above</div>';
+    return;
+  }
   sections.forEach(sec=>{
     const card=document.createElement('div');
     card.className='sec-card'+(activeSecId===sec.id?' sel':'');
     card.style.borderColor=activeSecId===sec.id?sec.color:'';
     card.style.background=activeSecId===sec.id?sec.color+'12':'';
-    const price=sec.mode==='free'?'Free':'₹'+sec.price;
+    const priceLabel=sec.mode==='free'?'Free':'₹'+sec.price;
+    // Count seats
+    let cnt=0;
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
     card.innerHTML=`
       <div class="scdot" style="background:${sec.color};"></div>
       <div class="scinfo">
         <div class="scname">${sec.name}</div>
-        <div class="scmeta">${sec.from} → ${sec.to} · ${sec.mode==='free'?'Free':'Paid'}</div>
+        <div class="scmeta">${sec.mode==='free'?'Free/Reserved':'Paid'} · ${cnt} seats painted</div>
       </div>
-      <div class="scprice" style="background:${sec.color}18;color:${sec.color};">${price}</div>
+      <div class="scprice" style="background:${sec.color}18;color:${sec.color};">${priceLabel}</div>
       <button class="scdel" onclick="delSec('${sec.id}',event)">✕</button>`;
-    card.onclick=()=>{activeSecId=sec.id;fineTool=null;document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));document.getElementById('gap-size-row').style.display='none';renderSecs();};
+    card.onclick=()=>{
+      activeSecId=sec.id;
+      fineTool=null;
+      document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
+      renderSecs();
+    };
     w.appendChild(card);
   });
+
   // Active tool label
   const atl=document.getElementById('atool');
   const atn=document.getElementById('atool-name');
   const active=sections.find(s=>s.id===activeSecId);
   if(fineTool){
     atl.style.display='block';
-    atn.textContent={blocked:'Blocking seat',vpass:'V-passage — click any seat to insert gap to its left',erase:'Erasing seat'}[fineTool]||fineTool;
+    atn.textContent={blocked:'Blocking seat',erase:'Erasing seat'}[fineTool]||fineTool;
+    atn.style.color='var(--text)';
   } else if(active){
     atl.style.display='block';
     atn.textContent=`${active.name} (${active.mode==='free'?'Free':'₹'+active.price})`;
     atn.style.color=active.color;
-  } else {atl.style.display='none';}
+  } else {
+    atl.style.display='none';
+  }
+
   // Stats per section
   const sw=document.getElementById('st-secs');sw.innerHTML='';
   sections.forEach(sec=>{
@@ -693,10 +655,10 @@ function renderSecs(){
 
 function delSec(id,e){
   e.stopPropagation();
-  if(!confirm('Delete section? Seats cleared.'))return;
+  if(!confirm('Delete section? Seats will be unassigned.'))return;
   sections=sections.filter(s=>s.id!==id);
-  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===id){c.t='seat';c.secId=null;}});});
-  if(activeSecId===id)activeSecId=sections[0]?.id||null;
+  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===id){c.secId=null;}});});
+  if(activeSecId===id) activeSecId=sections[0]?.id||null;
   render();renderSecs();
 }
 
@@ -706,13 +668,9 @@ function addRow(){
   const lbl=(document.getElementById('ar-lbl').value.trim().toUpperCase())||nextLabel();
   const cnt=parseInt(document.getElementById('ar-seats').value)||35;
   const cells=[];
-  let sn=1;
   for(let i=0;i<cnt;i++){
-    // Auto vertical gaps at seat 9 and seat cnt-8 for wide rows
     if(cnt>16&&(i===8||i===cnt-9)) cells.push({t:'vgap',gapW:2});
-    const sec=sections.find(s=>seatInRange(lbl,sn,s));
-    cells.push({t:'seat',secId:sec?sec.id:null});
-    sn++;
+    cells.push({t:'seat',secId:activeSecId||null});
   }
   rows.push({type:'row',label:lbl,cells});
   document.getElementById('ar-lbl').value='';
@@ -721,112 +679,17 @@ function addRow(){
 
 function addColAll(){
   saveHistory();
-  const sec=sections.find(s=>s.id===activeSecId);
   rows.forEach(r=>{
     if(r.type!=='row')return;
-    r.cells.push({t:'seat',secId:sec?sec.id:null});
+    r.cells.push({t:'seat',secId:activeSecId||null});
   });
   render();renderSecs();
-}
-
-function updateHGapSelect(){
-  // Update H-gap from/to dropdowns
-  ['hgap-from','hgap-to'].forEach((id,idx)=>{
-    const sel=document.getElementById(id);
-    if(!sel)return;
-    const prev=sel.value;
-    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
-    rows.filter(r=>r.type==='row').forEach(r=>{
-      const opt=document.createElement('option');
-      opt.value=r.label;
-      opt.textContent=r.label;
-      if(r.label===prev)opt.selected=true;
-      sel.appendChild(opt);
-    });
-  });
-  // Update V-gap row dropdowns
-  ['vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
-    const sel=document.getElementById(id);
-    if(!sel)return;
-    const prev=sel.value;
-    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
-    rows.filter(r=>r.type==='row').forEach(r=>{
-      const opt=document.createElement('option');
-      opt.value=r.label;
-      opt.textContent=r.label;
-      if(r.label===prev)opt.selected=true;
-      sel.appendChild(opt);
-    });
-  });
-  }
-
-function insertVGap(){
-  saveHistory();
-  const fromRow=document.getElementById('vgap-from-row').value;
-  const toRow=document.getElementById('vgap-to-row').value||fromRow;
-  const position=document.getElementById('vgap-position').value; // 'before' or 'after'
-  const seatNo=parseInt(document.getElementById('vgap-seat-no').value);
-  const sz=parseInt(document.getElementById('vgap-size').value)||2;
-  if(!fromRow){alert('Select from row.');return;}
-  if(isNaN(seatNo)||seatNo<1){alert('Enter seat number.');return;}
-  let count=0;
-  rows.forEach(row=>{
-    if(row.type!=='row')return;
-    if(row.label<fromRow||row.label>toRow)return;
-    // Count seats skipping vgaps to find target position
-    let seatCount=0, insertAt=-1;
-    for(let i=0;i<row.cells.length;i++){
-      if(row.cells[i].t!=='vgap') seatCount++;
-      if(position==='before'&&seatCount===seatNo){
-        // Insert BEFORE this seat = at index i (before current cell)
-        insertAt=i;
-        break;
-      }
-      if(position==='after'&&seatCount===seatNo){
-        // Insert AFTER this seat = at index i+1
-        insertAt=i+1;
-        break;
-      }
-    }
-    // Special case: before seat 1 = insert at position 0
-    if(position==='before'&&seatNo===1) insertAt=0;
-    if(insertAt!==-1){
-      row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});
-      count++;
-    }
-  });
-  if(count===0){alert('No matching seats found in selected rows.');return;}
-  render();renderSecs();
-}
-
-
-function insertHGap(){
-  saveHistory();
-  const fromLabel=document.getElementById('hgap-from').value;
-  const toLabel=document.getElementById('hgap-to').value;
-  const sz=parseInt(document.getElementById('hgap-size').value)||2;
-  if(!fromLabel){alert('Select from row.');return;}
-  const endLabel=toLabel||fromLabel;
-  // Find row indices for range — go bottom to top to preserve indices
-  const rowIndices=[];
-  rows.forEach((r,i)=>{
-    if(r.type!=='row')return;
-    if(r.label>=fromLabel&&r.label<=endLabel) rowIndices.push(i);
-  });
-  if(!rowIndices.length){alert('No rows found in range.');return;}
-  // Insert from bottom to top so indices stay valid
-  rowIndices.reverse().forEach(ri=>{
-    rows.splice(ri+1,0,{type:'hpass',height:sz});
-  });
-  render();renderSecs();
-  updateHGapSelect();
 }
 
 function delColAll(){
   saveHistory();
   rows.forEach(r=>{
     if(r.type!=='row')return;
-    // Remove last non-vgap cell
     for(let i=r.cells.length-1;i>=0;i--){
       if(r.cells[i].t!=='vgap'){r.cells.splice(i,1);break;}
     }
@@ -855,10 +718,81 @@ function nextLabel(){
 
 function clearAll(){
   saveHistory();
-  if(confirm('Clear all seats?')){
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat')c.secId=null;});});
+  if(confirm('Clear all seat assignments?')){
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'){c.secId=null;c.sn=null;}});});
     render();renderSecs();
   }
+}
+
+// ── Gap tools ──
+function updateGapSelects(){
+  ['hgap-from','hgap-to'].forEach((id,idx)=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
+    rows.filter(r=>r.type==='row').forEach(r=>{
+      const opt=document.createElement('option');
+      opt.value=r.label;opt.textContent=r.label;
+      if(r.label===prev)opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
+  ['vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">'+(idx===0?'from':'to')+'</option>';
+    rows.filter(r=>r.type==='row').forEach(r=>{
+      const opt=document.createElement('option');
+      opt.value=r.label;opt.textContent=r.label;
+      if(r.label===prev)opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function insertVGap(){
+  saveHistory();
+  const fromRow=document.getElementById('vgap-from-row').value;
+  const toRow=document.getElementById('vgap-to-row').value||fromRow;
+  const position=document.getElementById('vgap-position').value;
+  const seatNo=parseInt(document.getElementById('vgap-seat-no').value);
+  const sz=parseInt(document.getElementById('vgap-size').value)||2;
+  if(!fromRow){alert('Select from row.');return;}
+  if(isNaN(seatNo)||seatNo<1){alert('Enter seat number.');return;}
+  let count=0;
+  rows.forEach(row=>{
+    if(row.type!=='row')return;
+    if(row.label<fromRow||row.label>toRow)return;
+    let seatCount=0,insertAt=-1;
+    for(let i=0;i<row.cells.length;i++){
+      if(row.cells[i].t!=='vgap') seatCount++;
+      if(position==='before'&&seatCount===seatNo){insertAt=i;break;}
+      if(position==='after'&&seatCount===seatNo){insertAt=i+1;break;}
+    }
+    if(position==='before'&&seatNo===1) insertAt=0;
+    if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
+  });
+  if(count===0){alert('No matching seats found.');return;}
+  render();renderSecs();
+}
+
+function insertHGap(){
+  saveHistory();
+  const fromLabel=document.getElementById('hgap-from').value;
+  const toLabel=document.getElementById('hgap-to').value;
+  const sz=parseInt(document.getElementById('hgap-size').value)||2;
+  if(!fromLabel){alert('Select from row.');return;}
+  const endLabel=toLabel||fromLabel;
+  const rowIndices=[];
+  rows.forEach((r,i)=>{
+    if(r.type!=='row')return;
+    if(r.label>=fromLabel&&r.label<=endLabel) rowIndices.push(i);
+  });
+  if(!rowIndices.length){alert('No rows found in range.');return;}
+  rowIndices.reverse().forEach(ri=>{
+    rows.splice(ri+1,0,{type:'hpass',height:sz});
+  });
+  render();renderSecs();
 }
 
 // ── Hall ──
@@ -868,7 +802,6 @@ function createHall(){
   if(!n){alert('Enter hall name');return;}
   hallName=n+(c?', '+c:'');
   rows=[];sections=[];
-  // Blank 23x35 grid
   for(let ri=0;ri<23;ri++){
     const lbl=String.fromCharCode(65+ri);
     const cells=[];
@@ -881,21 +814,22 @@ function createHall(){
   render();renderSecs();
 }
 
-// ── Save ──
+// ── Save to Supabase ──
 function showSave(){
   if(!rows.length){alert('Nothing to save.');return;}
-  let total=0;rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'&&c.secId)total++;});});
+  let total=0;
+  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'&&c.secId)total++;});});
   document.getElementById('sv-total').textContent=total;
   document.getElementById('sv-rows').textContent=rows.filter(r=>r.type==='row').length;
   document.getElementById('save-hall-lbl').textContent=hallName||'Unnamed hall';
   const sum=document.getElementById('save-sum');sum.innerHTML='';
   sections.forEach(sec=>{
-    let cnt=0;rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
+    let cnt=0;
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
     const row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;gap:7px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);';
     row.innerHTML=`<div style="width:9px;height:9px;border-radius:2px;background:${sec.color};flex-shrink:0;"></div>
       <span style="flex:1;font-weight:600;">${sec.name}</span>
-      <span style="color:var(--muted);">${sec.from}→${sec.to}</span>
       <span style="color:${sec.color};font-weight:700;">${sec.mode==='free'?'Free':'₹'+sec.price}</span>
       <span style="color:var(--muted);">${cnt} seats</span>`;
     sum.appendChild(row);
@@ -903,94 +837,123 @@ function showSave(){
   showModal('modal-save');
 }
 
-function doSave(){
+async function doSave(){
+  const hallKey=currentHallKey;
+  const hallId=HALL_IDS[hallKey];
   const data={hall:hallName,sections,rows,savedAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=(hallName||'hall').replace(/[^a-z0-9]/gi,'_')+'_layout.json';
-  a.click();
-  closeModal('modal-save');
-  alert('✓ Layout saved!\nUpload this JSON to Supabase when backend is connected.');
-}
 
-function openRenum(ri, ci) {
-  renumRowIdx = ri;
-  renumCellIdx = ci;
-  // Pre-fill row label and current seat number
-  const row = rows[ri];
-  if (row && row.type === 'row') {
-    document.getElementById('renum-row').value = row.label;
-    const cell = row.cells[ci];
-    if (cell && cell.sn) document.getElementById('renum-pos').value = cell.sn;
+  if(hallId){
+    // Save to Supabase
+    const {error}=await sb.from('halls').update({layout_json:data}).eq('id',hallId);
+    if(error){
+      alert('Supabase error: '+error.message);
+      return;
+    }
+    closeModal('modal-save');
+    alert('✓ Layout saved to Supabase!');
+  } else {
+    // Fallback: download JSON
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(hallName||'hall').replace(/[^a-z0-9]/gi,'_')+'_layout.json';
+    a.click();
+    closeModal('modal-save');
+    alert('✓ Layout downloaded as JSON.');
   }
-  document.getElementById('renum-val').value = '';
-  showModal('modal-renum');
-  setTimeout(() => document.getElementById('renum-val').focus(), 100);
 }
 
-// Also allow opening renumber dialog without right-click via toolbar button
-function openRenumManual() {
-  renumRowIdx = null;
-  renumCellIdx = null;
-  document.getElementById('renum-row').value = '';
-  document.getElementById('renum-pos').value = '';
-  document.getElementById('renum-val').value = '';
+// ── Renumber ──
+function openRenum(ri,ci){
+  const row=rows[ri];
+  if(row&&row.type==='row'){
+    document.getElementById('renum-row').value=row.label;
+    // Find current seat number at this cell
+    let sn=0;
+    const hasSn=row.cells.some(c=>c.t==='seat'&&c.sn!=null);
+    if(hasSn){
+      sn=row.cells[ci].sn||'';
+    } else {
+      let counter=0;
+      for(let i=0;i<=ci;i++){
+        if(row.cells[i].t!=='vgap'&&row.cells[i].t!=='empty') counter++;
+      }
+      sn=counter;
+    }
+    document.getElementById('renum-pos').value=sn||'';
+  }
+  document.getElementById('renum-val').value='';
   showModal('modal-renum');
-  setTimeout(() => document.getElementById('renum-row').focus(), 100);
+  setTimeout(()=>document.getElementById('renum-val').focus(),100);
 }
 
-function applyRenum() {
-  const rowLabel = document.getElementById('renum-row').value.trim().toUpperCase();
-  const atPos = parseInt(document.getElementById('renum-pos').value);
-  const newNum = parseInt(document.getElementById('renum-val').value);
+function openRenumManual(){
+  document.getElementById('renum-row').value='';
+  document.getElementById('renum-pos').value='';
+  document.getElementById('renum-val').value='';
+  showModal('modal-renum');
+  setTimeout(()=>document.getElementById('renum-row').focus(),100);
+}
 
-  if (!rowLabel) { alert('Enter a row label (e.g. A).'); return; }
-  if (isNaN(atPos) || atPos < 1) { alert('Enter the current seat position number.'); return; }
-  if (isNaN(newNum) || newNum < 1) { alert('Enter the new seat number.'); return; }
+function applyRenum(){
+  const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
+  const atPos=parseInt(document.getElementById('renum-pos').value);
+  const newNum=parseInt(document.getElementById('renum-val').value);
 
-  // Find the row
-  const rowData = rows.find(r => r.type === 'row' && r.label === rowLabel);
-  if (!rowData) { alert('Row ' + rowLabel + ' not found.'); return; }
+  if(!rowLabel){alert('Enter a row label (e.g. A).');return;}
+  if(isNaN(atPos)||atPos<1){alert('Enter the current seat position number.');return;}
+  if(isNaN(newNum)||newNum<1){alert('Enter the new seat number.');return;}
 
-  // Get all non-vgap cells in order
-  let seatCells = [];
-  rowData.cells.forEach((cell, ci) => {
-    if (cell.t !== 'vgap') seatCells.push({ cellIdx: ci, cell });
+  const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
+  if(!rowData){alert('Row '+rowLabel+' not found.');return;}
+
+  // Get all non-vgap cells in order with their index
+  const seatCells=[];
+  rowData.cells.forEach((cell,ci)=>{
+    if(cell.t!=='vgap') seatCells.push({ci,cell});
   });
 
-  // Find the cell at position atPos (by current sn or by index)
-  let targetIdx = seatCells.findIndex(s => s.cell.sn === atPos);
-  if (targetIdx === -1) {
-    // fallback: use position index (1-based)
-    targetIdx = atPos - 1;
+  // Find target by matching current displayed number
+  // First check if any cells already have .sn set
+  const hasSn=seatCells.some(s=>s.cell.sn!=null);
+  let targetIdx=-1;
+
+  if(hasSn){
+    // Find cell whose .sn === atPos
+    targetIdx=seatCells.findIndex(s=>s.cell.sn===atPos);
   }
-  if (targetIdx < 0 || targetIdx >= seatCells.length) {
-    alert('Position ' + atPos + ' not found in row ' + rowLabel); return;
+  if(targetIdx===-1){
+    // fallback: treat atPos as 1-based position index
+    targetIdx=atPos-1;
   }
 
-  // Erase all seats before target
-  for (let i = 0; i < targetIdx; i++) {
-    seatCells[i].cell.t = 'empty';
-    seatCells[i].cell.secId = null;
-    seatCells[i].cell.sn = null;
+  if(targetIdx<0||targetIdx>=seatCells.length){
+    alert('Position '+atPos+' not found in row '+rowLabel);return;
   }
 
-  // Renumber from target onwards
-  let num = newNum;
-  for (let i = targetIdx; i < seatCells.length; i++) {
-    const cell = seatCells[i].cell;
-    if (cell.t === 'empty') continue;
-    cell.sn = num++;
+  saveHistory();
+
+  // Seats BEFORE target → empty
+  for(let i=0;i<targetIdx;i++){
+    seatCells[i].cell.t='empty';
+    seatCells[i].cell.secId=null;
+    seatCells[i].cell.sn=null;
+  }
+
+  // Seats FROM target onwards → assign sn sequentially
+  // Skip empty cells — they keep their empty status
+  let num=newNum;
+  for(let i=targetIdx;i<seatCells.length;i++){
+    const cell=seatCells[i].cell;
+    if(cell.t==='empty') continue; // already empty, skip
+    cell.sn=num++;
   }
 
   closeModal('modal-renum');
-  // Clear fields
-  document.getElementById('renum-row').value = '';
-  document.getElementById('renum-pos').value = '';
-  document.getElementById('renum-val').value = '';
-  render();
-  renderSecs();
+  document.getElementById('renum-row').value='';
+  document.getElementById('renum-pos').value='';
+  document.getElementById('renum-val').value='';
+  render();renderSecs();
 }
 
 function showModal(id){document.getElementById(id).classList.add('show');}
