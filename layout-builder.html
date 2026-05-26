@@ -847,23 +847,44 @@ function applyRenum(){
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
+  // Collect all non-vgap cells in order
   const seatCells=[];
   rowData.cells.forEach((cell,ci)=>{if(cell.t!=='vgap')seatCells.push({ci,cell});});
+
+  // Find target cell by sn (if renumber was done before) else by 1-based position
   const hasSn=seatCells.some(s=>s.cell.sn!=null);
   let targetIdx=hasSn?seatCells.findIndex(s=>s.cell.sn===atPos):-1;
   if(targetIdx===-1)targetIdx=atPos-1;
-  if(targetIdx<0||targetIdx>=seatCells.length){alert('Position not found.');return;}
+  if(targetIdx<0||targetIdx>=seatCells.length){alert('Position '+atPos+' not found in row '+rowLabel+'.');return;}
 
   saveHistory();
-  for(let i=0;i<targetIdx;i++){
-    seatCells[i].cell.t='empty';seatCells[i].cell.secId=null;seatCells[i].cell.sn=null;
+
+  // Find the last non-empty cell BEFORE target — erase only from there+1 up to target
+  // This preserves any previous renumber work before this point
+  let eraseFrom=0;
+  for(let i=targetIdx-1;i>=0;i--){
+    if(seatCells[i].cell.t!=='empty'){
+      eraseFrom=i+1; // erase starts just after this non-empty cell
+      break;
+    }
+    // if all before are empty, eraseFrom stays 0 (no-op since they're already empty)
   }
+
+  // Erase from eraseFrom up to (not including) targetIdx
+  for(let i=eraseFrom;i<targetIdx;i++){
+    seatCells[i].cell.t='empty';
+    seatCells[i].cell.secId=null;
+    seatCells[i].cell.sn=null;
+  }
+
+  // Renumber from target onwards — skip already-empty cells, stop at next empty gap
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
-    if(cell.t==='empty')continue;
+    if(cell.t==='empty') continue; // leave empty cells alone
     cell.sn=num++;
   }
+
   closeModal('modal-renum');
   document.getElementById('renum-row').value='';
   document.getElementById('renum-pos').value='';
