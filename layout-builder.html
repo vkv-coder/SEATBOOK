@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SeatBook — Layout Builder</title>
+<title>Khursilo — Layout Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -67,7 +67,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
 
 .grid-area{display:flex;flex-direction:column;gap:0;width:max-content;}
-.grid-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;}
+.grid-row{display:flex;align-items:center;gap:1px;margin-bottom:0;}
 .row-lbl-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:18px;gap:1px;}
 .row-lbl{font-size:9px;color:var(--muted);width:18px;text-align:center;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:10px;}
 .row-lbl:hover{color:var(--red);}
@@ -77,9 +77,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .row-op.restore{background:rgba(46,158,96,0.15);color:#2e9e60;}
 .row-op.restore:hover{background:rgba(46,158,96,0.35);}
 
-.seat{width:16px;height:14px;border-radius:0;border:none;cursor:pointer;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:14px;outline:none;}
+.seat{width:14px;height:12px;border-radius:0;border:none;cursor:pointer;font-size:6px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:12px;outline:none;}
 .seat:active{transform:scale(0.85);}
-.seat.empty{background:transparent;width:16px;height:14px;flex-shrink:0;cursor:default;pointer-events:none;}
+.seat.empty{background:transparent;width:14px;height:12px;flex-shrink:0;cursor:default;pointer-events:none;}
 .seat.unassigned{background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.12);color:#999;}
 .seat.blocked{background:var(--s2);color:#bbb;border:1px solid var(--border2);}
 .seat.highlight{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.3);}
@@ -129,7 +129,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <body>
 
 <div class="topbar">
-  <div><div class="tlogo">SeatBook</div><div class="tsub">Layout Builder · Admin only</div></div>
+  <div><div class="tlogo">Khursilo</div><div class="tsub">Layout Builder · Admin only</div></div>
   <div style="display:flex;gap:6px;align-items:center;">
     <button onclick="undoLast()" style="background:var(--s2);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">↩ Undo</button>
     <button class="save-btn" onclick="showSave()">💾 Save</button>
@@ -157,9 +157,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="atool" id="atool" style="display:none;">
     Active: <strong id="atool-name"></strong>
   </div>
-  <div style="font-size:10px;color:var(--muted);margin-top:5px;">
-    💡 Tap 🔢 Number mode → click any seat → type number → Enter
-  </div>
+
 </div>
 
 <!-- PAINT TOOLS -->
@@ -211,7 +209,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: Quick Build -->
-<div class="overlay" id="modal-quickbuild">
+<div class="overlay" id="modal-quickbuild" onclick="if(event.target===this)closeModal('modal-quickbuild')">
   <div class="modal">
     <div class="mtitle">⚡ Quick build hall</div>
     <div class="mf">
@@ -231,9 +229,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: Gaps -->
-<div class="overlay" id="modal-gaps">
+<div class="overlay" id="modal-gaps" onclick="if(event.target===this)closeModal('modal-gaps')">
   <div class="modal">
-    <div class="mtitle">Insert passages / gaps</div>
+    <div class="mtitle" style="display:flex;justify-content:space-between;align-items:center;">
+      Insert passages / gaps
+      <button onclick="closeModal('modal-gaps')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;">✕</button>
+    </div>
     <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:8px;">⎸ Vertical gap (aisle between seats)</div>
     <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
       <span style="font-size:10px;color:var(--muted);">Row</span>
@@ -269,7 +270,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: Section -->
-<div class="overlay" id="modal-sec">
+<div class="overlay" id="modal-sec" onclick="if(event.target===this)closeModal('modal-sec')">
   <div class="modal">
     <div class="mtitle">Add section</div>
     <div class="mf">
@@ -293,7 +294,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: New Hall -->
-<div class="overlay" id="modal-hall">
+<div class="overlay" id="modal-hall" onclick="if(event.target===this)closeModal('modal-hall')">
   <div class="modal">
     <div class="mtitle">Add new hall</div>
     <div class="mf"><div class="ml">Hall name *</div><input class="mi" id="nh-name" placeholder="e.g. Navrang Hall"></div>
@@ -306,7 +307,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: Save -->
-<div class="overlay" id="modal-save">
+<div class="overlay" id="modal-save" onclick="if(event.target===this)closeModal('modal-save')">
   <div class="modal">
     <div style="text-align:center;margin-bottom:14px;">
       <div style="font-size:32px;margin-bottom:6px;">💾</div>
@@ -325,7 +326,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MODAL: Seat number (right-click) -->
-<div class="overlay" id="modal-renum">
+<div class="overlay" id="modal-renum" onclick="if(event.target===this)closeModal('modal-renum')">
   <div class="modal">
     <div class="mtitle">Seat action</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">
@@ -536,31 +537,12 @@ function render(){
     const rowDiv=document.createElement('div');
     rowDiv.className='grid-row';
 
-    const lblWrap=document.createElement('div');
-    lblWrap.className='row-lbl-wrap';
-
     const lbl=document.createElement('div');
     lbl.className='row-lbl';
     lbl.textContent=rowData.label;
     lbl.title='Click to delete row';
     lbl.onclick=()=>delRow(ri);
-
-    const vanishBtn=document.createElement('button');
-    vanishBtn.className='row-op vanish';
-    vanishBtn.textContent='▼';
-    vanishBtn.title='Vanish un-numbered seats in this row';
-    vanishBtn.onclick=(e)=>{e.stopPropagation();vanishBlanks(ri);};
-
-    const restoreBtn=document.createElement('button');
-    restoreBtn.className='row-op restore';
-    restoreBtn.textContent='▲';
-    restoreBtn.title='Restore blank seats in this row';
-    restoreBtn.onclick=(e)=>{e.stopPropagation();restoreBlanks(ri);};
-
-    lblWrap.appendChild(lbl);
-    lblWrap.appendChild(vanishBtn);
-    lblWrap.appendChild(restoreBtn);
-    rowDiv.appendChild(lblWrap);
+    rowDiv.appendChild(lbl);
 
     let rowSecPrices={};
 
@@ -584,6 +566,15 @@ function render(){
 
       if(cell.t==='empty'){
         btn.className='seat empty';
+        // Show row label in middle empty cell of passage (run >= 3)
+        let rs=ci,re=ci;
+        while(rs>0&&rowData.cells[rs-1]&&rowData.cells[rs-1].t==='empty')rs--;
+        while(re<rowData.cells.length-1&&rowData.cells[re+1]&&rowData.cells[re+1].t==='empty')re++;
+        const rlen=re-rs+1;
+        if(rlen>=3&&ci===Math.floor((rs+re)/2)){
+          btn.style.cssText='width:14px;height:12px;flex-shrink:0;cursor:default;pointer-events:none;font-size:6px;font-weight:700;color:#bbb;display:flex;align-items:center;justify-content:center;';
+          btn.textContent=rowData.label;
+        }
       } else if(cell.t==='blocked'){
         btn.className='seat blocked';
         btn.textContent='✕';
