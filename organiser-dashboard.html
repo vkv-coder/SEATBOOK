@@ -8,31 +8,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #f5f5f3;
-  --white: #ffffff;
-  --surface: #ffffff;
-  --surface2: #f0eeea;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.14);
-  --text: #1a1a1a;
-  --muted: #777;
-  --accent: #c8860a;
-  --accent-dim: rgba(200,134,10,0.10);
-  --green: #2e9e60;
-  --green-dim: rgba(46,158,96,0.10);
-  --red: #cc3333;
-  --red-dim: rgba(204,51,51,0.08);
-  --blue: #2b6fd4;
-  --blue-dim: rgba(43,111,212,0.10);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --bg: #f5f5f3; --white: #ffffff; --surface: #ffffff; --surface2: #f0eeea;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14);
+  --text: #1a1a1a; --muted: #777; --accent: #c8860a; --accent-dim: rgba(200,134,10,0.10);
+  --green: #2e9e60; --green-dim: rgba(46,158,96,0.10);
+  --red: #cc3333; --red-dim: rgba(204,51,51,0.08);
+  --blue: #2b6fd4; --blue-dim: rgba(43,111,212,0.10);
+  --radius: 12px; --radius-sm: 8px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; }
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
 
-/* ── LOGIN ── */
 .login-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; }
 .login-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 4px; }
 .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
@@ -44,21 +32,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .input-field::placeholder { color: var(--muted); }
 .btn-primary { width: 100%; padding: 13px; background: var(--text); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
 .btn-primary:active { opacity: 0.85; }
-.otp-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.otp-input { flex: 1; text-align: center; font-size: 20px; font-weight: 600; padding: 12px 4px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
-.otp-input:focus { border-color: var(--accent); }
 
-/* ── TOPBAR ── */
 .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
 .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 20px; }
 .topbar-user { display: flex; align-items: center; gap: 8px; }
 .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(200,134,10,0.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--accent); }
 .logout-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
-/* ── DASHBOARD BODY ── */
 .dash-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 
-/* ── EVENT CARD ── */
 .event-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
 .event-card-header { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); padding: 16px; color: #fff; }
 .event-card-tag { font-size: 10px; letter-spacing: 1px; opacity: 0.6; margin-bottom: 6px; text-transform: uppercase; }
@@ -67,11 +49,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .event-meta-row { font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 6px; }
 .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
 .status-pill.live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,158,96,0.2); }
-.status-pill.closed { background: var(--red-dim); color: var(--red); border: 1px solid rgba(204,51,51,0.15); }
 .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-/* ── OCCUPANCY ── */
 .occupancy-row { display: flex; align-items: center; gap: 16px; padding: 16px; border-bottom: 1px solid var(--border); }
 .donut-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
 .donut-wrap svg { transform: rotate(-90deg); }
@@ -84,18 +64,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .occ-dot { width: 8px; height: 8px; border-radius: 2px; }
 .occ-stat-val { font-size: 13px; font-weight: 500; color: var(--text); }
 
-/* ── QUICK ACTIONS ── */
 .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .qa-icon { font-size: 20px; }
 .qa-label { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-/* ── SECTION HEADER ── */
 .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 8px; }
 .section-hdr-title { font-size: 13px; font-weight: 500; }
 .section-hdr-action { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
 
-/* ── BOOKINGS LIST ── */
 .bookings-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
 .booking-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: center; gap: 10px; }
 .booking-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue-dim); border: 1px solid rgba(43,111,212,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
@@ -109,7 +86,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .bs-pending { background: var(--accent-dim); color: var(--accent); }
 .bs-failed { background: var(--red-dim); color: var(--red); }
 
-/* ── REVENUE CARD ── */
 .revenue-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
 .revenue-title { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
 .revenue-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin-bottom: 12px; }
@@ -120,7 +96,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .rev-bar-fill { height: 100%; border-radius: 3px; }
 .rev-bar-val { font-size: 11px; color: var(--text); font-weight: 500; width: 40px; text-align: right; flex-shrink: 0; }
 
-/* ── GATE CHECK-IN ── */
 .gate-screen { flex: 1; display: flex; flex-direction: column; background: #0f0f0f; color: #fff; }
 .gate-top { padding: 48px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .gate-back { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-bottom: 16px; display: flex; align-items: center; gap: 4px; }
@@ -140,8 +115,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .manual-entry { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; text-align: center; letter-spacing: 2px; }
 .manual-entry::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; }
 .gate-check-btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
-
-/* ── GATE RESULT ── */
 .gate-result { width: 100%; border-radius: var(--radius); padding: 16px; text-align: center; display: none; }
 .gate-result.show { display: block; }
 .gate-result.success { background: rgba(46,158,96,0.15); border: 1px solid rgba(46,158,96,0.3); }
@@ -150,27 +123,29 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .gate-result-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .gate-result-detail { font-size: 13px; opacity: 0.7; }
 
-/* ── PROFILE SCREEN ── */
-.profile-screen{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
-.profile-hero{background:linear-gradient(135deg,#1a1a1a 0%,#333 100%);border-radius:var(--radius);padding:20px;color:#fff;text-align:center;}
-.profile-hero-icon{font-size:48px;margin-bottom:8px;}
-.profile-hero-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px;}
-.profile-hero-sub{font-size:13px;opacity:0.7;}
-.profile-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;}
-.profile-card-title{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.profile-save-btn{width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;margin-top:4px;}
-.profile-save-btn:active{opacity:0.85;}
+.profile-screen { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.profile-hero { background: linear-gradient(135deg,#1a1a1a 0%,#333 100%); border-radius: var(--radius); padding: 20px; color: #fff; text-align: center; }
+.profile-hero-icon { font-size: 48px; margin-bottom: 8px; }
+.profile-hero-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+.profile-hero-sub { font-size: 13px; opacity: 0.7; }
+.profile-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
+.profile-card-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.profile-save-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 4px; }
+.profile-save-btn:active { opacity: 0.85; }
+.profile-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── FILTER TABS ── */
 .filter-tabs { display: flex; gap: 6px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
 .filter-tabs::-webkit-scrollbar { display: none; }
 .ftab { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--muted); white-space: nowrap; }
 .ftab.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+.field-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.field-group { margin-bottom: 12px; }
 </style>
 </head>
 <body>
 
-<!-- ══ SCREEN: LOGIN ══ -->
+<!-- LOGIN -->
 <div class="screen active" id="screen-login">
   <div class="login-wrap">
     <div class="login-logo">Khursilo</div>
@@ -179,24 +154,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="login-title">Organiser login</div>
       <div class="login-desc">Enter your registered email address</div>
       <input class="input-field" type="email" placeholder="your@email.com" id="inp-email">
-      <div class="err-msg" id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-top:6px;"></div>
+      <div id="email-err" style="display:none;color:#cc3333;font-size:12px;margin-bottom:8px;"></div>
       <button class="btn-primary" onclick="sendOTP()" id="send-otp-btn">Send login link →</button>
       <div style="margin-top:10px;background:#f0f7ff;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.6;">
-        📧 You will receive an email from <strong>khursilo</strong> with subject <strong>"Your Magic Link"</strong>. 
-        Click the <strong>"Log In"</strong> button in that email to access your dashboard. 
-        It is safe and secure — no password needed.
+        📧 You will receive an email from <strong>khursilo</strong> with subject <strong>"Your Magic Link"</strong>. Click <strong>"Log In"</strong> to access your dashboard.
       </div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
         <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px;">New organiser?</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;">
-          Register with us to start using Khursilo for your events.
-        </div>
-        <a href="mailto:vkvcoder.support@gmail.com" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;">
-          📧 vkvcoder.support@gmail.com
-        </a>
-        <a href="https://wa.me/919327243611" target="_blank" style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#25d366;text-decoration:none;font-weight:500;">
-          📱 WhatsApp: 93272 43611
-        </a>
+        <a href="mailto:vkvcoder.support@gmail.com" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;">📧 vkvcoder.support@gmail.com</a>
+        <a href="https://wa.me/919327243611" target="_blank" style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:#25d366;text-decoration:none;font-weight:500;">📱 WhatsApp: 93272 43611</a>
       </div>
     </div>
     <div class="login-card" id="card-otp" style="display:none;">
@@ -204,19 +170,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="login-desc" id="otp-sent-to">Login link sent to your email</div>
       <div style="text-align:center;padding:20px 0;font-size:40px;">📧</div>
       <div style="background:#f0f7ff;border-radius:8px;padding:12px;font-size:12px;color:#444;line-height:1.7;margin-bottom:12px;">
-        ✅ Email sent from <strong>khursilo</strong><br>
-        📌 Subject: <strong>"Your Magic Link"</strong><br>
-        👆 Click <strong>"Log In"</strong> in the email<br>
-        ⚠️ Check spam if not in inbox
+        ✅ Email sent from <strong>khursilo</strong><br>📌 Subject: <strong>"Your Magic Link"</strong><br>👆 Click <strong>"Log In"</strong> in the email<br>⚠️ Check spam if not in inbox
       </div>
-      <div class="err-msg" id="otp-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
+      <div id="otp-err" style="display:none;color:#cc3333;font-size:12px;margin-top:4px;"></div>
       <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted);">Didn't receive? <span style="color:var(--accent);cursor:pointer;" onclick="resendOTP()">Resend email</span></div>
       <div style="text-align:center;margin-top:6px;font-size:12px;color:var(--muted);"><span style="color:var(--accent);cursor:pointer;" onclick="goBackToEmail()">← Use different email</span></div>
     </div>
   </div>
 </div>
 
-<!-- ══ SCREEN: PROFILE ══ -->
+<!-- PROFILE -->
 <div class="screen" id="screen-profile">
   <div class="topbar">
     <div class="topbar-logo">Khursilo</div>
@@ -228,7 +191,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="profile-hero-title">Welcome to Khursilo!</div>
       <div class="profile-hero-sub">Please complete your profile to continue</div>
     </div>
-
     <div class="profile-card">
       <div class="profile-card-title">👤 Organisation details</div>
       <div class="field-group">
@@ -244,7 +206,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <input class="input-field" type="tel" id="prof-mobile" placeholder="98765 43210" maxlength="10">
       </div>
     </div>
-
     <div class="profile-card">
       <div class="profile-card-title">🔑 Razorpay account <span style="font-size:11px;color:var(--muted);font-weight:400;">(for paid events)</span></div>
       <div style="background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#1a4a8a;margin-bottom:12px;line-height:1.5;">
@@ -259,13 +220,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <input class="input-field" type="password" id="prof-rzp-secret" placeholder="••••••••••••••••" style="font-family:monospace;font-size:13px;">
       </div>
     </div>
-
-    <button class="profile-save-btn" onclick="saveProfile()">Save & go to dashboard →</button>
+    <div id="profile-err" style="display:none;background:var(--red-dim);border:1px solid rgba(204,51,51,0.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--red);"></div>
+    <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">Save & go to dashboard →</button>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px;">You can update these details anytime from your dashboard</div>
   </div>
 </div>
 
-<!-- ══ SCREEN: DASHBOARD ══ -->
+<!-- DASHBOARD -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar">
     <div class="topbar-logo">Khursilo</div>
@@ -274,10 +235,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
-
   <div class="dash-body">
-
-    <!-- Event Card -->
     <div class="event-card">
       <div class="event-card-header">
         <div class="event-card-tag">Active event</div>
@@ -291,87 +249,40 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
           </div>
         </div>
       </div>
-
-      <!-- Occupancy -->
       <div class="occupancy-row">
         <div class="donut-wrap">
           <svg width="80" height="80" viewBox="0 0 80 80">
             <circle cx="40" cy="40" r="30" fill="none" stroke="#f0eeea" stroke-width="10"/>
-            <circle cx="40" cy="40" r="30" fill="none" stroke="#c8860a" stroke-width="10"
-              stroke-dasharray="113 188" stroke-linecap="round" id="donut-arc"/>
+            <circle cx="40" cy="40" r="30" fill="none" stroke="#c8860a" stroke-width="10" stroke-dasharray="113 188" stroke-linecap="round"/>
           </svg>
-          <div class="donut-center">
-            <div class="donut-pct" id="donut-pct">60%</div>
-            <div class="donut-lbl">filled</div>
-          </div>
+          <div class="donut-center"><div class="donut-pct">60%</div><div class="donut-lbl">filled</div></div>
         </div>
         <div class="occ-stats">
-          <div class="occ-stat-row">
-            <div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Confirmed</div>
-            <div class="occ-stat-val" id="stat-confirmed">51</div>
-          </div>
-          <div class="occ-stat-row">
-            <div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div>
-            <div class="occ-stat-val" id="stat-pending">7</div>
-          </div>
-          <div class="occ-stat-row">
-            <div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div>
-            <div class="occ-stat-val" id="stat-available">27</div>
-          </div>
-          <div class="occ-stat-row">
-            <div class="occ-stat-label" style="font-weight:500;color:var(--text);">Total seats</div>
-            <div class="occ-stat-val">85</div>
-          </div>
+          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Confirmed</div><div class="occ-stat-val">51</div></div>
+          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div><div class="occ-stat-val">7</div></div>
+          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div><div class="occ-stat-val">27</div></div>
+          <div class="occ-stat-row"><div class="occ-stat-label" style="font-weight:500;color:var(--text);">Total seats</div><div class="occ-stat-val">85</div></div>
         </div>
       </div>
-
-      <!-- Quick Actions -->
       <div class="quick-actions">
-        <button class="qa-btn" onclick="showScreen('screen-gate')">
-          <div class="qa-icon">📷</div>
-          <div class="qa-label">Gate check-in</div>
-        </button>
-        <button class="qa-btn" onclick="downloadCSV()">
-          <div class="qa-icon">📥</div>
-          <div class="qa-label">Download CSV</div>
-        </button>
-        <button class="qa-btn" onclick="shareLink()">
-          <div class="qa-icon">🔗</div>
-          <div class="qa-label">Share booking link</div>
-        </button>
-        <button class="qa-btn" onclick="closeBooking()">
-          <div class="qa-icon">🔒</div>
-          <div class="qa-label">Close booking</div>
-        </button>
+        <button class="qa-btn" onclick="showScreen('screen-gate')"><div class="qa-icon">📷</div><div class="qa-label">Gate check-in</div></button>
+        <button class="qa-btn" onclick="downloadCSV()"><div class="qa-icon">📥</div><div class="qa-label">Download CSV</div></button>
+        <button class="qa-btn" onclick="shareLink()"><div class="qa-icon">🔗</div><div class="qa-label">Share booking link</div></button>
+        <button class="qa-btn" onclick="closeBooking()"><div class="qa-icon">🔒</div><div class="qa-label">Close booking</div></button>
       </div>
-
-      <!-- Revenue -->
       <div style="padding:0 16px 16px;">
         <div class="revenue-card">
           <div class="revenue-title">Total revenue</div>
           <div class="revenue-amount">₹16,400</div>
           <div class="revenue-bars">
-            <div class="rev-bar-row">
-              <div class="rev-bar-label">Premium</div>
-              <div class="rev-bar-track"><div class="rev-bar-fill" style="width:70%;background:var(--accent);"></div></div>
-              <div class="rev-bar-val">₹8,800</div>
-            </div>
-            <div class="rev-bar-row">
-              <div class="rev-bar-label">Regular</div>
-              <div class="rev-bar-track"><div class="rev-bar-fill" style="width:50%;background:var(--blue);"></div></div>
-              <div class="rev-bar-val">₹7,600</div>
-            </div>
+            <div class="rev-bar-row"><div class="rev-bar-label">Premium</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:70%;background:var(--accent);"></div></div><div class="rev-bar-val">₹8,800</div></div>
+            <div class="rev-bar-row"><div class="rev-bar-label">Regular</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:50%;background:var(--blue);"></div></div><div class="rev-bar-val">₹7,600</div></div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Bookings List -->
     <div class="event-card">
-      <div class="section-hdr">
-        <div class="section-hdr-title">All bookings <span style="color:var(--muted);font-weight:400;">(58)</span></div>
-        <button class="section-hdr-action" onclick="downloadCSV()">Export ↓</button>
-      </div>
+      <div class="section-hdr"><div class="section-hdr-title">All bookings <span style="color:var(--muted);font-weight:400;">(58)</span></div><button class="section-hdr-action" onclick="downloadCSV()">Export ↓</button></div>
       <div class="filter-tabs">
         <button class="ftab active" onclick="filterBookings('all',this)">All</button>
         <button class="ftab" onclick="filterBookings('confirmed',this)">Confirmed</button>
@@ -380,11 +291,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
       <div class="bookings-list" id="bookings-list"></div>
     </div>
-
   </div>
 </div>
 
-<!-- ══ SCREEN: GATE CHECK-IN ══ -->
+<!-- GATE -->
 <div class="screen" id="screen-gate">
   <div class="gate-screen">
     <div class="gate-top">
@@ -394,10 +304,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     </div>
     <div class="scanner-wrap">
       <div class="scanner-box">
-        <div class="scanner-corner sc-tl"></div>
-        <div class="scanner-corner sc-tr"></div>
-        <div class="scanner-corner sc-bl"></div>
-        <div class="scanner-corner sc-br"></div>
+        <div class="scanner-corner sc-tl"></div><div class="scanner-corner sc-tr"></div>
+        <div class="scanner-corner sc-bl"></div><div class="scanner-corner sc-br"></div>
         <div class="scanner-line"></div>
         <div class="scanner-icon">📷</div>
       </div>
@@ -414,154 +322,86 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 </div>
 
 <script>
-// ── Dummy Bookings Data ──
-const BOOKINGS = [
-  { id:'BKG-2025-10234', name:'Rajesh Mehta',    phone:'98765 43210', seats:'A4, A5',   type:'premium', amount:800,  status:'confirmed', time:'2h ago' },
-  { id:'BKG-2025-10235', name:'Priya Shah',      phone:'87654 32109', seats:'C3',       type:'regular', amount:200,  status:'confirmed', time:'2h ago' },
-  { id:'BKG-2025-10236', name:'Amit Patel',      phone:'76543 21098', seats:'B6, B7',   type:'premium', amount:800,  status:'pending',   time:'1h ago' },
-  { id:'BKG-2025-10237', name:'Sunita Desai',    phone:'65432 10987', seats:'E2, E3',   type:'regular', amount:400,  status:'confirmed', time:'45m ago' },
-  { id:'BKG-2025-10238', name:'Kiran Joshi',     phone:'54321 09876', seats:'D8',       type:'regular', amount:200,  status:'failed',    time:'30m ago' },
-  { id:'BKG-2025-10239', name:'Meena Trivedi',   phone:'43210 98765', seats:'A8, A9',   type:'premium', amount:800,  status:'confirmed', time:'20m ago' },
-  { id:'BKG-2025-10240', name:'Deepak Sharma',   phone:'32109 87654', seats:'F4, F5',   type:'regular', amount:400,  status:'pending',   time:'15m ago' },
-  { id:'BKG-2025-10241', name:'Anita Kulkarni',  phone:'21098 76543', seats:'G1',       type:'regular', amount:200,  status:'confirmed', time:'10m ago' },
-  { id:'BKG-2025-10242', name:'Vijay Nair',      phone:'10987 65432', seats:'A2, A3',   type:'premium', amount:800,  status:'confirmed', time:'5m ago' },
-  { id:'BKG-2025-10243', name:'Rekha Pandya',    phone:'90876 54321', seats:'H6, H7',   type:'regular', amount:400,  status:'pending',   time:'2m ago' },
+const BOOKINGS=[
+  {id:'BKG-2025-10234',name:'Rajesh Mehta',phone:'98765 43210',seats:'A4, A5',type:'premium',amount:800,status:'confirmed',time:'2h ago'},
+  {id:'BKG-2025-10235',name:'Priya Shah',phone:'87654 32109',seats:'C3',type:'regular',amount:200,status:'confirmed',time:'2h ago'},
+  {id:'BKG-2025-10236',name:'Amit Patel',phone:'76543 21098',seats:'B6, B7',type:'premium',amount:800,status:'pending',time:'1h ago'},
+  {id:'BKG-2025-10237',name:'Sunita Desai',phone:'65432 10987',seats:'E2, E3',type:'regular',amount:400,status:'confirmed',time:'45m ago'},
+  {id:'BKG-2025-10238',name:'Kiran Joshi',phone:'54321 09876',seats:'D8',type:'regular',amount:200,status:'failed',time:'30m ago'},
+  {id:'BKG-2025-10239',name:'Meena Trivedi',phone:'43210 98765',seats:'A8, A9',type:'premium',amount:800,status:'confirmed',time:'20m ago'},
 ];
 
-let currentFilter = 'all';
-
-function renderBookings(filter) {
-  const list = document.getElementById('bookings-list');
-  list.innerHTML = '';
-  const filtered = filter === 'all' ? BOOKINGS : BOOKINGS.filter(b => b.status === filter);
-  filtered.forEach(b => {
-    const initial = b.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    const statusClass = { confirmed:'bs-confirmed', pending:'bs-pending', failed:'bs-failed' }[b.status];
-    const statusLabel = { confirmed:'✓ Confirmed', pending:'⏳ Pending', failed:'✗ Failed' }[b.status];
-    const el = document.createElement('div');
-    el.className = 'booking-item';
-    el.innerHTML = `
-      <div class="booking-avatar">${initial}</div>
-      <div class="booking-info">
-        <div class="booking-name">${b.name}</div>
-        <div class="booking-detail">${b.seats} · ${b.type === 'premium' ? 'Premium' : 'Regular'} · ${b.time}</div>
-      </div>
-      <div class="booking-right">
-        <div class="booking-amount">₹${b.amount.toLocaleString('en-IN')}</div>
-        <div class="booking-status ${statusClass}">${statusLabel}</div>
-      </div>`;
+function renderBookings(filter){
+  const list=document.getElementById('bookings-list');list.innerHTML='';
+  const filtered=filter==='all'?BOOKINGS:BOOKINGS.filter(b=>b.status===filter);
+  filtered.forEach(b=>{
+    const initial=b.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const statusClass={confirmed:'bs-confirmed',pending:'bs-pending',failed:'bs-failed'}[b.status];
+    const statusLabel={confirmed:'✓ Confirmed',pending:'⏳ Pending',failed:'✗ Failed'}[b.status];
+    const el=document.createElement('div');el.className='booking-item';
+    el.innerHTML=`<div class="booking-avatar">${initial}</div>
+      <div class="booking-info"><div class="booking-name">${b.name}</div><div class="booking-detail">${b.seats} · ${b.type==='premium'?'Premium':'Regular'} · ${b.time}</div></div>
+      <div class="booking-right"><div class="booking-amount">₹${b.amount.toLocaleString('en-IN')}</div><div class="booking-status ${statusClass}">${statusLabel}</div></div>`;
     list.appendChild(el);
   });
 }
 
-function filterBookings(filter, btn) {
-  currentFilter = filter;
-  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+function filterBookings(filter,btn){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   renderBookings(filter);
 }
 
-// ── Supabase Init ──
-let sb;
-try {
-  sb = window.supabase.createClient(
-    'https://jqqnnkzozjskziaizajg.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
-  );
-  console.log('Supabase initialized OK');
-} catch(e) {
-  console.error('Supabase init failed:', e);
-  alert('System error: ' + e.message);
-}
+// ── Supabase ──
+const sb=window.supabase.createClient(
+  'https://jqqnnkzozjskziaizajg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+);
 
-let currentOrganiser = null;
+let currentOrganiser=null;
 
 // ── Auto-login from magic link ──
-window.addEventListener('load', async () => {
-  if (!sb) return;
-  // Check if returning from magic link (hash contains access_token)
-  const hash = window.location.hash;
-  if (hash && hash.includes('access_token')) {
-    console.log('Magic link detected — logging in...');
-    // Supabase auto-processes the hash and sets session
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (session && session.user) {
+window.addEventListener('load',async()=>{
+  const hash=window.location.hash;
+  if(hash&&hash.includes('access_token')){
+    const {data:{session},error}=await sb.auth.getSession();
+    if(session&&session.user){
       await loginWithSession(session);
     } else {
-      // Small delay then retry
-      setTimeout(async () => {
-        const { data: { session: s2 } } = await sb.auth.getSession();
-        if (s2) await loginWithSession(s2);
-      }, 1000);
+      setTimeout(async()=>{
+        const {data:{session:s2}}=await sb.auth.getSession();
+        if(s2) await loginWithSession(s2);
+      },1000);
     }
     return;
   }
-  // Check if already logged in (existing session)
-  const { data: { session } } = await sb.auth.getSession();
-  if (session && session.user) {
-    await loginWithSession(session);
-  }
+  const {data:{session}}=await sb.auth.getSession();
+  if(session&&session.user) await loginWithSession(session);
 });
 
-async function loginWithSession(session) {
-  const email = session.user.email;
-  console.log('Session email:', email);
-  // Fetch organiser details
-  const { data: org, error: orgErr } = await sb
-    .from('organisers')
-    .select('id, name, status, email_1')
-    .ilike('email_1', email)
-    .single();
-  console.log('Org data:', org, 'Error:', orgErr);
-  if (orgErr || !org) {
-    // Try direct match as fallback
-    const { data: org2 } = await sb
-      .from('organisers')
-      .select('id, name, status, email_1')
-      .eq('email_1', email.toUpperCase())
-      .single();
-    console.log('Org2 (uppercase):', org2);
-    if (org2) {
-      if (org2.status === 'active') {
-        currentOrganiser = org2;
-        const initials = org2.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        document.getElementById('user-avatar').textContent = initials;
-        history.replaceState(null, '', window.location.pathname);
-        // Check if profile complete
-        if(!org2.contact_1_mobile) {
-          showScreen('screen-profile');
-        } else {
-          showScreen('screen-dashboard');
-          renderBookings('all');
-        }
-        return;
-      } else {
-        await sb.auth.signOut();
-        const errEl = document.getElementById('email-err');
-        if (errEl) { errEl.textContent = 'Account ' + org2.status + '. Contact admin.'; errEl.style.display = 'block'; }
-        return;
-      }
-    }
+async function loginWithSession(session){
+  const email=session.user.email;
+  // Try case-insensitive match
+  const {data:org,error}=await sb.from('organisers').select('*').ilike('email_1',email).single();
+  if(error||!org){
     await sb.auth.signOut();
-    const errEl = document.getElementById('email-err');
-    if (errEl) { errEl.textContent = 'Email not registered.'; errEl.style.display = 'block'; }
+    showErr('email-err','Email not registered with Khursilo.');
     return;
   }
-  if (org.status.toLowerCase() !== 'active') {
+  if(org.status.toLowerCase()!=='active'){
     await sb.auth.signOut();
-    const errEl = document.getElementById('email-err');
-    if (errEl) {
-      errEl.textContent = 'Account ' + org.status + '. Contact admin.';
-      errEl.style.display = 'block';
-    }
+    showErr('email-err','Account '+org.status+'. Contact admin.');
     return;
   }
-  currentOrganiser = org;
-  const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
-  history.replaceState(null, '', window.location.pathname);
-  // Check if profile complete
-  if(!org.contact_1_mobile) {
+  currentOrganiser=org;
+  history.replaceState(null,'',window.location.pathname);
+  setAvatar(org.name||org.email_1);
+  // If contact_1_name is null → profile incomplete → show profile screen
+  if(!org.contact_1_name){
+    // Pre-fill whatever we already have
+    document.getElementById('prof-org-name').value=org.name||'';
+    document.getElementById('prof-mobile').value=org.contact_1_mobile||'';
+    document.getElementById('prof-rzp-key').value=org.razorpay_key_id||'';
     showScreen('screen-profile');
   } else {
     showScreen('screen-dashboard');
@@ -569,164 +409,159 @@ async function loginWithSession(session) {
   }
 }
 
-// ── Login ──
-async function sendOTP() {
-  const email = document.getElementById('inp-email').value.trim();
-  const errEl = document.getElementById('email-err');
-  const btn = document.getElementById('send-otp-btn');
-  errEl.style.display = 'none';
-  if (!email || !email.includes('@')) {
-    errEl.textContent = 'Enter a valid email address.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if (!sb) {
-    alert('System not ready. Please refresh the page.');
-    return;
-  }
-  console.log('Sending OTP to:', email);
-  btn.textContent = 'Sending link...';
-  btn.disabled = true;
-  // Send OTP directly — check organiser status after login
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: 'https://khursilo.in'
-    }
-  });
-  if (error) {
-    btn.textContent = 'Send login link →';
-    btn.disabled = false;
-    if (error.message.includes('Signups not allowed')) {
-      errEl.innerHTML = 'Email not registered with Khursilo.<br>Contact us: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
-    } else {
-      errEl.textContent = 'Error: ' + error.message;
-    }
-    errEl.style.display = 'block';
-    return;
-  }
-  // Visual feedback
-  btn.textContent = '✓ Link sent!';
-  btn.style.background = '#2e9e60';
-  setTimeout(() => {
-    document.getElementById('otp-sent-to').textContent = 'OTP sent to ' + email + ' — check inbox & spam';
-    document.getElementById('card-email').style.display = 'none';
-    document.getElementById('card-otp').style.display = 'block';
-    document.getElementById('inp-otp').focus();
-    btn.textContent = 'Send login link →';
-    btn.style.background = '';
-    btn.disabled = false;
-  }, 1500);
+function setAvatar(name){
+  const initials=(name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent=initials;
 }
 
-async function verifyOTP() {
-  const otp = document.getElementById('inp-otp').value.trim();
-  const errEl = document.getElementById('otp-err');
-  const btn = document.getElementById('verify-btn');
-  errEl.style.display = 'none';
-  if (otp.length < 6) {
-    errEl.textContent = 'Enter the 6-digit OTP from your email.';
-    errEl.style.display = 'block';
+// ── saveProfile — THE MISSING FUNCTION ──
+async function saveProfile(){
+  const orgName=document.getElementById('prof-org-name').value.trim();
+  const contactName=document.getElementById('prof-contact-name').value.trim();
+  const mobile=document.getElementById('prof-mobile').value.trim();
+  const rzpKey=document.getElementById('prof-rzp-key').value.trim();
+  const rzpSecret=document.getElementById('prof-rzp-secret').value.trim();
+
+  const errEl=document.getElementById('profile-err');
+  errEl.style.display='none';
+
+  if(!orgName){errEl.textContent='Organisation name is required.';errEl.style.display='block';return;}
+  if(!contactName){errEl.textContent='Contact person name is required.';errEl.style.display='block';return;}
+  if(!mobile||mobile.length<10){errEl.textContent='Enter a valid 10-digit mobile number.';errEl.style.display='block';return;}
+
+  if(!currentOrganiser){
+    errEl.textContent='Session expired. Please login again.';
+    errEl.style.display='block';
+    setTimeout(()=>logout(),2000);
     return;
   }
-  btn.textContent = 'Verifying...';
-  btn.disabled = true;
-  const email = document.getElementById('inp-email').value.trim();
-  const { data, error } = await sb.auth.verifyOtp({
-    email,
-    token: otp,
-    type: 'email'
-  });
-  btn.textContent = 'Verify & Login →';
-  btn.disabled = false;
-  if (error) {
-    errEl.textContent = 'Invalid OTP. Please try again.';
-    errEl.style.display = 'block';
+
+  const btn=document.getElementById('profile-save-btn');
+  btn.textContent='Saving...';
+  btn.disabled=true;
+
+  const updates={
+    name: orgName,
+    contact_1_name: contactName,
+    contact_1_mobile: mobile,
+  };
+  if(rzpKey) updates.razorpay_key_id=rzpKey;
+  if(rzpSecret) updates.razorpay_key_secret=rzpSecret;
+
+  const {error}=await sb.from('organisers').update(updates).eq('id',currentOrganiser.id);
+
+  btn.textContent='Save & go to dashboard →';
+  btn.disabled=false;
+
+  if(error){
+    errEl.textContent='Save failed: '+error.message;
+    errEl.style.display='block';
     return;
   }
-  // Login success
-  const initials = currentOrganiser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
+
+  // Update local organiser object
+  currentOrganiser={...currentOrganiser,...updates};
+  setAvatar(orgName);
   showScreen('screen-dashboard');
   renderBookings('all');
 }
 
-async function resendOTP() {
-  const email = document.getElementById('inp-email').value.trim();
-  await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-  alert('Login link resent to ' + email);
+// ── Login ──
+async function sendOTP(){
+  const email=document.getElementById('inp-email').value.trim();
+  const errEl=document.getElementById('email-err');
+  const btn=document.getElementById('send-otp-btn');
+  errEl.style.display='none';
+  if(!email||!email.includes('@')){showErr('email-err','Enter a valid email address.');return;}
+  btn.textContent='Sending link...';btn.disabled=true;
+  const {error}=await sb.auth.signInWithOtp({
+    email,
+    options:{shouldCreateUser:false,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}
+  });
+  if(error){
+    btn.textContent='Send login link →';btn.disabled=false;
+    if(error.message.includes('Signups not allowed')){
+      errEl.innerHTML='Email not registered.<br>Contact: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
+    } else {
+      errEl.textContent='Error: '+error.message;
+    }
+    errEl.style.display='block';
+    return;
+  }
+  btn.textContent='✓ Link sent!';btn.style.background='#2e9e60';
+  setTimeout(()=>{
+    document.getElementById('otp-sent-to').textContent='Login link sent to '+email;
+    document.getElementById('card-email').style.display='none';
+    document.getElementById('card-otp').style.display='block';
+    btn.textContent='Send login link →';btn.style.background='';btn.disabled=false;
+  },1500);
 }
 
-function goBackToEmail() {
-  document.getElementById('card-email').style.display = 'block';
-  document.getElementById('card-otp').style.display = 'none';
+async function resendOTP(){
+  const email=document.getElementById('inp-email').value.trim();
+  await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}});
+  alert('Login link resent to '+email);
 }
 
-async function logout() {
+function goBackToEmail(){
+  document.getElementById('card-email').style.display='block';
+  document.getElementById('card-otp').style.display='none';
+}
+
+async function logout(){
   await sb.auth.signOut();
-  currentOrganiser = null;
+  currentOrganiser=null;
   showScreen('screen-login');
-  document.getElementById('card-email').style.display = 'block';
-  document.getElementById('card-otp').style.display = 'none';
-  document.getElementById('inp-email').value = '';
-  document.getElementById('inp-otp').value = '';
+  document.getElementById('card-email').style.display='block';
+  document.getElementById('card-otp').style.display='none';
+  document.getElementById('inp-email').value='';
 }
 
-// ── Gate check-in ──
-function checkIn() {
-  const val = document.getElementById('gate-input').value.trim().toUpperCase();
-  const result = document.getElementById('gate-result');
-  const found = BOOKINGS.find(b => b.id === val || val === 'BKG-2025-10234');
-  result.className = 'gate-result show ' + (found ? 'success' : 'fail');
-  if (found) {
-    document.getElementById('gate-icon').textContent = '✅';
-    document.getElementById('gate-title').textContent = 'Valid ticket — ' + (found.name || 'Guest');
-    document.getElementById('gate-detail').textContent = 'Seats: ' + (found.seats || 'A4, A5') + ' · Entry allowed';
+// ── Gate ──
+function checkIn(){
+  const val=document.getElementById('gate-input').value.trim().toUpperCase();
+  const result=document.getElementById('gate-result');
+  const found=BOOKINGS.find(b=>b.id===val);
+  result.className='gate-result show '+(found?'success':'fail');
+  if(found){
+    document.getElementById('gate-icon').textContent='✅';
+    document.getElementById('gate-title').textContent='Valid ticket — '+found.name;
+    document.getElementById('gate-detail').textContent='Seats: '+found.seats+' · Entry allowed';
   } else {
-    document.getElementById('gate-icon').textContent = '❌';
-    document.getElementById('gate-title').textContent = 'Invalid ticket';
-    document.getElementById('gate-detail').textContent = 'Booking ID not found. Please check again.';
+    document.getElementById('gate-icon').textContent='❌';
+    document.getElementById('gate-title').textContent='Invalid ticket';
+    document.getElementById('gate-detail').textContent='Booking ID not found.';
   }
-  setTimeout(() => {
-    result.className = 'gate-result';
-    document.getElementById('gate-input').value = '';
-  }, 4000);
+  setTimeout(()=>{result.className='gate-result';document.getElementById('gate-input').value='';},4000);
 }
 
-// ── CSV Download ──
-function downloadCSV() {
-  const headers = ['Booking ID','Name','Phone','Seats','Type','Amount','Status','Time'];
-  const rows = BOOKINGS.map(b => [b.id, b.name, b.phone, b.seats, b.type, b.amount, b.status, b.time]);
-  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'GarbaNight2025-bookings.csv';
-  a.click();
+function downloadCSV(){
+  const headers=['Booking ID','Name','Phone','Seats','Type','Amount','Status','Time'];
+  const rowsData=BOOKINGS.map(b=>[b.id,b.name,b.phone,b.seats,b.type,b.amount,b.status,b.time]);
+  const csv=[headers,...rowsData].map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bookings.csv';a.click();
 }
 
-function shareLink() {
-  const url = 'https://vkv-coder.github.io/SEATBOOK/';
-  if (navigator.share) {
-    navigator.share({ title: 'Book seats — Garba Night 2025', url });
-  } else {
-    navigator.clipboard.writeText(url);
-    alert('Booking link copied to clipboard!');
-  }
+function shareLink(){
+  const url='https://khursilo.in/';
+  if(navigator.share){navigator.share({title:'Book seats',url});}
+  else{navigator.clipboard.writeText(url);alert('Booking link copied!');}
 }
 
-function closeBooking() {
-  if (confirm('Close booking for this event? No new bookings will be accepted.')) {
-    document.querySelector('.status-pill.live').className = 'status-pill closed';
-    document.querySelector('.status-pill.closed').innerHTML = '🔒 Booking closed';
-  }
+function closeBooking(){
+  if(confirm('Close booking for this event?')){alert('Booking closed.');}
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+}
+
+function showErr(id,msg){
+  const el=document.getElementById(id);
+  if(el){el.textContent=msg;el.style.display='block';}
 }
 </script>
 </body>
