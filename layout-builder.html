@@ -152,13 +152,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     Active: <strong id="atool-name"></strong>
   </div>
   <div style="font-size:10px;color:var(--muted);margin-top:5px;">
-    💡 Right-click seat to number it · Long-press on mobile
+    💡 Tap 🔢 Number mode → click any seat → type number → Enter
   </div>
 </div>
 
 <!-- PAINT TOOLS -->
 <div class="fine-tools">
-  <div class="flbl">Paint:</div>
+  <div class="flbl">Mode:</div>
+  <button class="ftool" id="ft-num" onclick="setNumMode()" style="color:#2b6fd4;border-color:rgba(43,111,212,0.3);">🔢 Number</button>
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
@@ -361,7 +362,7 @@ const sb=window.supabase.createClient(
 );
 const HALL_IDS={sayjirao:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'};
 
-let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0];
+let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0],numMode=false;
 let painting=false,hallName='',currentHallKey='';
 let history=[];
 let _renumRi=-1,_renumCi=-1; // clicked cell for renumber
@@ -438,9 +439,30 @@ function createHall(){
 }
 
 // ── Tools ──
+function setNumMode(){
+  numMode=!numMode;
+  if(numMode){
+    fineTool=null;
+    document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
+    document.getElementById('ft-num').classList.add('active');
+    document.getElementById('ft-num').style.background='#2b6fd4';
+    document.getElementById('ft-num').style.color='#fff';
+  } else {
+    document.getElementById('ft-num').classList.remove('active');
+    document.getElementById('ft-num').style.background='';
+    document.getElementById('ft-num').style.color='#2b6fd4';
+    clearSelection();
+  }
+  renderSecs();
+}
+
 function setFine(t){
+  numMode=false;
+  document.getElementById('ft-num').classList.remove('active');
+  document.getElementById('ft-num').style.background='';
+  document.getElementById('ft-num').style.color='#2b6fd4';
   fineTool=fineTool===t?null:t;
-  document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ftool:not(#ft-num)').forEach(b=>b.classList.remove('active'));
   if(fineTool)document.getElementById('ft-'+t).classList.add('active');
   renderSecs();
 }
@@ -538,21 +560,23 @@ function render(){
       btn.dataset.ri=ri; btn.dataset.ci=ci;
       btn.addEventListener('mousedown',e=>{
         e.preventDefault();
-        if(fineTool||activeSecId){
-          painting=true; paintCell(ri,ci);
-        } else {
+        if(numMode){
+          // Number mode — click selects seat for numbering
           selectSeat(ri,ci);
+        } else {
+          // Paint mode — click paints
+          painting=true; paintCell(ri,ci);
         }
       });
       btn.addEventListener('contextmenu',e=>e.preventDefault());
-      btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
+      btn.addEventListener('mouseenter',()=>{if(painting&&!numMode)paintCell(ri,ci);});
       let pt;
       btn.addEventListener('touchstart',e=>{
         e.preventDefault();
-        if(fineTool||activeSecId){
-          painting=true; paintCell(ri,ci);
-        } else {
+        if(numMode){
           selectSeat(ri,ci);
+        } else {
+          painting=true; paintCell(ri,ci);
         }
       },{passive:false});
       btn.addEventListener('touchend',()=>{painting=false; clearTimeout(pt);});
