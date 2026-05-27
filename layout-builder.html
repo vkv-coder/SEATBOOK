@@ -849,57 +849,62 @@ function openRenumManual(){
 
 function applyRenum(){
   const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
-  const atPos=parseInt(document.getElementById('renum-pos').value);  // current seat sn at target
-  const newNum=parseInt(document.getElementById('renum-val').value); // new sn it should become
+  const atPos=parseInt(document.getElementById('renum-pos').value);  // current displayed seat number
+  const newNum=parseInt(document.getElementById('renum-val').value); // what it becomes
   if(!rowLabel){alert('Enter row label.');return;}
   if(isNaN(atPos)||atPos<1){alert('Enter current seat number at target.');return;}
   if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
-  // Collect all non-vgap cells in physical order
-  const seatCells=[];
+  // Collect all non-vgap, non-empty cells — these have displayed numbers
+  // Also collect empty cells to preserve their positions
+  const allCells=[]; // all non-vgap (includes empty)
   rowData.cells.forEach((cell,ci)=>{
-    if(cell.t!=='vgap') seatCells.push({ci,cell});
+    if(cell.t!=='vgap') allCells.push({ci,cell});
   });
 
-  // Find target: cell whose sn===atPos; fallback 1-based index
-  const hasSn=seatCells.some(s=>s.cell.sn!=null);
-  let targetIdx=hasSn ? seatCells.findIndex(s=>s.cell.sn===atPos) : atPos-1;
-  if(targetIdx===-1) targetIdx=atPos-1;
-  if(targetIdx<0||targetIdx>=seatCells.length){
-    alert('Seat '+atPos+' not found in row '+rowLabel+'.');
+  // Build display number for each non-empty cell
+  // If sn is set use it; else auto-count
+  let counter=1;
+  allCells.forEach(s=>{
+    if(s.cell.t==='empty'){ s.displayNum=null; }
+    else if(s.cell.sn!=null){ s.displayNum=s.cell.sn; }
+    else { s.displayNum=counter; counter++; }
+  });
+
+  // Find target cell by displayed number
+  const targetEntry=allCells.find(s=>s.displayNum===atPos);
+  if(!targetEntry){
+    alert('Seat number '+atPos+' not found in row '+rowLabel+'.');
     return;
   }
+  const targetIdx=allCells.indexOf(targetEntry);
 
-  // Find blank zone start: cell whose sn===newNum; fallback 0-based index newNum-1
-  let blankStart=hasSn ? seatCells.findIndex(s=>s.cell.sn===newNum) : newNum-1;
-  if(blankStart===-1) blankStart=newNum-1;
+  // Find blank zone start cell by displayed number newNum
+  const blankEntry=allCells.find(s=>s.displayNum===newNum);
+  let blankStart=blankEntry ? allCells.indexOf(blankEntry) : newNum-1;
   if(blankStart<0) blankStart=0;
-  // blankStart must be < targetIdx; if not, nothing to blank
   if(blankStart>targetIdx) blankStart=targetIdx;
 
   saveHistory();
 
-  // Step 1: blank cells from blankStart up to (not including) targetIdx
+  // Step 1: blank from blankStart to targetIdx-1
   for(let i=blankStart;i<targetIdx;i++){
-    seatCells[i].cell.t='empty';
-    seatCells[i].cell.secId=null;
-    seatCells[i].cell.sn=null;
+    allCells[i].cell.t='empty';
+    allCells[i].cell.secId=null;
+    allCells[i].cell.sn=null;
   }
 
-  // Step 2: renumber from targetIdx to end
-  // IMPORTANT: do NOT skip any cell here — every non-empty cell gets a new sn
-  // Empty cells (blanked above or pre-existing) are skipped
+  // Step 2: renumber from targetIdx to end — skip empty cells
   let num=newNum;
-  for(let i=targetIdx;i<seatCells.length;i++){
-    const cell=seatCells[i].cell;
-    if(cell.t==='empty') continue; // skip blank/aisle cells
-    // Restore seat type if it was somehow emptied and re-painted
+  for(let i=targetIdx;i<allCells.length;i++){
+    const cell=allCells[i].cell;
+    if(cell.t==='empty') continue;
     cell.sn=num++;
   }
 
-  // Keep modal open — clear both fields for next renumber entry
+  // Keep modal open — clear fields for next entry, row label stays
   document.getElementById('renum-pos').value='';
   document.getElementById('renum-val').value='';
   render();renderSecs();
