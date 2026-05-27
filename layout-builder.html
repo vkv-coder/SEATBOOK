@@ -77,6 +77,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .seat.unassigned{background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.12);color:#999;}
 .seat.blocked{background:var(--s2);color:#bbb;border:1px solid var(--border2);}
 .seat.highlight{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.3);}
+.seat.selected{outline:3px solid #1a1a1a;outline-offset:-2px;z-index:5;position:relative;}
+.seat.unassigned.selected{outline:3px solid #1a1a1a;}
 
 .hpass-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;}
 .hpass-lbl{font-size:8px;color:#cc3333;width:16px;text-align:center;flex-shrink:0;cursor:pointer;}
@@ -196,6 +198,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <button class="ar-btn col" onclick="delColAll()" style="flex:1;">− Col</button>
     <button class="ar-btn red" onclick="delLastRow()" style="flex:1;">− Row</button>
     <button class="ar-btn pur" onclick="showModal('modal-gaps')" style="flex:1;">Gaps ↕↔</button>
+  </div>
+  <!-- Seat number input — shown when a seat is selected -->
+  <div class="ar-row" id="seat-num-bar" style="display:none;background:#f0f7ff;border-radius:8px;padding:6px 8px;border:2px solid #2b6fd4;">
+    <span style="font-size:11px;color:#2b6fd4;font-weight:600;white-space:nowrap;" id="seat-num-label">Row — · Col —</span>
+    <input class="ar-in" type="number" id="seat-num-input" placeholder="Seat no." min="1"
+      style="flex:1;font-size:14px;font-weight:700;text-align:center;border-color:#2b6fd4;"
+      onkeydown="if(event.key==='Enter')applySeatNum();if(event.key==='Escape')clearSelection();">
+    <button class="ar-btn" style="background:#2b6fd4;" onclick="applySeatNum()">✓</button>
+    <button class="ar-btn" style="background:#cc3333;" onclick="cutSelected()">✂</button>
+    <button class="ar-btn" style="background:#888;" onclick="clearSelection()">✕</button>
   </div>
 </div>
 
@@ -523,29 +535,27 @@ function render(){
         if(num!=='')total++;
       }
 
-      // Paint on mouse
+      btn.dataset.ri=ri; btn.dataset.ci=ci;
       btn.addEventListener('mousedown',e=>{
-        if(e.button===2){e.preventDefault();return;}
-        e.preventDefault();painting=true;paintCell(ri,ci);
+        e.preventDefault();
+        if(fineTool||activeSecId){
+          painting=true; paintCell(ri,ci);
+        } else {
+          selectSeat(ri,ci);
+        }
       });
-      btn.addEventListener('contextmenu',e=>{
-        e.preventDefault();e.stopPropagation();
-        // Close any open modal first, then open renum
-        document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show'));
-        _renumRi=-1;_renumCi=-1;
-        setTimeout(()=>openRenum(ri,ci),10);
-      });
+      btn.addEventListener('contextmenu',e=>e.preventDefault());
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
-      // Long press mobile
       let pt;
       btn.addEventListener('touchstart',e=>{
-        pt=setTimeout(()=>{e.preventDefault();painting=false;openRenum(ri,ci);},600);
-        // Don't paint immediately on touch — wait to see if it's a long press
+        e.preventDefault();
+        if(fineTool||activeSecId){
+          painting=true; paintCell(ri,ci);
+        } else {
+          selectSeat(ri,ci);
+        }
       },{passive:false});
-      btn.addEventListener('touchend',e=>{
-        if(!painting){painting=true;paintCell(ri,ci);}
-      });
-      btn.addEventListener('touchend',()=>clearTimeout(pt));
+      btn.addEventListener('touchend',()=>{painting=false; clearTimeout(pt);});
       btn.addEventListener('touchmove',()=>clearTimeout(pt));
       rowDiv.appendChild(btn);
     });
@@ -809,26 +819,51 @@ function insertHGap(){
   render();renderSecs();
 }
 
-// ── RENUMBER — click seat → assign number ──
-function openRenum(ri,ci){
+// ── SEAT SELECTION + NUMBERING ──
+let _selRi=-1, _selCi=-1;
+
+function selectSeat(ri,ci){
+  // If same seat clicked again — deselect
+  if(_selRi===ri&&_selCi===ci){clearSelection();return;}
+  _selRi=ri;_selCi=ci;
   const row=rows[ri];
-  if(!row||row.type!=='row')return;
-  _renumRi=ri;_renumCi=ci;
-  // Count physical column number (1-based, ignoring vgaps)
+  // Count physical column
   let col=0;
   for(let i=0;i<=ci;i++){if(row.cells[i].t!=='vgap')col++;}
-  document.getElementById('renum-row-lbl').textContent=row.label;
-  document.getElementById('renum-col-lbl').textContent='col '+col;
-  document.getElementById('renum-val').value='';
-  showModal('modal-renum');
-  setTimeout(()=>document.getElementById('renum-val').focus(),120);
+  // Show input bar
+  const bar=document.getElementById('seat-num-bar');
+  bar.style.display='flex';
+  document.getElementById('seat-num-label').textContent='Row '+row.label+' · Col '+col;
+  const inp=document.getElementById('seat-num-input');
+  inp.value='';
+  // Re-render to show highlight, then focus input
+  renderHighlight();
+  setTimeout(()=>inp.focus(),80);
 }
 
-function applyRenum(){
-  const newNum=parseInt(document.getElementById('renum-val').value);
-  if(isNaN(newNum)||newNum<1){alert('Enter a seat number (1 or more).');return;}
-  if(_renumRi<0||_renumCi<0){alert('No seat selected.');return;}
-  const rowData=rows[_renumRi];
+function clearSelection(){
+  _selRi=-1;_selCi=-1;
+  document.getElementById('seat-num-bar').style.display='none';
+  document.getElementById('seat-num-input').value='';
+  renderHighlight();
+}
+
+function renderHighlight(){
+  document.querySelectorAll('.seat.selected').forEach(b=>b.classList.remove('selected'));
+  if(_selRi<0||_selCi<0)return;
+  // Find button by data-ri and data-ci
+  const btn=document.querySelector(`.seat[data-ri="${_selRi}"][data-ci="${_selCi}"]`);
+  if(btn) btn.classList.add('selected');
+}
+
+function applySeatNum(){
+  const newNum=parseInt(document.getElementById('seat-num-input').value);
+  if(isNaN(newNum)||newNum<1){
+    document.getElementById('seat-num-input').focus();
+    return;
+  }
+  if(_selRi<0||_selCi<0)return;
+  const rowData=rows[_selRi];
   if(!rowData||rowData.type!=='row')return;
 
   // All non-vgap cells in physical order
@@ -837,12 +872,12 @@ function applyRenum(){
     if(cell.t!=='vgap')allCells.push({ci,cell});
   });
 
-  const targetIdx=allCells.findIndex(s=>s.ci===_renumCi);
-  if(targetIdx<0){alert('Seat not found.');return;}
+  const targetIdx=allCells.findIndex(s=>s.ci===_selCi);
+  if(targetIdx<0)return;
 
   saveHistory();
 
-  // Step 1: un-numbered seats BEFORE target → vanish (empty)
+  // Un-numbered seats BEFORE target → vanish
   for(let i=0;i<targetIdx;i++){
     const cell=allCells[i].cell;
     if(cell.t!=='empty'&&cell.sn==null){
@@ -850,7 +885,7 @@ function applyRenum(){
     }
   }
 
-  // Step 2: assign newNum to target, continue sequentially to end
+  // Assign newNum to target, continue to end
   let num=newNum;
   for(let i=targetIdx;i<allCells.length;i++){
     const cell=allCells[i].cell;
@@ -858,24 +893,25 @@ function applyRenum(){
     cell.sn=num++;
   }
 
-  closeModal('modal-renum');
-  _renumRi=-1;_renumCi=-1;
+  clearSelection();
   render();renderSecs();
 }
 
-// Cut — remove target cell and everything after it in this row
-function cutHere(){
-  if(_renumRi<0||_renumCi<0){alert('No seat selected.');return;}
-  const rowData=rows[_renumRi];
+function cutSelected(){
+  if(_selRi<0||_selCi<0)return;
+  const rowData=rows[_selRi];
   if(!rowData||rowData.type!=='row')return;
-  if(!confirm('Remove this seat and all seats after it in row '+rowData.label+'?'))return;
+  if(!confirm('Remove this seat and all after it in row '+rowData.label+'?'))return;
   saveHistory();
-  // Find the actual index in cells array and slice
-  rowData.cells=rowData.cells.slice(0,_renumCi);
-  closeModal('modal-renum');
-  _renumRi=-1;_renumCi=-1;
+  rowData.cells=rowData.cells.slice(0,_selCi);
+  clearSelection();
   render();renderSecs();
 }
+
+// Keep old names for compatibility
+function openRenum(ri,ci){selectSeat(ri,ci);}
+function applyRenum(){applySeatNum();}
+function cutHere(){cutSelected();}
 
 // ── Save ──
 function showSave(){
