@@ -71,7 +71,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .row-lbl{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:14px;}
 .row-lbl:hover{color:var(--red);}
 
-.seat{width:16px;height:14px;border-radius:0;border:none;cursor:pointer;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:14px;outline:none;}
+.seat{width:16px;height:14px;border-radius:0;border:none;cursor:pointer;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:14px;outline:none;}
 .seat:active{transform:scale(0.85);}
 .seat.empty{background:transparent;width:16px;height:14px;flex-shrink:0;cursor:default;pointer-events:none;}
 .seat.unassigned{background:transparent;border:1px dashed #ccc;color:#ccc;}
@@ -511,7 +511,7 @@ function render(){
         const num=cell.sn!=null?cell.sn:'';
         btn.className='seat'+(isHighlighted?' highlight':'');
         if(sec){
-          btn.style.cssText=`background:${sec.color}${isHighlighted?'':'22'};color:${isHighlighted?'#fff':sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
+          btn.style.cssText=`background:${sec.color}${isHighlighted?'':'44'};color:${isHighlighted?'#fff':sec.color};box-shadow:inset 0 0 0 1px ${sec.color}88;`;
           if(isHighlighted) btn.style.background=sec.color;
           if(!rowSecPrices[sec.id])rowSecPrices[sec.id]={sec,count:0};
           rowSecPrices[sec.id].count++;
@@ -524,17 +524,20 @@ function render(){
 
       // Paint on mouse
       btn.addEventListener('mousedown',e=>{
-        if(e.button===2){e.preventDefault();openRenum(ri,ci);return;}
+        if(e.button===2){e.preventDefault();return;}
         e.preventDefault();painting=true;paintCell(ri,ci);
       });
-      btn.addEventListener('contextmenu',e=>{e.preventDefault();openRenum(ri,ci);});
+      btn.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();openRenum(ri,ci);});
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
       // Long press mobile
       let pt;
       btn.addEventListener('touchstart',e=>{
-        pt=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);
-        painting=true;paintCell(ri,ci);
+        pt=setTimeout(()=>{e.preventDefault();painting=false;openRenum(ri,ci);},600);
+        // Don't paint immediately on touch — wait to see if it's a long press
       },{passive:false});
+      btn.addEventListener('touchend',e=>{
+        if(!painting){painting=true;paintCell(ri,ci);}
+      });
       btn.addEventListener('touchend',()=>clearTimeout(pt));
       btn.addEventListener('touchmove',()=>clearTimeout(pt));
       rowDiv.appendChild(btn);
