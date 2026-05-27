@@ -26,21 +26,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .hsel{flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;}
 .hbtn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:7px 10px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;}
 
-.sec-panel{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;max-height:130px;overflow-y:auto;}
+/* SECTIONS */
+.sec-panel{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;max-height:160px;overflow-y:auto;}
 .sec-panel-hdr{font-size:11px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .add-sec-btn{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .sec-cards{display:flex;flex-direction:column;gap:5px;}
 .sec-card{border-radius:var(--rsm);border:1.5px solid var(--border2);padding:8px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;transition:all 0.15s;}
 .sec-card.sel{border-width:2px;}
+.sec-card.highlighted{box-shadow:0 0 0 2px var(--accent);}
 .scdot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
 .scinfo{flex:1;min-width:0;}
-.scname{font-size:12px;font-weight:600;color:var(--text);}
+.scname{font-size:12px;font-weight:600;}
 .scmeta{font-size:10px;color:var(--muted);margin-top:1px;}
-.scdel{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0;flex-shrink:0;}
+.scprice{font-size:11px;font-weight:700;padding:2px 7px;border-radius:8px;flex-shrink:0;}
+.scdel{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0;}
 .scdel:hover{color:var(--red);}
 .atool{font-size:11px;color:var(--muted);margin-top:6px;}
 .atool strong{color:var(--text);}
 
+/* PAINT TOOLS */
 .fine-tools{background:var(--white);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;flex-shrink:0;}
 .flbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-right:2px;flex-shrink:0;}
 .ftool{padding:4px 8px;font-size:11px;font-weight:500;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
@@ -49,64 +53,68 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .ftool.era.active{background:var(--red);border-color:var(--red);}
 .ftool.red{color:var(--red);border-color:rgba(204,51,51,0.3);}
 
-.stats-bar{display:flex;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
-.stat{flex:1;padding:6px 3px;text-align:center;border-right:1px solid var(--border);}
+/* STATS */
+.stats-bar{display:flex;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.stat{flex-shrink:0;padding:6px 10px;text-align:center;border-right:1px solid var(--border);}
 .stat:last-child{border-right:none;}
 .stat-n{font-size:13px;font-weight:600;}
 .stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;}
 
+/* CANVAS */
 .canvas-outer{flex:1;overflow:auto;padding:10px 6px 180px;-webkit-overflow-scrolling:touch;}
 .stage-wrap{text-align:center;margin-bottom:10px;}
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
 
-.grid-area{display:flex;flex-direction:column;gap:0;width:max-content;line-height:0;font-size:0;}
-.grid-row{display:flex;align-items:stretch;gap:2px;margin-bottom:0;line-height:0;}
-
-.row-lbl{font-size:9px;color:var(--muted);width:14px;text-align:center;flex-shrink:0;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.grid-area{display:flex;flex-direction:column;gap:0;width:max-content;}
+.grid-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;}
+.row-lbl{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:14px;}
 .row-lbl:hover{color:var(--red);}
 
-.seat{width:16px;height:14px;border-radius:0;border:none;outline:1px solid rgba(255,255,255,0.3);outline-offset:-1px;cursor:pointer;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;flex-grow:0;transition:transform 0.08s;line-height:14px;}
+.seat{width:16px;height:14px;border-radius:0;border:none;cursor:pointer;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:14px;outline:none;}
 .seat:active{transform:scale(0.85);}
-.seat.empty{background:transparent;border:none;box-shadow:none;cursor:default;width:16px;height:15px;flex-shrink:0;}
+.seat.empty{background:transparent;width:16px;height:14px;flex-shrink:0;cursor:default;pointer-events:none;}
+.seat.unassigned{background:transparent;border:1px dashed #ccc;color:#ccc;}
 .seat.blocked{background:var(--s2);color:#bbb;border:1px solid var(--border2);}
+.seat.highlight{outline:2px solid #fff;outline-offset:-2px;filter:brightness(1.3);}
 
-.hpass-row{display:flex;align-items:center;gap:2px;margin-bottom:0;}
-.hpass-cell{background:transparent;flex-shrink:0;}
-.hpass-cell.h1{height:6px;}
-.hpass-cell.h2{height:12px;}
-.hpass-cell.h3{height:20px;}
-.hpass-row-lbl{font-size:8px;color:#cc3333;width:14px;text-align:center;flex-shrink:0;font-weight:700;cursor:pointer;}
+.hpass-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;}
+.hpass-lbl{font-size:8px;color:#cc3333;width:16px;text-align:center;flex-shrink:0;cursor:pointer;}
+.hpass-cell{flex-shrink:0;width:16px;}
+.hpass-cell.h1{height:5px;}
+.hpass-cell.h2{height:10px;}
+.hpass-cell.h3{height:18px;}
 
-.row-price{font-size:9px;font-weight:700;padding:2px 5px;border-radius:6px;flex-shrink:0;margin-left:3px;white-space:nowrap;}
+.row-price{font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;flex-shrink:0;margin-left:2px;white-space:nowrap;}
 
-/* ADD ROW BAR — 2 lines */
-.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;pointer-events:all;}
-.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 7px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;pointer-events:all;}
+/* BOTTOM BAR */
+.add-row-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:8px 10px;display:flex;flex-direction:column;gap:6px;z-index:100;}
+.ar-in{background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:6px 7px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;}
 .ar-in:focus{border-color:var(--accent);}
-.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:6px 9px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;pointer-events:all;}
+.ar-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:6px 9px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;}
 .ar-btn.red{background:var(--red);}
 .ar-btn.col{background:var(--blue);}
 .ar-btn.grn{background:var(--green);}
+.ar-btn.pur{background:#6366f1;}
 .ar-row{display:flex;gap:5px;width:100%;align-items:center;}
-.ar-label{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
 
 /* MODALS */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-end;}
 .overlay.show{display:flex;}
 .modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:18px;width:100%;max-height:90vh;overflow-y:auto;}
 .mtitle{font-size:14px;font-weight:600;margin-bottom:12px;}
-.mf{margin-bottom:9px;}
+.mf{margin-bottom:10px;}
 .ml{font-size:11px;color:var(--muted);margin-bottom:3px;}
 .mi{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;}
 .mi:focus{border-color:var(--accent);}
-.mr2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;}
+.mr2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .mbtns{display:flex;gap:7px;margin-top:12px;}
 .mbtn{flex:1;padding:10px;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);}
 .mbtn.pri{background:var(--text);color:#fff;border-color:var(--text);}
 .mbtn.grn{background:var(--green);color:#fff;border-color:var(--green);}
+.mbtn.red{background:var(--red);color:#fff;border-color:var(--red);}
 .swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
-.swatch{width:26px;height:26px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:transform 0.1s;}
+.swatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:transform 0.1s;}
 .swatch.picked{border-color:var(--text);transform:scale(1.2);}
 </style>
 </head>
@@ -123,127 +131,149 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <div class="hall-bar">
   <select class="hsel" id="hall-sel" onchange="pickHall()">
     <option value="">— Select hall —</option>
-    <option value="sayjirao">Sayjirao Nagar Gruha, Akota, Vadodara</option>
-    <option value="sayaji">Sayaji Hall, Vadodara (demo)</option>
+    <option value="sayjirao">Sayjirao Nagar Gruha, Vadodara</option>
+    <option value="demo">Demo Hall</option>
   </select>
-  <button class="hbtn" onclick="showModal('modal-hall')">+ New</button>
+  <button class="hbtn" onclick="showModal('modal-quickbuild')">⚡ Build</button>
 </div>
 
+<!-- SECTIONS PANEL -->
 <div class="sec-panel">
   <div class="sec-panel-hdr">
     <span>🎨 Sections</span>
     <button class="add-sec-btn" onclick="openAddSec()">+ Add section</button>
   </div>
-  <div class="sec-cards" id="sec-cards"><div style="font-size:11px;color:var(--muted);">Select a hall to begin</div></div>
-  <div class="atool" id="atool" style="display:none;">Painting: <strong id="atool-name"></strong></div>
-  <div style="font-size:10px;color:var(--muted);margin-top:4px;">💡 Right-click any seat (or long press on mobile) to renumber</div>
+  <div class="sec-cards" id="sec-cards">
+    <div style="font-size:11px;color:var(--muted);">No sections yet</div>
+  </div>
+  <div class="atool" id="atool" style="display:none;">
+    Active: <strong id="atool-name"></strong>
+  </div>
+  <div style="font-size:10px;color:var(--muted);margin-top:5px;">
+    💡 Right-click seat to number it · Long-press on mobile
+  </div>
 </div>
 
+<!-- PAINT TOOLS -->
 <div class="fine-tools">
   <div class="flbl">Paint:</div>
   <button class="ftool bl" id="ft-blocked" onclick="setFine('blocked')">■ Block</button>
   <button class="ftool era" id="ft-erase" onclick="setFine('erase')">✕ Erase</button>
-  <button class="ftool" onclick="openRenumManual()" style="color:#6366f1;border-color:rgba(99,102,241,0.3);">⟳ Renumber</button>
   <button class="ftool red" onclick="clearAll()">Clear all</button>
 </div>
 
+<!-- STATS -->
 <div class="stats-bar">
   <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total</div></div>
   <div class="stat"><div class="stat-n" id="st-rows">0</div><div class="stat-l">Rows</div></div>
   <div id="st-secs" style="display:contents;"></div>
 </div>
 
+<!-- CANVAS -->
 <div class="canvas-outer">
-  <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12px;" id="empty-hint">Select a hall above to start building</div>
+  <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12px;" id="empty-hint">Select a hall or click ⚡ Build to start</div>
   <div class="stage-wrap" id="stage-wrap" style="display:none;">
     <div class="stage-box">STAGE</div><div class="stage-line"></div>
   </div>
   <div class="grid-area" id="grid-area"></div>
 </div>
 
-<!-- ADD ROW BAR -->
+<!-- BOTTOM BAR -->
 <div class="add-row-bar">
-  <!-- Line 1: Row insert controls -->
   <div class="ar-row">
     <input class="ar-in" type="text" id="ar-lbl" placeholder="Label e.g. AA" maxlength="4" style="width:72px;text-transform:uppercase;">
-    <input class="ar-in" type="number" id="ar-seats" placeholder="63" min="1" style="width:52px;">
-    <select class="ar-in" id="ar-position" style="width:60px;">
+    <input class="ar-in" type="number" id="ar-seats" placeholder="63" min="1" style="width:50px;">
+    <select class="ar-in" id="ar-position" style="width:62px;">
       <option value="before">Before</option>
       <option value="after">After</option>
       <option value="end" selected>End ↓</option>
     </select>
-    <select class="ar-in" id="ar-ref-row" style="flex:1;">
-      <option value="">— row —</option>
-    </select>
+    <select class="ar-in" id="ar-ref-row" style="flex:1;"><option value="">— row —</option></select>
     <button class="ar-btn grn" onclick="addRow()">＋ Row</button>
   </div>
-  <!-- Line 2: Col and gap controls -->
   <div class="ar-row">
     <button class="ar-btn col" onclick="addColAll()" style="flex:1;">＋ Col</button>
     <button class="ar-btn col" onclick="delColAll()" style="flex:1;">− Col</button>
     <button class="ar-btn red" onclick="delLastRow()" style="flex:1;">− Row</button>
-    <button class="ar-btn" onclick="showModal('modal-gaps')" style="background:#6366f1;flex:1;">Gaps ↕↔</button>
+    <button class="ar-btn pur" onclick="showModal('modal-gaps')" style="flex:1;">Gaps ↕↔</button>
+  </div>
+</div>
+
+<!-- MODAL: Quick Build -->
+<div class="overlay" id="modal-quickbuild">
+  <div class="modal">
+    <div class="mtitle">⚡ Quick build hall</div>
+    <div class="mf">
+      <div class="ml">Row labels (space separated, stage→back)</div>
+      <input class="mi" id="qb-rows" placeholder="AA BB A B C D E F G H I J K L M N O P Q R S T U V W" style="font-size:12px;">
+    </div>
+    <div class="mf">
+      <div class="ml">Seats per row</div>
+      <input class="mi" type="number" id="qb-seats" value="63" min="1">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">This will replace the current layout.</div>
+    <div class="mbtns">
+      <button class="mbtn" onclick="closeModal('modal-quickbuild')">Cancel</button>
+      <button class="mbtn pri" onclick="quickBuild()">⚡ Build now</button>
+    </div>
   </div>
 </div>
 
 <!-- MODAL: Gaps -->
 <div class="overlay" id="modal-gaps">
   <div class="modal">
-    <div class="mtitle">Insert gaps / passages</div>
-    <!-- V-gap -->
-    <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:6px;">⎸ Vertical gap (aisle between seats)</div>
+    <div class="mtitle">Insert passages / gaps</div>
+    <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:8px;">⎸ Vertical gap (aisle between seats)</div>
     <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
       <span style="font-size:10px;color:var(--muted);">Row</span>
-      <select class="mi" id="vgap-from-row" style="width:48px;padding:5px 6px;font-size:11px;"></select>
+      <select class="mi" id="vgap-from-row" style="width:48px;padding:5px;font-size:11px;"></select>
       <span style="font-size:10px;color:var(--muted);">to</span>
-      <select class="mi" id="vgap-to-row" style="width:48px;padding:5px 6px;font-size:11px;"></select>
-      <select class="mi" id="vgap-position" style="width:60px;padding:5px 6px;font-size:11px;">
+      <select class="mi" id="vgap-to-row" style="width:48px;padding:5px;font-size:11px;"></select>
+      <select class="mi" id="vgap-position" style="width:62px;padding:5px;font-size:11px;">
         <option value="before">Before</option>
         <option value="after">After</option>
       </select>
-      <span style="font-size:10px;color:var(--muted);">seat</span>
-      <input class="mi" type="number" id="vgap-seat-no" placeholder="#" min="1" style="width:44px;padding:5px 6px;font-size:11px;">
-      <select class="mi" id="vgap-size" style="width:68px;padding:5px 6px;font-size:11px;">
+      <span style="font-size:10px;color:var(--muted);">col</span>
+      <input class="mi" type="number" id="vgap-col-no" placeholder="#" min="1" style="width:44px;padding:5px;font-size:11px;">
+      <select class="mi" id="vgap-size" style="width:68px;padding:5px;font-size:11px;">
         <option value="1">Narrow</option>
         <option value="2" selected>Medium</option>
         <option value="3">Wide</option>
       </select>
-      <button class="ar-btn" style="background:#6366f1;" onclick="insertVGap()">＋ Add</button>
+      <button class="ar-btn pur" onclick="insertVGap()">＋ Add</button>
     </div>
-    <!-- H-gap -->
-    <div style="font-size:11px;font-weight:600;color:#0891b2;margin-bottom:6px;">≡ Horizontal gap (passage between rows)</div>
+    <div style="font-size:11px;font-weight:600;color:#0891b2;margin-bottom:8px;">≡ Horizontal gap (passage between rows)</div>
     <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
-      <span style="font-size:10px;color:var(--muted);">Row</span>
-      <select class="mi" id="hgap-from" style="width:48px;padding:5px 6px;font-size:11px;"></select>
-      <span style="font-size:10px;color:var(--muted);">to</span>
-      <select class="mi" id="hgap-to" style="width:48px;padding:5px 6px;font-size:11px;"></select>
-      <select class="mi" id="hgap-size" style="width:68px;padding:5px 6px;font-size:11px;">
+      <span style="font-size:10px;color:var(--muted);">After row</span>
+      <select class="mi" id="hgap-from" style="width:52px;padding:5px;font-size:11px;"></select>
+      <select class="mi" id="hgap-size" style="width:68px;padding:5px;font-size:11px;">
         <option value="1">Narrow</option>
         <option value="2" selected>Medium</option>
         <option value="3">Wide</option>
       </select>
       <button class="ar-btn col" onclick="insertHGap()">＋ Add</button>
     </div>
-    <div class="mbtns"><button class="mbtn" onclick="closeModal('modal-gaps')">Close</button></div>
+    <div class="mbtns"><button class="mbtn grn" onclick="closeModal('modal-gaps')">Done</button></div>
   </div>
 </div>
 
 <!-- MODAL: Section -->
 <div class="overlay" id="modal-sec">
   <div class="modal">
-    <div class="mtitle">Add seat section</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
-      Define a category with a colour.<br>
-      Select it, then <strong>paint seats</strong> on the grid. Prices are set at event creation.
-    </div>
+    <div class="mtitle">Add section</div>
     <div class="mf">
       <div class="ml">Section name *</div>
-      <input class="mi" id="sec-name" placeholder="e.g. Premium, Regular, VIP, Corner">
+      <input class="mi" id="sec-name" placeholder="e.g. Premium, Regular, VIP">
+    </div>
+    <div class="mf">
+      <div class="ml">Ticket price ₹</div>
+      <input class="mi" type="number" id="sec-price" placeholder="e.g. 400">
     </div>
     <div class="mf">
       <div class="ml">Colour</div>
       <div class="swatches" id="swatches"></div>
     </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;">After saving, select this section and paint seats on the grid.</div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-sec')">Cancel</button>
       <button class="mbtn pri" onclick="saveSec()">Save section</button>
@@ -259,7 +289,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="mf"><div class="ml">City</div><input class="mi" id="nh-city" placeholder="e.g. Vadodara"></div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-hall')">Cancel</button>
-      <button class="mbtn pri" onclick="createHall()">Create & start mapping</button>
+      <button class="mbtn pri" onclick="createHall()">Create hall</button>
     </div>
   </div>
 </div>
@@ -273,7 +303,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <div style="font-size:12px;color:var(--muted);" id="save-hall-lbl"></div>
     </div>
     <div id="save-sum" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;"></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Total seats: <strong id="sv-total">0</strong> · Rows: <strong id="sv-rows">0</strong></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+      Total seats: <strong id="sv-total">0</strong> · Rows: <strong id="sv-rows">0</strong>
+    </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-save')">Cancel</button>
       <button class="mbtn grn" onclick="doSave()">✓ Save to Supabase</button>
@@ -281,35 +313,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
 </div>
 
-<!-- MODAL: Renumber -->
+<!-- MODAL: Seat number (right-click) -->
 <div class="overlay" id="modal-renum">
   <div class="modal">
-    <div class="mtitle">Renumber seats</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-      Set a new number at any position. Positions between old and new become blank (aisle).
-      <strong>Modal stays open</strong> — keep renumbering, click Cancel when done.
-    </div>
-    <div class="mr2">
-      <div>
-        <div class="ml">Row label</div>
-        <input class="mi" type="text" id="renum-row" placeholder="e.g. A" maxlength="3" style="text-transform:uppercase;font-weight:600;text-align:center;">
-      </div>
-      <div>
-        <div class="ml">Current seat no. at target</div>
-        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 18" min="1" style="font-weight:600;text-align:center;">
-      </div>
+    <div class="mtitle">Seat action</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+      Row <strong id="renum-row-lbl" style="color:var(--text);font-size:14px;">—</strong>
+      &nbsp;·&nbsp; Column <strong id="renum-col-lbl" style="color:var(--text);">—</strong>
     </div>
     <div class="mf">
-      <div class="ml">New seat number at that position</div>
-      <input class="mi" type="number" id="renum-val" placeholder="e.g. 14" min="1" style="font-size:20px;font-weight:600;text-align:center;">
+      <div class="ml">Assign seat number here</div>
+      <input class="mi" type="number" id="renum-val" placeholder="e.g. 1" min="1"
+        style="font-size:28px;font-weight:700;text-align:center;"
+        onkeydown="if(event.key==='Enter')applyRenum()">
     </div>
-    <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:10px;">
-      Example: Row <strong>AA</strong> · Current seat <strong>18</strong> → <strong>13</strong><br>
-      → Seats up to 12 untouched · seats 13,14,15,16,17 become blank · seat 18 becomes 13, 19→14…
+    <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:12px;line-height:1.6;">
+      • Un-numbered seats <strong>before</strong> this → vanish<br>
+      • This seat → your number<br>
+      • Seats after → continue +1, +2, +3…
     </div>
     <div class="mbtns">
-      <button class="mbtn" onclick="closeModal('modal-renum')">✓ Done</button>
-      <button class="mbtn pri" onclick="applyRenum()">Apply →</button>
+      <button class="mbtn red" onclick="cutHere()">✂ Cut here</button>
+      <button class="mbtn" onclick="closeModal('modal-renum')">Cancel</button>
+      <button class="mbtn pri" onclick="applyRenum()">✓ Apply</button>
     </div>
   </div>
 </div>
@@ -326,10 +352,12 @@ const HALL_IDS={sayjirao:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'};
 let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0];
 let painting=false,hallName='',currentHallKey='';
 let history=[];
+let _renumRi=-1,_renumCi=-1; // clicked cell for renumber
+let highlightSecId=null; // section being highlighted
 
 function saveHistory(){
   history.push(JSON.stringify({rows,sections}));
-  if(history.length>30)history.shift();
+  if(history.length>40)history.shift();
 }
 function undoLast(){
   if(!history.length){alert('Nothing to undo.');return;}
@@ -344,11 +372,10 @@ async function pickHall(){
   const v=document.getElementById('hall-sel').value;
   if(!v)return;
   currentHallKey=v;
-  const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',sayaji:'Sayaji Hall, Vadodara'};
-  hallName=names[v];
+  const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',demo:'Demo Hall'};
+  hallName=names[v]||v;
   document.getElementById('empty-hint').style.display='none';
   document.getElementById('stage-wrap').style.display='block';
-
   if(v==='sayjirao'){
     rows=[];sections=[];render();renderSecs();
     const {data:hall}=await sb.from('halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
@@ -363,30 +390,26 @@ async function pickHall(){
       }
     }
     rows=[];sections=[];render();renderSecs();
-    alert('Blank canvas ready. Add a section first, then add rows and paint.');
-  } else if(v==='sayaji'){
-    loadDemo();
   }
 }
 
-function loadDemo(){
-  sections=[
-    {id:'s1',name:'Premium',color:'#c8860a'},
-    {id:'s2',name:'Regular',color:'#2b6fd4'},
-  ];
+// ── Quick Build ──
+function quickBuild(){
+  const labelsRaw=document.getElementById('qb-rows').value.trim();
+  const seats=parseInt(document.getElementById('qb-seats').value)||63;
+  if(!labelsRaw){alert('Enter row labels.');return;}
+  const labels=labelsRaw.toUpperCase().split(/\s+/).filter(Boolean);
+  if(!labels.length){alert('No valid labels found.');return;}
+  saveHistory();
   rows=[];
-  for(let ri=0;ri<23;ri++){
-    const lbl=String.fromCharCode(65+ri);
-    const sec=ri<3?sections[0]:sections[1];
+  labels.forEach(lbl=>{
     const cells=[];
-    for(let si=0;si<35;si++){
-      if(si===8||si===26)cells.push({t:'vgap',gapW:2});
-      cells.push({t:'seat',secId:sec.id});
-    }
+    for(let i=0;i<seats;i++) cells.push({t:'seat',secId:null,sn:null});
     rows.push({type:'row',label:lbl,cells});
-    if(ri===2)rows.push({type:'hpass',height:2});
-  }
-  activeSecId='s1';
+  });
+  document.getElementById('empty-hint').style.display='none';
+  document.getElementById('stage-wrap').style.display='block';
+  closeModal('modal-quickbuild');
   render();renderSecs();
 }
 
@@ -413,11 +436,11 @@ function setFine(t){
 // ── Paint ──
 function paintCell(ri,ci){
   const row=rows[ri];
-  if(row.type!=='row')return;
+  if(!row||row.type!=='row')return;
   const cell=row.cells[ci];
   if(!cell||cell.t==='vgap')return;
   if(!painting)saveHistory();
-  if(fineTool==='erase'){cell.t='empty';cell.secId=null;cell.sn=null;}
+  if(fineTool==='erase'){cell.t='seat';cell.secId=null;cell.sn=null;}
   else if(fineTool==='blocked'){cell.t='blocked';cell.secId=null;cell.sn=null;}
   else if(activeSecId){cell.t='seat';cell.secId=activeSecId;}
   render();renderSecs();
@@ -434,15 +457,14 @@ function render(){
       const hrow=document.createElement('div');
       hrow.className='hpass-row';
       const hlbl=document.createElement('div');
-      hlbl.className='hpass-row-lbl';
+      hlbl.className='hpass-lbl';
       hlbl.textContent='✕';
-      hlbl.title='Delete this passage';
+      hlbl.title='Delete passage';
       hlbl.onclick=()=>{saveHistory();rows.splice(ri,1);render();renderSecs();};
       hrow.appendChild(hlbl);
-      for(let i=0;i<40;i++){
+      for(let i=0;i<70;i++){
         const c=document.createElement('div');
         c.className=`hpass-cell h${rowData.height}`;
-        c.style.width='16px';c.style.marginRight='2px';
         hrow.appendChild(c);
       }
       grid.appendChild(hrow);
@@ -451,28 +473,24 @@ function render(){
 
     const rowDiv=document.createElement('div');
     rowDiv.className='grid-row';
+
     const lbl=document.createElement('div');
-    lbl.className='row-lbl';lbl.textContent=rowData.label;
+    lbl.className='row-lbl';
+    lbl.textContent=rowData.label;
     lbl.title='Click to delete row';
     lbl.onclick=()=>delRow(ri);
     rowDiv.appendChild(lbl);
 
-    const hasSn=rowData.cells.some(c=>c.t==='seat'&&c.sn!=null);
-    let autoCounter=1;
     let rowSecPrices={};
 
     rowData.cells.forEach((cell,ci)=>{
       if(cell.t==='vgap'){
-        const w=cell.gapW===1?8:cell.gapW===2?14:20;
-        const lw=cell.gapW===1?2:cell.gapW===2?4:6;
+        const w=cell.gapW===1?5:cell.gapW===2?10:16;
         const gw=document.createElement('div');
-        gw.style.cssText=`display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;width:${w}px;height:14px;transition:background 0.15s;`;
+        gw.style.cssText=`width:${w}px;height:14px;flex-shrink:0;cursor:pointer;transition:background 0.15s;border-radius:1px;`;
         gw.title='Click to delete gap';
-        const gl=document.createElement('div');
-        gl.style.cssText=`width:${lw}px;height:100%;border-radius:2px;background:transparent;transition:background 0.15s;`;
-        gw.appendChild(gl);
-        gw.onmouseenter=()=>{gw.style.background='rgba(204,51,51,0.12)';gl.style.background='rgba(204,51,51,0.5)';};
-        gw.onmouseleave=()=>{gw.style.background='transparent';gl.style.background='transparent';};
+        gw.onmouseenter=()=>gw.style.background='rgba(204,51,51,0.2)';
+        gw.onmouseleave=()=>gw.style.background='transparent';
         gw.onclick=e=>{e.stopPropagation();saveHistory();rowData.cells.splice(ci,1);render();renderSecs();};
         gw.addEventListener('touchstart',e=>{e.stopPropagation();e.preventDefault();saveHistory();rowData.cells.splice(ci,1);render();renderSecs();},{passive:false});
         rowDiv.appendChild(gw);
@@ -480,53 +498,54 @@ function render(){
       }
 
       const btn=document.createElement('button');
-      btn.className='seat';
       const sec=sections.find(s=>s.id===cell.secId);
+      const isHighlighted=highlightSecId&&cell.secId===highlightSecId;
 
       if(cell.t==='empty'){
-        // Truly blank — invisible, no number
         btn.className='seat empty';
       } else if(cell.t==='blocked'){
-        btn.style.cssText='background:var(--s2);color:#bbb;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);';
+        btn.className='seat blocked';
         btn.textContent='✕';
-        if(!hasSn) autoCounter++;
-      } else if(cell.t==='seat'){
-        // Show number regardless of section assignment
-        const displayNum=hasSn ? (cell.sn!=null ? cell.sn : '') : autoCounter;
+      } else {
+        // seat — numbered or un-numbered
+        const num=cell.sn!=null?cell.sn:'';
+        btn.className='seat'+(isHighlighted?' highlight':'');
         if(sec){
-          btn.style.cssText=`background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
-          if(!rowSecPrices[sec.id]) rowSecPrices[sec.id]={sec,count:0};
+          btn.style.cssText=`background:${sec.color}${isHighlighted?'':'22'};color:${isHighlighted?'#fff':sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
+          if(isHighlighted) btn.style.background=sec.color;
+          if(!rowSecPrices[sec.id])rowSecPrices[sec.id]={sec,count:0};
           rowSecPrices[sec.id].count++;
         } else {
-          // No section — grey dashed (unassigned)
-          btn.style.cssText='background:transparent;border:1px dashed #ccc;color:#aaa;';
+          btn.className='seat unassigned'+(isHighlighted?' highlight':'');
         }
-        btn.textContent=displayNum;
-        total++;
-        if(!hasSn) autoCounter++;
-      } else {
-        btn.className='seat empty';
+        btn.textContent=num;
+        if(num!=='')total++;
       }
 
+      // Paint on mouse
       btn.addEventListener('mousedown',e=>{
         if(e.button===2){e.preventDefault();openRenum(ri,ci);return;}
         e.preventDefault();painting=true;paintCell(ri,ci);
       });
       btn.addEventListener('contextmenu',e=>{e.preventDefault();openRenum(ri,ci);});
       btn.addEventListener('mouseenter',()=>{if(painting)paintCell(ri,ci);});
+      // Long press mobile
       let pt;
-      btn.addEventListener('touchstart',e=>{pt=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);painting=true;paintCell(ri,ci);},{passive:false});
+      btn.addEventListener('touchstart',e=>{
+        pt=setTimeout(()=>{e.preventDefault();openRenum(ri,ci);},600);
+        painting=true;paintCell(ri,ci);
+      },{passive:false});
       btn.addEventListener('touchend',()=>clearTimeout(pt));
       btn.addEventListener('touchmove',()=>clearTimeout(pt));
       rowDiv.appendChild(btn);
     });
 
-    // Price tags per section in this row
+    // Section price tags on right
     Object.values(rowSecPrices).forEach(p=>{
       const tag=document.createElement('div');
       tag.className='row-price';
       tag.style.cssText=`background:${p.sec.color}18;color:${p.sec.color};`;
-      tag.textContent=p.sec.name+(Object.keys(rowSecPrices).length>1?' ×'+p.count:'');
+      tag.textContent=(p.sec.price?'₹'+p.sec.price:p.sec.name)+(Object.keys(rowSecPrices).length>1?' ×'+p.count:'');
       rowDiv.appendChild(tag);
     });
 
@@ -536,13 +555,13 @@ function render(){
   document.addEventListener('mouseup',()=>painting=false);
   document.getElementById('st-total').textContent=total;
   document.getElementById('st-rows').textContent=rows.filter(r=>r.type==='row').length;
-  updateRefRowSelect();
-  updateGapSelects();
+  updateSelects();
 }
 
 // ── Sections ──
 function openAddSec(){
   document.getElementById('sec-name').value='';
+  document.getElementById('sec-price').value='';
   pickedColor=COLORS[sections.length%COLORS.length];
   buildSwatches();
   showModal('modal-sec');
@@ -561,9 +580,10 @@ function buildSwatches(){
 
 function saveSec(){
   const name=document.getElementById('sec-name').value.trim();
-  if(!name){alert('Enter a section name.');return;}
+  const price=document.getElementById('sec-price').value.trim();
+  if(!name){alert('Enter section name.');return;}
   const id='s'+Date.now();
-  sections.push({id,name,color:pickedColor});
+  sections.push({id,name,color:pickedColor,price});
   activeSecId=id;
   closeModal('modal-sec');
   render();renderSecs();
@@ -572,50 +592,63 @@ function saveSec(){
 function renderSecs(){
   const w=document.getElementById('sec-cards');w.innerHTML='';
   if(!sections.length){
-    w.innerHTML='<div style="font-size:11px;color:var(--muted);">No sections yet — add one above</div>';
+    w.innerHTML='<div style="font-size:11px;color:var(--muted);">No sections — add one above</div>';
     document.getElementById('atool').style.display='none';
     document.getElementById('st-secs').innerHTML='';
     return;
   }
+
   sections.forEach(sec=>{
     let cnt=0;
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat'&&c.sn!=null)cnt++;});});
     const card=document.createElement('div');
-    card.className='sec-card'+(activeSecId===sec.id?' sel':'');
-    card.style.borderColor=activeSecId===sec.id?sec.color:'';
-    card.style.background=activeSecId===sec.id?sec.color+'12':'';
+    const isSel=activeSecId===sec.id;
+    const isHL=highlightSecId===sec.id;
+    card.className='sec-card'+(isSel?' sel':'')+(isHL?' highlighted':'');
+    card.style.borderColor=isSel?sec.color:'';
+    card.style.background=isSel?sec.color+'12':'';
+
     card.innerHTML=`
       <div class="scdot" style="background:${sec.color};"></div>
       <div class="scinfo">
-        <div class="scname">${sec.name}</div>
-        <div class="scmeta">${cnt} seats painted</div>
+        <div class="scname" style="color:${sec.color};">${sec.name}</div>
+        <div class="scmeta">${sec.price?'₹'+sec.price+' · ':''} ${cnt} numbered seats</div>
       </div>
+      <div class="scprice" style="background:${sec.color}18;color:${sec.color};">${sec.price?'₹'+sec.price:'Free'}</div>
       <button class="scdel" onclick="delSec('${sec.id}',event)">✕</button>`;
-    card.onclick=()=>{
-      activeSecId=sec.id;fineTool=null;
+
+    // Single click → select for painting
+    // Double click → highlight/un-highlight seats
+    card.onclick=(e)=>{
+      if(e.target.classList.contains('scdel'))return;
+      activeSecId=sec.id;
+      fineTool=null;
       document.querySelectorAll('.ftool').forEach(b=>b.classList.remove('active'));
-      renderSecs();
+      highlightSecId=highlightSecId===sec.id?null:sec.id;
+      renderSecs();render();
     };
     w.appendChild(card);
   });
 
+  // Active tool label
   const atl=document.getElementById('atool');
   const atn=document.getElementById('atool-name');
   const active=sections.find(s=>s.id===activeSecId);
   if(fineTool){
     atl.style.display='block';
-    atn.textContent={blocked:'Blocking seat',erase:'Erasing seat'}[fineTool]||fineTool;
+    atn.textContent={blocked:'Blocking',erase:'Erasing'}[fineTool];
     atn.style.color='var(--text)';
   } else if(active){
     atl.style.display='block';
-    atn.textContent=active.name;
+    atn.textContent=active.name+(active.price?' · ₹'+active.price:'');
     atn.style.color=active.color;
   } else {atl.style.display='none';}
 
+  // Stats
   const sw=document.getElementById('st-secs');sw.innerHTML='';
   sections.forEach(sec=>{
     let cnt=0;
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat'&&c.sn!=null)cnt++;});});
     const el=document.createElement('div');
     el.className='stat';
     el.innerHTML=`<div class="stat-n" style="color:${sec.color};">${cnt}</div><div class="stat-l">${sec.name}</div>`;
@@ -627,26 +660,13 @@ function delSec(id,e){
   e.stopPropagation();
   if(!confirm('Delete section? Seats will be unassigned.'))return;
   sections=sections.filter(s=>s.id!==id);
-  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===id){c.secId=null;}});});
+  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===id)c.secId=null;});});
   if(activeSecId===id)activeSecId=sections[0]?.id||null;
+  if(highlightSecId===id)highlightSecId=null;
   render();renderSecs();
 }
 
-// ── Row reference dropdown ──
-function updateRefRowSelect(){
-  const sel=document.getElementById('ar-ref-row');
-  if(!sel)return;
-  const prev=sel.value;
-  sel.innerHTML='<option value="">— row —</option>';
-  rows.filter(r=>r.type==='row').forEach(r=>{
-    const opt=document.createElement('option');
-    opt.value=r.label;opt.textContent=r.label;
-    if(r.label===prev)opt.selected=true;
-    sel.appendChild(opt);
-  });
-}
-
-// ── Add Row — insert anywhere ──
+// ── Row management ──
 function addRow(){
   saveHistory();
   const lblInput=document.getElementById('ar-lbl').value.trim().toUpperCase();
@@ -655,28 +675,17 @@ function addRow(){
   const cnt=seatsInput===''?63:Math.max(1,parseInt(seatsInput)||63);
   const position=document.getElementById('ar-position').value;
   const refRow=document.getElementById('ar-ref-row').value;
-
-  // Build cells — plain seats only, no auto-vgap (use Gaps tool for aisles)
   const cells=[];
-  for(let i=0;i<cnt;i++){
-    cells.push({t:'seat',secId:activeSecId||null});
-  }
+  for(let i=0;i<cnt;i++) cells.push({t:'seat',secId:activeSecId||null,sn:null});
   const newRow={type:'row',label:lbl,cells};
-
   if(position==='end'||!refRow){
     rows.push(newRow);
   } else {
-    // Find index of reference row
     const refIdx=rows.findIndex(r=>r.type==='row'&&r.label===refRow);
-    if(refIdx===-1){
-      rows.push(newRow);
-    } else if(position==='before'){
-      rows.splice(refIdx,0,newRow);
-    } else { // after
-      rows.splice(refIdx+1,0,newRow);
-    }
+    if(refIdx===-1)rows.push(newRow);
+    else if(position==='before')rows.splice(refIdx,0,newRow);
+    else rows.splice(refIdx+1,0,newRow);
   }
-
   document.getElementById('ar-lbl').value='';
   render();renderSecs();
 }
@@ -690,10 +699,7 @@ function nextLabel(){
 
 function addColAll(){
   saveHistory();
-  rows.forEach(r=>{
-    if(r.type!=='row')return;
-    r.cells.push({t:'seat',secId:activeSecId||null});
-  });
+  rows.forEach(r=>{if(r.type!=='row')return;r.cells.push({t:'seat',secId:activeSecId||null,sn:null});});
   render();renderSecs();
 }
 
@@ -723,18 +729,18 @@ function delRow(ri){
 function clearAll(){
   saveHistory();
   if(confirm('Clear all seat assignments?')){
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'){c.secId=null;c.sn=null;}});});
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{c.secId=null;c.sn=null;});});
     render();renderSecs();
   }
 }
 
-// ── Gap selects ──
-function updateGapSelects(){
-  ['hgap-from','hgap-to','vgap-from-row','vgap-to-row'].forEach((id,idx)=>{
+// ── Gap tools ──
+function updateSelects(){
+  ['hgap-from','vgap-from-row','vgap-to-row','ar-ref-row'].forEach((id,idx)=>{
     const sel=document.getElementById(id);if(!sel)return;
     const prev=sel.value;
-    const isFrom=idx===0||idx===2;
-    sel.innerHTML='<option value="">'+(isFrom?'from':'to')+'</option>';
+    const placeholder=id==='ar-ref-row'?'— row —':id==='hgap-from'?'row':'from';
+    sel.innerHTML=`<option value="">${placeholder}</option>`;
     rows.filter(r=>r.type==='row').forEach(r=>{
       const opt=document.createElement('option');
       opt.value=r.label;opt.textContent=r.label;
@@ -742,6 +748,18 @@ function updateGapSelects(){
       sel.appendChild(opt);
     });
   });
+  // vgap-to-row
+  const vto=document.getElementById('vgap-to-row');
+  if(vto){
+    const prev=vto.value;
+    vto.innerHTML='<option value="">to</option>';
+    rows.filter(r=>r.type==='row').forEach(r=>{
+      const opt=document.createElement('option');
+      opt.value=r.label;opt.textContent=r.label;
+      if(r.label===prev)opt.selected=true;
+      vto.appendChild(opt);
+    });
+  }
 }
 
 function insertVGap(){
@@ -749,37 +767,103 @@ function insertVGap(){
   const fromRow=document.getElementById('vgap-from-row').value;
   const toRow=document.getElementById('vgap-to-row').value||fromRow;
   const position=document.getElementById('vgap-position').value;
-  const seatNo=parseInt(document.getElementById('vgap-seat-no').value);
+  const colNo=parseInt(document.getElementById('vgap-col-no').value);
   const sz=parseInt(document.getElementById('vgap-size').value)||2;
   if(!fromRow){alert('Select from row.');return;}
-  if(isNaN(seatNo)||seatNo<1){alert('Enter seat number.');return;}
+  if(isNaN(colNo)||colNo<1){alert('Enter column number.');return;}
   let count=0;
   rows.forEach(row=>{
     if(row.type!=='row')return;
     if(row.label<fromRow||row.label>toRow)return;
-    let seatCount=0,insertAt=-1;
+    let colCount=0,insertAt=-1;
     for(let i=0;i<row.cells.length;i++){
-      if(row.cells[i].t!=='vgap')seatCount++;
-      if(position==='before'&&seatCount===seatNo){insertAt=i;break;}
-      if(position==='after'&&seatCount===seatNo){insertAt=i+1;break;}
+      if(row.cells[i].t!=='vgap')colCount++;
+      if(position==='before'&&colCount===colNo){insertAt=i;break;}
+      if(position==='after'&&colCount===colNo){insertAt=i+1;break;}
     }
-    if(position==='before'&&seatNo===1)insertAt=0;
+    if(position==='before'&&colNo===1)insertAt=0;
     if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
   });
-  if(count===0){alert('No matching seats found.');return;}
+  if(count===0){alert('No matching columns found.');return;}
   render();renderSecs();
 }
 
 function insertHGap(){
   saveHistory();
-  const fromLabel=document.getElementById('hgap-from').value;
-  const toLabel=document.getElementById('hgap-to').value||fromLabel;
+  const afterLabel=document.getElementById('hgap-from').value;
   const sz=parseInt(document.getElementById('hgap-size').value)||2;
-  if(!fromLabel){alert('Select from row.');return;}
-  const rowIndices=[];
-  rows.forEach((r,i)=>{if(r.type!=='row')return;if(r.label>=fromLabel&&r.label<=toLabel)rowIndices.push(i);});
-  if(!rowIndices.length){alert('No rows found.');return;}
-  rowIndices.reverse().forEach(ri=>{rows.splice(ri+1,0,{type:'hpass',height:sz});});
+  if(!afterLabel){alert('Select row.');return;}
+  const refIdx=rows.findLastIndex(r=>r.type==='row'&&r.label===afterLabel);
+  if(refIdx===-1){alert('Row not found.');return;}
+  rows.splice(refIdx+1,0,{type:'hpass',height:sz});
+  render();renderSecs();
+}
+
+// ── RENUMBER — click seat → assign number ──
+function openRenum(ri,ci){
+  const row=rows[ri];
+  if(!row||row.type!=='row')return;
+  _renumRi=ri;_renumCi=ci;
+  // Count physical column number (1-based, ignoring vgaps)
+  let col=0;
+  for(let i=0;i<=ci;i++){if(row.cells[i].t!=='vgap')col++;}
+  document.getElementById('renum-row-lbl').textContent=row.label;
+  document.getElementById('renum-col-lbl').textContent='col '+col;
+  document.getElementById('renum-val').value='';
+  showModal('modal-renum');
+  setTimeout(()=>document.getElementById('renum-val').focus(),120);
+}
+
+function applyRenum(){
+  const newNum=parseInt(document.getElementById('renum-val').value);
+  if(isNaN(newNum)||newNum<1){alert('Enter a seat number (1 or more).');return;}
+  if(_renumRi<0||_renumCi<0){alert('No seat selected.');return;}
+  const rowData=rows[_renumRi];
+  if(!rowData||rowData.type!=='row')return;
+
+  // All non-vgap cells in physical order
+  const allCells=[];
+  rowData.cells.forEach((cell,ci)=>{
+    if(cell.t!=='vgap')allCells.push({ci,cell});
+  });
+
+  const targetIdx=allCells.findIndex(s=>s.ci===_renumCi);
+  if(targetIdx<0){alert('Seat not found.');return;}
+
+  saveHistory();
+
+  // Step 1: un-numbered seats BEFORE target → vanish (empty)
+  for(let i=0;i<targetIdx;i++){
+    const cell=allCells[i].cell;
+    if(cell.t!=='empty'&&cell.sn==null){
+      cell.t='empty';cell.secId=null;cell.sn=null;
+    }
+  }
+
+  // Step 2: assign newNum to target, continue sequentially to end
+  let num=newNum;
+  for(let i=targetIdx;i<allCells.length;i++){
+    const cell=allCells[i].cell;
+    if(cell.t==='empty')continue;
+    cell.sn=num++;
+  }
+
+  closeModal('modal-renum');
+  _renumRi=-1;_renumCi=-1;
+  render();renderSecs();
+}
+
+// Cut — remove target cell and everything after it in this row
+function cutHere(){
+  if(_renumRi<0||_renumCi<0){alert('No seat selected.');return;}
+  const rowData=rows[_renumRi];
+  if(!rowData||rowData.type!=='row')return;
+  if(!confirm('Remove this seat and all seats after it in row '+rowData.label+'?'))return;
+  saveHistory();
+  // Find the actual index in cells array and slice
+  rowData.cells=rowData.cells.slice(0,_renumCi);
+  closeModal('modal-renum');
+  _renumRi=-1;_renumCi=-1;
   render();renderSecs();
 }
 
@@ -787,18 +871,19 @@ function insertHGap(){
 function showSave(){
   if(!rows.length){alert('Nothing to save.');return;}
   let total=0;
-  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'&&c.secId)total++;});});
+  rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.t==='seat'&&c.sn!=null)total++;});});
   document.getElementById('sv-total').textContent=total;
   document.getElementById('sv-rows').textContent=rows.filter(r=>r.type==='row').length;
   document.getElementById('save-hall-lbl').textContent=hallName||'Unnamed hall';
   const sum=document.getElementById('save-sum');sum.innerHTML='';
   sections.forEach(sec=>{
     let cnt=0;
-    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat')cnt++;});});
+    rows.forEach(r=>{if(r.type!=='row')return;r.cells.forEach(c=>{if(c.secId===sec.id&&c.t==='seat'&&c.sn!=null)cnt++;});});
     const row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;gap:7px;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);';
     row.innerHTML=`<div style="width:9px;height:9px;border-radius:2px;background:${sec.color};flex-shrink:0;"></div>
       <span style="flex:1;font-weight:600;">${sec.name}</span>
+      <span style="color:${sec.color};font-weight:700;">${sec.price?'₹'+sec.price:'Free'}</span>
       <span style="color:var(--muted);">${cnt} seats</span>`;
     sum.appendChild(row);
   });
@@ -823,102 +908,16 @@ async function doSave(){
   }
 }
 
-// ── Renumber ──
-function openRenum(ri,ci){
-  const row=rows[ri];
-  if(row&&row.type==='row'){
-    document.getElementById('renum-row').value=row.label;
-    const hasSn=row.cells.some(c=>c.t==='seat'&&c.sn!=null);
-    let sn=0;
-    if(hasSn){sn=row.cells[ci].sn||'';}
-    else{let counter=0;for(let i=0;i<=ci;i++){if(row.cells[i].t!=='vgap'&&row.cells[i].t!=='empty')counter++;}sn=counter;}
-    document.getElementById('renum-pos').value=sn||'';
-  }
-  document.getElementById('renum-val').value='';
-  showModal('modal-renum');
-  setTimeout(()=>document.getElementById('renum-val').focus(),100);
-}
-
-function openRenumManual(){
-  document.getElementById('renum-row').value='';
-  document.getElementById('renum-pos').value='';
-  document.getElementById('renum-val').value='';
-  showModal('modal-renum');
-  setTimeout(()=>document.getElementById('renum-row').focus(),100);
-}
-
-function applyRenum(){
-  const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
-  const atPos=parseInt(document.getElementById('renum-pos').value);  // current displayed seat number
-  const newNum=parseInt(document.getElementById('renum-val').value); // what it becomes
-  if(!rowLabel){alert('Enter row label.');return;}
-  if(isNaN(atPos)||atPos<1){alert('Enter current seat number at target.');return;}
-  if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
-  const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
-  if(!rowData){alert('Row '+rowLabel+' not found.');return;}
-
-  // Collect all non-vgap, non-empty cells — these have displayed numbers
-  // Also collect empty cells to preserve their positions
-  const allCells=[]; // all non-vgap (includes empty)
-  rowData.cells.forEach((cell,ci)=>{
-    if(cell.t!=='vgap') allCells.push({ci,cell});
-  });
-
-  // Build display number for each non-empty cell
-  // If sn is set use it; else auto-count
-  let counter=1;
-  allCells.forEach(s=>{
-    if(s.cell.t==='empty'){ s.displayNum=null; }
-    else if(s.cell.sn!=null){ s.displayNum=s.cell.sn; }
-    else { s.displayNum=counter; counter++; }
-  });
-
-  // Find target cell by displayed number
-  const targetEntry=allCells.find(s=>s.displayNum===atPos);
-  if(!targetEntry){
-    alert('Seat number '+atPos+' not found in row '+rowLabel+'.');
-    return;
-  }
-  const targetIdx=allCells.indexOf(targetEntry);
-
-  // Find blank zone start cell by displayed number newNum
-  const blankEntry=allCells.find(s=>s.displayNum===newNum);
-  let blankStart=blankEntry ? allCells.indexOf(blankEntry) : newNum-1;
-  if(blankStart<0) blankStart=0;
-  if(blankStart>targetIdx) blankStart=targetIdx;
-
-  saveHistory();
-
-  // Step 1: blank from blankStart to targetIdx-1
-  for(let i=blankStart;i<targetIdx;i++){
-    allCells[i].cell.t='empty';
-    allCells[i].cell.secId=null;
-    allCells[i].cell.sn=null;
-  }
-
-  // Step 2: renumber from targetIdx to end — skip empty cells
-  let num=newNum;
-  for(let i=targetIdx;i<allCells.length;i++){
-    const cell=allCells[i].cell;
-    if(cell.t==='empty') continue;
-    cell.sn=num++;
-  }
-
-  // Keep modal open — clear fields for next entry, row label stays
-  document.getElementById('renum-pos').value='';
-  document.getElementById('renum-val').value='';
-  render();renderSecs();
-}
-
 function showModal(id){
   document.getElementById(id).classList.add('show');
-  updateGapSelects();
+  updateSelects();
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('hall-sel').value='sayaji';
-  pickHall();
+  // Default quick build values for Sayjirao
+  document.getElementById('qb-rows').value='AA BB A B C D E F G H I J K L M N O P Q R S T U V W';
+  document.getElementById('qb-seats').value='63';
 });
 </script>
 </body>
