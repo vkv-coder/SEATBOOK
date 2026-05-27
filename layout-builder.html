@@ -286,7 +286,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="modal">
     <div class="mtitle">Renumber seats</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-      Seats <strong>before</strong> target become empty · Seats <strong>from</strong> target renumber in sequence.
+      Set a new number at any position. Positions between old and new become blank (aisle).
+      <strong>Modal stays open</strong> — keep renumbering, click Cancel when done.
     </div>
     <div class="mr2">
       <div>
@@ -294,20 +295,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
         <input class="mi" type="text" id="renum-row" placeholder="e.g. A" maxlength="3" style="text-transform:uppercase;font-weight:600;text-align:center;">
       </div>
       <div>
-        <div class="ml">At position (current seat no.)</div>
-        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 6" min="1" style="font-weight:600;text-align:center;">
+        <div class="ml">At position (1, 2, 3… count from left)</div>
+        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 17" min="1" style="font-weight:600;text-align:center;">
       </div>
     </div>
     <div class="mf">
-      <div class="ml">Change to seat number</div>
-      <input class="mi" type="number" id="renum-val" placeholder="e.g. 1" min="1" style="font-size:20px;font-weight:600;text-align:center;">
+      <div class="ml">New seat number at that position</div>
+      <input class="mi" type="number" id="renum-val" placeholder="e.g. 14" min="1" style="font-size:20px;font-weight:600;text-align:center;">
     </div>
     <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:10px;">
-      Example: Row <strong>A</strong> · Position <strong>6</strong> → <strong>1</strong><br>
-      → Seats 1–5 become empty, seat 6 becomes 1, 7 becomes 2…
+      Example: Row <strong>A</strong> · Position <strong>17</strong> → <strong>14</strong><br>
+      → Seats 1–13 untouched · positions 14,15,16 become blank · position 17 = seat 14, 18 = 15…
     </div>
     <div class="mbtns">
-      <button class="mbtn" onclick="closeModal('modal-renum')">Cancel</button>
+      <button class="mbtn" onclick="closeModal('modal-renum')">✓ Done</button>
       <button class="mbtn pri" onclick="applyRenum()">Apply →</button>
     </div>
   </div>
@@ -842,50 +843,49 @@ function applyRenum(){
   const atPos=parseInt(document.getElementById('renum-pos').value);
   const newNum=parseInt(document.getElementById('renum-val').value);
   if(!rowLabel){alert('Enter row label.');return;}
-  if(isNaN(atPos)||atPos<1){alert('Enter current seat position.');return;}
-  if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
+  if(isNaN(atPos)||atPos<1){alert('Enter current seat position (1-based).');return;}
+  if(isNaN(newNum)||newNum<1){alert('Enter the new seat number.');return;}
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
-  // Collect all non-vgap cells in order
+  // Collect all non-vgap cells in order (these are the "positions")
   const seatCells=[];
   rowData.cells.forEach((cell,ci)=>{if(cell.t!=='vgap')seatCells.push({ci,cell});});
 
-  // Find target cell by sn (if renumber was done before) else by 1-based position
-  const hasSn=seatCells.some(s=>s.cell.sn!=null);
-  let targetIdx=hasSn?seatCells.findIndex(s=>s.cell.sn===atPos):-1;
-  if(targetIdx===-1)targetIdx=atPos-1;
-  if(targetIdx<0||targetIdx>=seatCells.length){alert('Position '+atPos+' not found in row '+rowLabel+'.');return;}
+  // atPos is always 1-based position index (not sn)
+  const targetIdx=atPos-1;
+  if(targetIdx<0||targetIdx>=seatCells.length){
+    alert('Position '+atPos+' not found in row '+rowLabel+'. Row has '+seatCells.length+' positions.');
+    return;
+  }
 
   saveHistory();
 
-  // Erase only the gap between the last non-empty seat and the target.
-  // Everything before the last non-empty seat is untouched (preserves prior renumbers).
-  let eraseFrom = targetIdx; // default: nothing to erase
-  for(let i=targetIdx-1;i>=0;i--){
-    if(seatCells[i].cell.t!=='empty'){
-      eraseFrom = i+1; // erase starts just after this non-empty cell
-      break;
-    }
-    // if i reaches 0 and it's empty, all cells before target are already empty — no erase needed
+  // Seats BEFORE target: untouched — keep exactly as they are
+  // Seats from newNum-th position to targetIdx-1: blank (these become the aisle/gap)
+  // Seats from targetIdx onwards: renumber starting from newNum
+
+  // Blank out positions from (newNum-1) to (targetIdx-1)
+  // i.e. the positions that fall between where newNum "should" start and where target actually is
+  const blankFrom = newNum - 1; // 0-based: position that would have been newNum
+  for(let i=blankFrom;i<targetIdx;i++){
+    if(i<0) continue;
+    const cell=seatCells[i].cell;
+    cell.t='empty';
+    cell.secId=null;
+    cell.sn=null;
   }
 
-  for(let i=eraseFrom;i<targetIdx;i++){
-    seatCells[i].cell.t='empty';
-    seatCells[i].cell.secId=null;
-    seatCells[i].cell.sn=null;
-  }
-
-  // Renumber from target onwards — assign sn sequentially, skip empty cells
+  // Renumber from targetIdx onwards
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
-    if(cell.t==='empty') continue;
+    if(cell.t==='empty') continue; // skip already-empty cells
     cell.sn=num++;
   }
 
-  closeModal('modal-renum');
-  document.getElementById('renum-row').value='';
+  // Modal stays open — fields stay filled for next renumber operation
+  // Only update the position field to help user know where we are now
   document.getElementById('renum-pos').value='';
   document.getElementById('renum-val').value='';
   render();renderSecs();
