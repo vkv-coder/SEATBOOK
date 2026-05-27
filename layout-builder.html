@@ -833,11 +833,11 @@ function insertVGap(){
     if(!validLabels.has(row.label))return;
     let colCount=0,insertAt=-1;
     for(let i=0;i<row.cells.length;i++){
-      if(row.cells[i].t!=='vgap')colCount++;
+      const ct=row.cells[i].t;
+      if(ct!=='vgap'&&ct!=='empty') colCount++;
       if(position==='before'&&colCount===colNo){insertAt=i;break;}
       if(position==='after'&&colCount===colNo){insertAt=i+1;break;}
     }
-    if(position==='before'&&colNo===1)insertAt=0;
     if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
   });
   if(count===0){alert('No matching columns found. Check row and column values.');return;}
