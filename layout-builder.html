@@ -295,8 +295,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
         <input class="mi" type="text" id="renum-row" placeholder="e.g. A" maxlength="3" style="text-transform:uppercase;font-weight:600;text-align:center;">
       </div>
       <div>
-        <div class="ml">At position (1, 2, 3… count from left)</div>
-        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 17" min="1" style="font-weight:600;text-align:center;">
+        <div class="ml">Current seat no. at target</div>
+        <input class="mi" type="number" id="renum-pos" placeholder="e.g. 18" min="1" style="font-weight:600;text-align:center;">
       </div>
     </div>
     <div class="mf">
@@ -304,8 +304,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <input class="mi" type="number" id="renum-val" placeholder="e.g. 14" min="1" style="font-size:20px;font-weight:600;text-align:center;">
     </div>
     <div style="background:rgba(43,111,212,0.06);border-radius:6px;padding:8px 10px;font-size:11px;color:#1a4a8a;margin-bottom:10px;">
-      Example: Row <strong>A</strong> · Position <strong>17</strong> → <strong>14</strong><br>
-      → Seats 1–13 untouched · positions 14,15,16 become blank · position 17 = seat 14, 18 = 15…
+      Example: Row <strong>AA</strong> · Current seat <strong>18</strong> → <strong>13</strong><br>
+      → Seats up to 12 untouched · seats 13,14,15,16,17 become blank · seat 18 becomes 13, 19→14…
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-renum')">✓ Done</button>
@@ -848,51 +848,64 @@ function openRenumManual(){
 
 function applyRenum(){
   const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
-  const atPos=parseInt(document.getElementById('renum-pos').value);  // 1-based physical position
-  const newNum=parseInt(document.getElementById('renum-val').value); // new seat number at that position
+  const atPos=parseInt(document.getElementById('renum-pos').value);  // current seat number at target
+  const newNum=parseInt(document.getElementById('renum-val').value); // what it should become
   if(!rowLabel){alert('Enter row label.');return;}
-  if(isNaN(atPos)||atPos<1){alert('Enter position (count from left, 1,2,3...)');return;}
+  if(isNaN(atPos)||atPos<1){alert('Enter current seat number at target position.');return;}
   if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
-  // All non-vgap cells = physical positions 1,2,3...
+  // All non-vgap cells in order
   const seatCells=[];
   rowData.cells.forEach((cell,ci)=>{
     if(cell.t!=='vgap') seatCells.push({ci,cell});
   });
 
-  const targetIdx=atPos-1; // 0-based
+  // Find target cell — the cell whose sn === atPos
+  // If no sn set yet (fresh row), treat atPos as 1-based index
+  const hasSn = seatCells.some(s=>s.cell.sn!=null);
+  let targetIdx = -1;
+  if(hasSn){
+    targetIdx = seatCells.findIndex(s=>s.cell.sn===atPos);
+  }
+  if(targetIdx===-1){
+    // fallback: treat atPos as 1-based physical position
+    targetIdx = atPos - 1;
+  }
   if(targetIdx<0||targetIdx>=seatCells.length){
-    alert('Position '+atPos+' does not exist. Row has '+seatCells.length+' positions.');
+    alert('Seat '+atPos+' not found in row '+rowLabel+'.');
     return;
   }
 
   saveHistory();
 
   // RULE:
-  // 1. Positions 0..(targetIdx-1): scan backwards from targetIdx-1
-  //    find the last non-empty cell, everything after it up to targetIdx-1 → blank
-  //    everything before and including it → untouched
-  // 2. Position targetIdx onwards → renumber from newNum, skip empty
+  // - Find the cell whose sn === newNum (or position newNum-1 if no sn)
+  //   Everything from that cell up to (targetIdx-1) → blank
+  // - targetIdx onwards → renumber from newNum
+  // - Everything before the blank zone → untouched
 
-  // Find last non-empty position before target
-  let lastNonEmpty=-1;
-  for(let i=targetIdx-1;i>=0;i--){
-    if(seatCells[i].cell.t!=='empty'){
-      lastNonEmpty=i;
-      break;
-    }
+  // Find where newNum currently sits (the start of the blank zone)
+  let blankStartIdx = -1;
+  if(hasSn){
+    blankStartIdx = seatCells.findIndex(s=>s.cell.sn===newNum);
   }
+  if(blankStartIdx===-1){
+    blankStartIdx = newNum - 1; // fallback: 0-based position
+  }
+  // Clamp to valid range and ensure it's before target
+  if(blankStartIdx<0) blankStartIdx=0;
+  if(blankStartIdx>=targetIdx) blankStartIdx=targetIdx; // nothing to blank
 
-  // Blank out everything between lastNonEmpty+1 and targetIdx-1
-  for(let i=lastNonEmpty+1;i<targetIdx;i++){
+  // Blank from blankStartIdx to targetIdx-1
+  for(let i=blankStartIdx;i<targetIdx;i++){
     seatCells[i].cell.t='empty';
     seatCells[i].cell.secId=null;
     seatCells[i].cell.sn=null;
   }
 
-  // Renumber from targetIdx onwards sequentially, skip empty cells
+  // Renumber from targetIdx onwards, skip empty
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
@@ -900,11 +913,9 @@ function applyRenum(){
     cell.sn=num++;
   }
 
-  // Keep modal open and ALL fields filled — user clicks Done when finished
-  // Just clear value field so user types next new number
-  document.getElementById('renum-val').value='';
-  // Update pos hint to show last applied position
+  // Keep modal open — row label stays, both fields clear for next operation
   document.getElementById('renum-pos').value='';
+  document.getElementById('renum-val').value='';
   render();renderSecs();
 }
 
