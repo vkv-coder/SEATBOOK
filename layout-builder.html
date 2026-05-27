@@ -206,19 +206,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <button class="ar-btn red" onclick="delLastRow()" style="flex:1;">− Row</button>
     <button class="ar-btn pur" onclick="showModal('modal-gaps')" style="flex:1;">Gaps ↕↔</button>
   </div>
-  <!-- Seat number input — shown when a seat is selected -->
-  <div class="ar-row" id="seat-num-bar" style="display:none;background:#f0f7ff;border-radius:8px;padding:6px 8px;border:2px solid #2b6fd4;">
-    <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
-      <span style="font-size:10px;color:#2b6fd4;font-weight:600;" id="seat-num-label">Row — · Col —</span>
-      <input class="ar-in" type="number" id="seat-num-input" placeholder="Type seat no. → Enter" min="1"
-        style="width:100%;font-size:15px;font-weight:700;text-align:center;border-color:#2b6fd4;padding:5px 8px;"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();applySeatNum();}if(event.key==='Escape')clearSelection();">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:3px;">
-      <button class="ar-btn" style="background:#2b6fd4;padding:4px 10px;" onclick="applySeatNum()">✓ Set</button>
-      <button class="ar-btn" style="background:#cc3333;padding:4px 10px;" onclick="cutSelected()">✂ Cut</button>
-    </div>
-    <button class="ar-btn" style="background:#888;align-self:stretch;padding:4px 10px;" onclick="clearSelection()">✕ Cancel</button>
+  <!-- Keyboard flow status bar -->
+  <div id="seat-num-bar" style="display:none;background:#f0f7ff;border-radius:8px;padding:5px 10px;border:2px solid #2b6fd4;align-items:center;gap:8px;">
+    <span style="font-size:11px;color:#2b6fd4;font-weight:600;" id="seat-num-label">—</span>
+    <span style="font-size:10px;color:#888;">Type digit · Space=skip · Backspace=undo · Esc=stop</span>
+    <button class="ar-btn" style="background:#888;padding:3px 8px;font-size:11px;margin-left:auto;" onclick="clearSelection()">✕</button>
   </div>
 </div>
 
@@ -923,72 +915,141 @@ function insertHGap(){
   render();renderSecs();
 }
 
-// ── SEAT SELECTION + NUMBERING ──
+// ── KEYBOARD SEAT NUMBERING ──
+// Flow: click first seat → type digits → auto-advance
+// Space = skip/vanish current seat → advance
+// Backspace = undo last typed number
+// Escape = stop numbering mode
+
 let _selRi=-1, _selCi=-1;
+let _typedDigits=''; // buffer for multi-digit input
+let _lastAction=null; // for backspace undo
 
 function selectSeat(ri,ci){
-  // If same seat clicked again — deselect
-  if(_selRi===ri&&_selCi===ci){clearSelection();return;}
-  _selRi=ri;_selCi=ci;
-  const row=rows[ri];
-  // Count physical column
-  let col=0;
-  for(let i=0;i<=ci;i++){if(row.cells[i].t!=='vgap')col++;}
-  // Show input bar
-  const bar=document.getElementById('seat-num-bar');
-  bar.style.display='flex';
-  document.getElementById('seat-num-label').textContent='Row '+row.label+' · Col '+col;
-  const inp=document.getElementById('seat-num-input');
-  inp.value='';
-  // Re-render to show highlight, then focus input
+  if(!numMode) return;
+  _selRi=ri; _selCi=ci;
+  _typedDigits='';
+  updateStatusBar();
   renderHighlight();
-  setTimeout(()=>inp.focus(),80);
+}
+
+function updateStatusBar(){
+  const bar=document.getElementById('seat-num-bar');
+  if(_selRi<0){bar.style.display='none';return;}
+  bar.style.display='flex';
+  const row=rows[_selRi];
+  let col=0;
+  for(let i=0;i<=_selCi;i++){if(row&&row.cells[i]&&row.cells[i].t!=='vgap')col++;}
+  const cur=_typedDigits||'—';
+  document.getElementById('seat-num-label').textContent=
+    'Row '+row.label+' · Col '+col+' → '+cur;
 }
 
 function clearSelection(){
-  _selRi=-1;_selCi=-1;
+  _selRi=-1;_selCi=-1;_typedDigits='';
   document.getElementById('seat-num-bar').style.display='none';
-  document.getElementById('seat-num-input').value='';
   renderHighlight();
 }
 
 function renderHighlight(){
   document.querySelectorAll('.seat.selected').forEach(b=>b.classList.remove('selected'));
   if(_selRi<0||_selCi<0)return;
-  // Find button by data-ri and data-ci
   const btn=document.querySelector(`.seat[data-ri="${_selRi}"][data-ci="${_selCi}"]`);
-  if(btn) btn.classList.add('selected');
+  if(btn)btn.classList.add('selected');
 }
 
-function applySeatNum(){
-  const newNum=parseInt(document.getElementById('seat-num-input').value);
-  if(isNaN(newNum)||newNum<1){
-    document.getElementById('seat-num-input').focus();
-    return;
+// Get next non-vgap cell index in same row, or next row
+function getNextSeat(ri,ci){
+  const row=rows[ri];
+  if(!row||row.type!=='row')return null;
+  // Next cell in same row
+  for(let i=ci+1;i<row.cells.length;i++){
+    if(row.cells[i].t!=='vgap')return{ri,ci:i};
   }
-  if(_selRi<0||_selCi<0)return;
-  const rowData=rows[_selRi];
-  if(!rowData||rowData.type!=='row')return;
-
-  // All non-vgap cells in physical order
-  const allCells=[];
-  rowData.cells.forEach((cell,ci)=>{
-    if(cell.t!=='vgap')allCells.push({ci,cell});
-  });
-
-  const targetIdx=allCells.findIndex(s=>s.ci===_selCi);
-  if(targetIdx<0)return;
-
-  saveHistory();
-
-  // Simply assign the number to this one seat only
-  // User numbers each seat manually — no auto-fill
-  allCells[targetIdx].cell.sn=newNum;
-
-  clearSelection();
-  render();renderSecs();
+  // Next row
+  for(let r=ri+1;r<rows.length;r++){
+    if(rows[r].type!=='row')continue;
+    for(let i=0;i<rows[r].cells.length;i++){
+      if(rows[r].cells[i].t!=='vgap')return{ri:r,ci:i};
+    }
+  }
+  return null;
 }
 
+// Commit current typed number to selected seat, advance to next
+function commitNum(){
+  if(_selRi<0||_typedDigits==='')return;
+  const num=parseInt(_typedDigits);
+  if(isNaN(num)||num<1){_typedDigits='';updateStatusBar();return;}
+  saveHistory();
+  const cell=rows[_selRi].cells[_selCi];
+  _lastAction={ri:_selRi,ci:_selCi,prevSn:cell.sn,prevT:cell.t};
+  cell.sn=num;
+  cell.t='seat';
+  _typedDigits='';
+  render();renderSecs();
+  // Advance to next seat
+  const next=getNextSeat(_selRi,_selCi);
+  if(next){_selRi=next.ri;_selCi=next.ci;updateStatusBar();renderHighlight();}
+  else{clearSelection();}
+}
+
+// Skip current seat (vanish it), advance
+function skipSeat(){
+  if(_selRi<0)return;
+  saveHistory();
+  const cell=rows[_selRi].cells[_selCi];
+  _lastAction={ri:_selRi,ci:_selCi,prevSn:cell.sn,prevT:cell.t};
+  cell.t='empty';cell.sn=null;cell.secId=null;
+  _typedDigits='';
+  render();renderSecs();
+  const next=getNextSeat(_selRi,_selCi);
+  if(next){_selRi=next.ri;_selCi=next.ci;updateStatusBar();renderHighlight();}
+  else{clearSelection();}
+}
+
+// Backspace — undo last action
+function undoLastSeat(){
+  if(_lastAction){
+    const cell=rows[_lastAction.ri].cells[_lastAction.ci];
+    cell.sn=_lastAction.prevSn;
+    cell.t=_lastAction.prevT||'seat';
+    _selRi=_lastAction.ri;_selCi=_lastAction.ci;
+    _lastAction=null;_typedDigits='';
+    render();renderSecs();
+    updateStatusBar();renderHighlight();
+  } else if(_typedDigits.length>0){
+    _typedDigits=_typedDigits.slice(0,-1);
+    updateStatusBar();
+  }
+}
+
+// Global keydown handler for number mode
+document.addEventListener('keydown',function(e){
+  if(!numMode||_selRi<0)return;
+  if(e.key>='0'&&e.key<='9'){
+    e.preventDefault();
+    _typedDigits+=e.key;
+    updateStatusBar();
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    commitNum();
+  } else if(e.key===' '){
+    e.preventDefault();
+    // If digits typed, commit first then skip next
+    if(_typedDigits) commitNum();
+    else skipSeat();
+  } else if(e.key==='Backspace'){
+    e.preventDefault();
+    undoLastSeat();
+  } else if(e.key==='Escape'){
+    e.preventDefault();
+    clearSelection();
+    setNumMode(); // toggle off
+  }
+});
+
+function applySeatNum(){commitNum();}
 function cutSelected(){
   if(_selRi<0||_selCi<0)return;
   const rowData=rows[_selRi];
@@ -999,10 +1060,8 @@ function cutSelected(){
   clearSelection();
   render();renderSecs();
 }
-
-// Keep old names for compatibility
 function openRenum(ri,ci){selectSeat(ri,ci);}
-function applyRenum(){applySeatNum();}
+function applyRenum(){commitNum();}
 function cutHere(){cutSelected();}
 
 // ── Save ──
