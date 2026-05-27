@@ -848,72 +848,57 @@ function openRenumManual(){
 
 function applyRenum(){
   const rowLabel=document.getElementById('renum-row').value.trim().toUpperCase();
-  const atPos=parseInt(document.getElementById('renum-pos').value);  // current seat number at target
-  const newNum=parseInt(document.getElementById('renum-val').value); // what it should become
+  const atPos=parseInt(document.getElementById('renum-pos').value);  // current seat sn at target
+  const newNum=parseInt(document.getElementById('renum-val').value); // new sn it should become
   if(!rowLabel){alert('Enter row label.');return;}
-  if(isNaN(atPos)||atPos<1){alert('Enter current seat number at target position.');return;}
+  if(isNaN(atPos)||atPos<1){alert('Enter current seat number at target.');return;}
   if(isNaN(newNum)||newNum<1){alert('Enter new seat number.');return;}
   const rowData=rows.find(r=>r.type==='row'&&r.label===rowLabel);
   if(!rowData){alert('Row '+rowLabel+' not found.');return;}
 
-  // All non-vgap cells in order
+  // Collect all non-vgap cells in physical order
   const seatCells=[];
   rowData.cells.forEach((cell,ci)=>{
     if(cell.t!=='vgap') seatCells.push({ci,cell});
   });
 
-  // Find target cell — the cell whose sn === atPos
-  // If no sn set yet (fresh row), treat atPos as 1-based index
-  const hasSn = seatCells.some(s=>s.cell.sn!=null);
-  let targetIdx = -1;
-  if(hasSn){
-    targetIdx = seatCells.findIndex(s=>s.cell.sn===atPos);
-  }
-  if(targetIdx===-1){
-    // fallback: treat atPos as 1-based physical position
-    targetIdx = atPos - 1;
-  }
+  // Find target: cell whose sn===atPos; fallback 1-based index
+  const hasSn=seatCells.some(s=>s.cell.sn!=null);
+  let targetIdx=hasSn ? seatCells.findIndex(s=>s.cell.sn===atPos) : atPos-1;
+  if(targetIdx===-1) targetIdx=atPos-1;
   if(targetIdx<0||targetIdx>=seatCells.length){
     alert('Seat '+atPos+' not found in row '+rowLabel+'.');
     return;
   }
 
+  // Find blank zone start: cell whose sn===newNum; fallback 0-based index newNum-1
+  let blankStart=hasSn ? seatCells.findIndex(s=>s.cell.sn===newNum) : newNum-1;
+  if(blankStart===-1) blankStart=newNum-1;
+  if(blankStart<0) blankStart=0;
+  // blankStart must be < targetIdx; if not, nothing to blank
+  if(blankStart>targetIdx) blankStart=targetIdx;
+
   saveHistory();
 
-  // RULE:
-  // - Find the cell whose sn === newNum (or position newNum-1 if no sn)
-  //   Everything from that cell up to (targetIdx-1) → blank
-  // - targetIdx onwards → renumber from newNum
-  // - Everything before the blank zone → untouched
-
-  // Find where newNum currently sits (the start of the blank zone)
-  let blankStartIdx = -1;
-  if(hasSn){
-    blankStartIdx = seatCells.findIndex(s=>s.cell.sn===newNum);
-  }
-  if(blankStartIdx===-1){
-    blankStartIdx = newNum - 1; // fallback: 0-based position
-  }
-  // Clamp to valid range and ensure it's before target
-  if(blankStartIdx<0) blankStartIdx=0;
-  if(blankStartIdx>=targetIdx) blankStartIdx=targetIdx; // nothing to blank
-
-  // Blank from blankStartIdx to targetIdx-1
-  for(let i=blankStartIdx;i<targetIdx;i++){
+  // Step 1: blank cells from blankStart up to (not including) targetIdx
+  for(let i=blankStart;i<targetIdx;i++){
     seatCells[i].cell.t='empty';
     seatCells[i].cell.secId=null;
     seatCells[i].cell.sn=null;
   }
 
-  // Renumber from targetIdx onwards, skip empty
+  // Step 2: renumber from targetIdx to end
+  // IMPORTANT: do NOT skip any cell here — every non-empty cell gets a new sn
+  // Empty cells (blanked above or pre-existing) are skipped
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
-    if(cell.t==='empty') continue;
+    if(cell.t==='empty') continue; // skip blank/aisle cells
+    // Restore seat type if it was somehow emptied and re-painted
     cell.sn=num++;
   }
 
-  // Keep modal open — row label stays, both fields clear for next operation
+  // Keep modal open — clear both fields for next renumber entry
   document.getElementById('renum-pos').value='';
   document.getElementById('renum-val').value='';
   render();renderSecs();
