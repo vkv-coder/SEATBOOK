@@ -202,13 +202,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <!-- Seat number input — shown when a seat is selected -->
   <div class="ar-row" id="seat-num-bar" style="display:none;background:#f0f7ff;border-radius:8px;padding:6px 8px;border:2px solid #2b6fd4;">
-    <span style="font-size:11px;color:#2b6fd4;font-weight:600;white-space:nowrap;" id="seat-num-label">Row — · Col —</span>
-    <input class="ar-in" type="number" id="seat-num-input" placeholder="Seat no." min="1"
-      style="flex:1;font-size:14px;font-weight:700;text-align:center;border-color:#2b6fd4;"
-      onkeydown="if(event.key==='Enter')applySeatNum();if(event.key==='Escape')clearSelection();">
-    <button class="ar-btn" style="background:#2b6fd4;" onclick="applySeatNum()">✓</button>
-    <button class="ar-btn" style="background:#cc3333;" onclick="cutSelected()">✂</button>
-    <button class="ar-btn" style="background:#888;" onclick="clearSelection()">✕</button>
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
+      <span style="font-size:10px;color:#2b6fd4;font-weight:600;" id="seat-num-label">Row — · Col —</span>
+      <input class="ar-in" type="number" id="seat-num-input" placeholder="Type seat no. → Enter" min="1"
+        style="width:100%;font-size:15px;font-weight:700;text-align:center;border-color:#2b6fd4;padding:5px 8px;"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();applySeatNum();}if(event.key==='Escape')clearSelection();">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <button class="ar-btn" style="background:#2b6fd4;padding:4px 10px;" onclick="applySeatNum()">✓ Set</button>
+      <button class="ar-btn" style="background:#cc3333;padding:4px 10px;" onclick="cutSelected()">✂ Cut</button>
+    </div>
+    <button class="ar-btn" style="background:#888;align-self:stretch;padding:4px 10px;" onclick="clearSelection()">✕ Cancel</button>
   </div>
 </div>
 
@@ -815,10 +819,18 @@ function insertVGap(){
   const sz=parseInt(document.getElementById('vgap-size').value)||2;
   if(!fromRow){alert('Select from row.');return;}
   if(isNaN(colNo)||colNo<1){alert('Enter column number.');return;}
+  // Get ordered list of row labels to handle AA,BB,A,B... correctly
+  const rowLabels=rows.filter(r=>r.type==='row').map(r=>r.label);
+  const fromIdx=rowLabels.indexOf(fromRow);
+  const toIdx=toRow?rowLabels.indexOf(toRow):fromIdx;
+  const validLabels=new Set(rowLabels.slice(
+    Math.min(fromIdx,toIdx),
+    Math.max(fromIdx,toIdx)+1
+  ));
   let count=0;
   rows.forEach(row=>{
     if(row.type!=='row')return;
-    if(row.label<fromRow||row.label>toRow)return;
+    if(!validLabels.has(row.label))return;
     let colCount=0,insertAt=-1;
     for(let i=0;i<row.cells.length;i++){
       if(row.cells[i].t!=='vgap')colCount++;
@@ -828,7 +840,7 @@ function insertVGap(){
     if(position==='before'&&colNo===1)insertAt=0;
     if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
   });
-  if(count===0){alert('No matching columns found.');return;}
+  if(count===0){alert('No matching columns found. Check row and column values.');return;}
   render();renderSecs();
 }
 
