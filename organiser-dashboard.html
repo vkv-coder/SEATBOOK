@@ -381,16 +381,24 @@ window.addEventListener('load',async()=>{
 
 async function loginWithSession(session){
   const email=session.user.email;
-  // Try case-insensitive match
-  const {data:org,error}=await sb.from('organisers').select('*').ilike('email_1',email).single();
-  if(error||!org){
+  // Try email_1 first, then email_2 as fallback
+  let org=null;
+  const {data:org1}=await sb.from('organisers').select('*').ilike('email_1',email).maybeSingle();
+  if(org1) org=org1;
+  if(!org){
+    const {data:org2}=await sb.from('organisers').select('*').ilike('email_2',email).maybeSingle();
+    if(org2) org=org2;
+  }
+  if(!org){
     await sb.auth.signOut();
-    showErr('email-err','Email not registered with Khursilo.');
+    showScreen('screen-login');
+    showErr('email-err','Email '+email+' not registered with Khursilo. Contact admin.');
     return;
   }
   if(org.status.toLowerCase()!=='active'){
     await sb.auth.signOut();
-    showErr('email-err','Account '+org.status+'. Contact admin.');
+    showScreen('screen-login');
+    showErr('email-err','Account is '+org.status+'. Contact admin.');
     return;
   }
   currentOrganiser=org;
@@ -398,8 +406,8 @@ async function loginWithSession(session){
   setAvatar(org.name||org.email_1);
   // If contact_1_name is null → profile incomplete → show profile screen
   if(!org.contact_1_name){
-    // Pre-fill whatever we already have
     document.getElementById('prof-org-name').value=org.name||'';
+    document.getElementById('prof-contact-name').value=org.contact_1_name||'';
     document.getElementById('prof-mobile').value=org.contact_1_mobile||'';
     document.getElementById('prof-rzp-key').value=org.razorpay_key_id||'';
     showScreen('screen-profile');
