@@ -981,21 +981,9 @@ function applySeatNum(){
 
   saveHistory();
 
-  // Un-numbered seats BEFORE target → vanish
-  for(let i=0;i<targetIdx;i++){
-    const cell=allCells[i].cell;
-    if(cell.t!=='empty'&&cell.sn==null){
-      cell.t='empty';cell.secId=null;cell.sn=null;
-    }
-  }
-
-  // Assign newNum to target, continue to end
-  let num=newNum;
-  for(let i=targetIdx;i<allCells.length;i++){
-    const cell=allCells[i].cell;
-    if(cell.t==='empty')continue;
-    cell.sn=num++;
-  }
+  // Simply assign the number to this one seat only
+  // User numbers each seat manually — no auto-fill
+  allCells[targetIdx].cell.sn=newNum;
 
   clearSelection();
   render();renderSecs();
