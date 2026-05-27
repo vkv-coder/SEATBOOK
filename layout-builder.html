@@ -166,7 +166,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <!-- Line 1: Row insert controls -->
   <div class="ar-row">
     <input class="ar-in" type="text" id="ar-lbl" placeholder="Label e.g. AA" maxlength="4" style="width:72px;text-transform:uppercase;">
-    <input class="ar-in" type="number" id="ar-seats" placeholder="Seats" min="1" style="width:52px;">
+    <input class="ar-in" type="number" id="ar-seats" placeholder="63" min="1" style="width:52px;">
     <select class="ar-in" id="ar-position" style="width:60px;">
       <option value="before">Before</option>
       <option value="after">After</option>
@@ -484,25 +484,26 @@ function render(){
       const sec=sections.find(s=>s.id===cell.secId);
 
       if(cell.t==='empty'){
-        // Truly blank — invisible placeholder, no interaction
+        // Truly blank — invisible, no number
         btn.className='seat empty';
-      } else if(cell.t==='seat'&&sec){
-        const displayNum=hasSn?(cell.sn!=null?cell.sn:''):autoCounter;
-        btn.style.cssText=`background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
-        btn.textContent=displayNum;
-        total++;
-        if(!rowSecPrices[sec.id])rowSecPrices[sec.id]={sec,count:0};
-        rowSecPrices[sec.id].count++;
-        if(!hasSn)autoCounter++;
-      } else if(cell.t==='seat'&&!sec){
-        // Seat with no section assigned — show as unassigned (grey outline)
-        btn.style.cssText='background:transparent;border:1px dashed #ccc;color:#ccc;';
-        btn.textContent=hasSn?(cell.sn!=null?cell.sn:''):autoCounter;
-        if(!hasSn)autoCounter++;
       } else if(cell.t==='blocked'){
         btn.style.cssText='background:var(--s2);color:#bbb;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);';
         btn.textContent='✕';
-        if(!hasSn)autoCounter++;
+        if(!hasSn) autoCounter++;
+      } else if(cell.t==='seat'){
+        // Show number regardless of section assignment
+        const displayNum=hasSn ? (cell.sn!=null ? cell.sn : '') : autoCounter;
+        if(sec){
+          btn.style.cssText=`background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}44;`;
+          if(!rowSecPrices[sec.id]) rowSecPrices[sec.id]={sec,count:0};
+          rowSecPrices[sec.id].count++;
+        } else {
+          // No section — grey dashed (unassigned)
+          btn.style.cssText='background:transparent;border:1px dashed #ccc;color:#aaa;';
+        }
+        btn.textContent=displayNum;
+        total++;
+        if(!hasSn) autoCounter++;
       } else {
         btn.className='seat empty';
       }
@@ -651,7 +652,7 @@ function addRow(){
   const lblInput=document.getElementById('ar-lbl').value.trim().toUpperCase();
   const lbl=lblInput||nextLabel();
   const seatsInput=document.getElementById('ar-seats').value.trim();
-  const cnt=seatsInput===''?35:Math.max(1,parseInt(seatsInput)||35);
+  const cnt=seatsInput===''?63:Math.max(1,parseInt(seatsInput)||63);
   const position=document.getElementById('ar-position').value;
   const refRow=document.getElementById('ar-ref-row').value;
 
