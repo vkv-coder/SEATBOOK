@@ -250,8 +250,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
         <option value="before">Before</option>
         <option value="after">After</option>
       </select>
-      <span style="font-size:10px;color:var(--muted);">col</span>
-      <input class="mi" type="number" id="vgap-col-no" placeholder="#" min="1" style="width:44px;padding:5px;font-size:11px;">
+      <span style="font-size:10px;color:var(--muted);">seat no.</span>
+      <input class="mi" type="number" id="vgap-col-no" placeholder="e.g.13" min="1" style="width:52px;padding:5px;font-size:11px;">
       <select class="mi" id="vgap-size" style="width:68px;padding:5px;font-size:11px;">
         <option value="1">Narrow</option>
         <option value="2" selected>Medium</option>
@@ -831,16 +831,29 @@ function insertVGap(){
   rows.forEach(row=>{
     if(row.type!=='row')return;
     if(!validLabels.has(row.label))return;
-    let colCount=0,insertAt=-1;
+    let insertAt=-1;
+    // Find by seat number (sn) — colNo is the seat number to insert before/after
     for(let i=0;i<row.cells.length;i++){
-      const ct=row.cells[i].t;
-      if(ct!=='vgap'&&ct!=='empty') colCount++;
-      if(position==='before'&&colCount===colNo){insertAt=i;break;}
-      if(position==='after'&&colCount===colNo){insertAt=i+1;break;}
+      const cell=row.cells[i];
+      if(cell.t==='vgap'||cell.t==='empty') continue;
+      if(cell.sn===colNo){
+        insertAt = position==='before' ? i : i+1;
+        break;
+      }
+    }
+    // Fallback: if no sn set, count physical non-empty seats
+    if(insertAt===-1){
+      let colCount=0;
+      for(let i=0;i<row.cells.length;i++){
+        const ct=row.cells[i].t;
+        if(ct!=='vgap'&&ct!=='empty') colCount++;
+        if(position==='before'&&colCount===colNo){insertAt=i;break;}
+        if(position==='after'&&colCount===colNo){insertAt=i+1;break;}
+      }
     }
     if(insertAt!==-1){row.cells.splice(insertAt,0,{t:'vgap',gapW:sz});count++;}
   });
-  if(count===0){alert('No matching columns found. Check row and column values.');return;}
+  if(count===0){alert('Seat number '+colNo+' not found in selected rows.');return;}
   render();renderSecs();
 }
 
