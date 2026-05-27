@@ -639,16 +639,16 @@ function updateRefRowSelect(){
 // ── Add Row — insert anywhere ──
 function addRow(){
   saveHistory();
-  const lbl=(document.getElementById('ar-lbl').value.trim().toUpperCase())||nextLabel();
-  const cnt=parseInt(document.getElementById('ar-seats').value)||35;
-  const position=document.getElementById('ar-position').value; // before | after | end
+  const lblInput=document.getElementById('ar-lbl').value.trim().toUpperCase();
+  const lbl=lblInput||nextLabel();
+  const seatsInput=document.getElementById('ar-seats').value.trim();
+  const cnt=seatsInput===''?35:Math.max(1,parseInt(seatsInput)||35);
+  const position=document.getElementById('ar-position').value;
   const refRow=document.getElementById('ar-ref-row').value;
 
-  // Build cells
+  // Build cells — plain seats only, no auto-vgap (use Gaps tool for aisles)
   const cells=[];
   for(let i=0;i<cnt;i++){
-    // Auto vgap at ~seat 9 and ~seat cnt-8 for wide rows
-    if(cnt>16&&(i===8||i===cnt-9))cells.push({t:'vgap',gapW:2});
     cells.push({t:'seat',secId:activeSecId||null});
   }
   const newRow={type:'row',label:lbl,cells};
@@ -859,29 +859,28 @@ function applyRenum(){
 
   saveHistory();
 
-  // Find the last non-empty cell BEFORE target — erase only from there+1 up to target
-  // This preserves any previous renumber work before this point
-  let eraseFrom=0;
+  // Erase only the gap between the last non-empty seat and the target.
+  // Everything before the last non-empty seat is untouched (preserves prior renumbers).
+  let eraseFrom = targetIdx; // default: nothing to erase
   for(let i=targetIdx-1;i>=0;i--){
     if(seatCells[i].cell.t!=='empty'){
-      eraseFrom=i+1; // erase starts just after this non-empty cell
+      eraseFrom = i+1; // erase starts just after this non-empty cell
       break;
     }
-    // if all before are empty, eraseFrom stays 0 (no-op since they're already empty)
+    // if i reaches 0 and it's empty, all cells before target are already empty — no erase needed
   }
 
-  // Erase from eraseFrom up to (not including) targetIdx
   for(let i=eraseFrom;i<targetIdx;i++){
     seatCells[i].cell.t='empty';
     seatCells[i].cell.secId=null;
     seatCells[i].cell.sn=null;
   }
 
-  // Renumber from target onwards — skip already-empty cells, stop at next empty gap
+  // Renumber from target onwards — assign sn sequentially, skip empty cells
   let num=newNum;
   for(let i=targetIdx;i<seatCells.length;i++){
     const cell=seatCells[i].cell;
-    if(cell.t==='empty') continue; // leave empty cells alone
+    if(cell.t==='empty') continue;
     cell.sn=num++;
   }
 
