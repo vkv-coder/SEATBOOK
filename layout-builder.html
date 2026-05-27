@@ -68,8 +68,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 .grid-area{display:flex;flex-direction:column;gap:0;width:max-content;}
 .grid-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;}
-.row-lbl{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:14px;}
+.row-lbl-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:18px;gap:1px;}
+.row-lbl{font-size:9px;color:var(--muted);width:18px;text-align:center;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:10px;}
 .row-lbl:hover{color:var(--red);}
+.row-op{font-size:7px;width:18px;height:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:2px;border:none;padding:0;line-height:1;}
+.row-op.vanish{background:rgba(204,51,51,0.15);color:#cc3333;}
+.row-op.vanish:hover{background:rgba(204,51,51,0.35);}
+.row-op.restore{background:rgba(46,158,96,0.15);color:#2e9e60;}
+.row-op.restore:hover{background:rgba(46,158,96,0.35);}
 
 .seat{width:16px;height:14px;border-radius:0;border:none;cursor:pointer;font-size:7px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;line-height:14px;outline:none;}
 .seat:active{transform:scale(0.85);}
@@ -372,6 +378,36 @@ let history=[];
 let _renumRi=-1,_renumCi=-1; // clicked cell for renumber
 let highlightSecId=null; // section being highlighted
 
+function vanishBlanks(ri){
+  // Make all un-numbered seats in this row empty (invisible)
+  const row=rows[ri];
+  if(!row||row.type!=='row')return;
+  saveHistory();
+  row.cells.forEach(cell=>{
+    if(cell.t==='seat'&&cell.sn==null){
+      cell.t='empty';
+      cell.secId=null;
+    }
+  });
+  render();renderSecs();
+}
+
+function restoreBlanks(ri){
+  // Restore all empty cells in this row back to blank seats
+  const row=rows[ri];
+  if(!row||row.type!=='row')return;
+  saveHistory();
+  // Find original seat count — add back empties as seats
+  row.cells.forEach(cell=>{
+    if(cell.t==='empty'){
+      cell.t='seat';
+      cell.sn=null;
+      cell.secId=null;
+    }
+  });
+  render();renderSecs();
+}
+
 function saveHistory(){
   history.push(JSON.stringify({rows,sections}));
   if(history.length>40)history.shift();
@@ -512,12 +548,31 @@ function render(){
     const rowDiv=document.createElement('div');
     rowDiv.className='grid-row';
 
+    const lblWrap=document.createElement('div');
+    lblWrap.className='row-lbl-wrap';
+
     const lbl=document.createElement('div');
     lbl.className='row-lbl';
     lbl.textContent=rowData.label;
     lbl.title='Click to delete row';
     lbl.onclick=()=>delRow(ri);
-    rowDiv.appendChild(lbl);
+
+    const vanishBtn=document.createElement('button');
+    vanishBtn.className='row-op vanish';
+    vanishBtn.textContent='▼';
+    vanishBtn.title='Vanish un-numbered seats in this row';
+    vanishBtn.onclick=(e)=>{e.stopPropagation();vanishBlanks(ri);};
+
+    const restoreBtn=document.createElement('button');
+    restoreBtn.className='row-op restore';
+    restoreBtn.textContent='▲';
+    restoreBtn.title='Restore blank seats in this row';
+    restoreBtn.onclick=(e)=>{e.stopPropagation();restoreBlanks(ri);};
+
+    lblWrap.appendChild(lbl);
+    lblWrap.appendChild(vanishBtn);
+    lblWrap.appendChild(restoreBtn);
+    rowDiv.appendChild(lblWrap);
 
     let rowSecPrices={};
 
