@@ -336,17 +336,17 @@ async function loadEvent() {
       const wrap = document.getElementById('map-wrap');
       if (grid && wrap) {
         const gridW = grid.scrollWidth;
-        const wrapW = wrap.clientWidth - 8;
+        const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
           grid.style.transform = `scale(${scale})`;
-          grid.style.transformOrigin = 'top center';
+          grid.style.transformOrigin = 'top left';
           const scaledH = grid.scrollHeight * scale;
-          grid.parentElement.style.minHeight = scaledH + 'px';
           grid.style.marginBottom = `-${grid.scrollHeight * (1 - scale)}px`;
+          wrap.style.overflowX = 'hidden';
         }
       }
-    }, 200);
+    }, 300);
 
   } catch(e) {
     console.error(e);
