@@ -45,9 +45,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 10px 14px;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
-.row-wrap{display:flex;align-items:center;gap:0;justify-content:center;}
-.row-label{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;}
-.row-seats{display:flex;gap:var(--seat-gap);flex-wrap:nowrap;}
+.row-wrap{display:flex;align-items:center;gap:0;}
+.row-label{font-size:9px;color:var(--muted);width:12px;text-align:center;flex-shrink:0;font-weight:600;}
+.row-seats{display:flex;gap:0;flex-wrap:nowrap;}
 
 .seat{
   width:var(--seat-size);height:var(--seat-size);
@@ -58,6 +58,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   border:1.5px solid transparent;
   transition:transform .1s, box-shadow .1s;
   position:relative;
+  margin:1px;
 }
 .seat:active{transform:scale(0.9);}
 .seat.available{opacity:1;}
@@ -429,10 +430,7 @@ function buildSeatMap(layout) {
     const rowWrap = document.createElement('div');
     rowWrap.className = 'row-wrap';
 
-    const lblL = document.createElement('div');
-    lblL.className = 'row-label';
-    lblL.textContent = row.label || '';
-    rowWrap.appendChild(lblL);
+
 
     const seatsDiv = document.createElement('div');
     seatsDiv.className = 'row-seats';
@@ -442,14 +440,25 @@ function buildSeatMap(layout) {
       const el = document.createElement('div');
       const t = cell.t || '';
 
-      // Empty or gap cell - all same width as seat, invisible
+      // Label cell - show row letter
+      if (t === 'label') {
+        el.className = 'seat aisle';
+        el.style.background = 'transparent';
+        el.style.border = 'none';
+        el.style.pointerEvents = 'none';
+        el.style.fontSize = '8px';
+        el.style.fontWeight = '700';
+        el.style.color = 'var(--muted)';
+        el.textContent = row.label;
+        seatsDiv.appendChild(el);
+        return;
+      }
+      // Empty or gap cell
       if (t === 'empty' || t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
         el.style.background = 'transparent';
         el.style.border = 'none';
         el.style.pointerEvents = 'none';
-        // gap cells get slight tint so passages are visible
-        if (t === 'gap') el.style.background = 'rgba(0,0,0,0.04)';
         seatsDiv.appendChild(el);
         return;
       }
@@ -502,10 +511,7 @@ function buildSeatMap(layout) {
 
     rowWrap.appendChild(seatsDiv);
 
-    const lblR = document.createElement('div');
-    lblR.className = 'row-label';
-    lblR.textContent = row.label || '';
-    rowWrap.appendChild(lblR);
+
 
     fragment.appendChild(rowWrap);
   });
