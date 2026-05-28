@@ -331,12 +331,11 @@ async function loadEvent() {
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('hall-grid').style.display = 'block';
-    // Auto-scale seat grid to fit screen width
+   // Auto-scale seat grid to fit screen width
     setTimeout(() => {
-      const grid = document.getElementById('seat-grid');
       const hallGrid = document.getElementById('hall-grid');
       const wrap = document.getElementById('map-wrap');
-      if (grid && wrap) {
+      if (hallGrid && wrap) {
         const gridW = hallGrid.scrollWidth;
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
@@ -347,7 +346,6 @@ async function loadEvent() {
         }
       }
     }, 300);
-
   } catch(e) {
     console.error(e);
     document.getElementById('loading-screen').style.display = 'none';
