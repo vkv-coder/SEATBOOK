@@ -412,7 +412,14 @@ function buildSeatMap(layout) {
 
   const fragment = document.createDocumentFragment();
   rows.forEach(row => {
-    if (row.type !== 'row') return; // skip non-row entries
+    if (row.type === 'hgap') {
+        const hgapDiv = document.createElement('div');
+        hgapDiv.style.height = '12px';
+        hgapDiv.style.width = '100%';
+        fragment.appendChild(hgapDiv);
+        return;
+      }
+      if (row.type !== 'row') return;
 
     const rowWrap = document.createElement('div');
     rowWrap.className = 'row-wrap';
@@ -433,8 +440,8 @@ function buildSeatMap(layout) {
       // Aisle / gap - render as wide empty space
       if (t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
-        el.style.width = 'var(--seat-size)';
-        el.style.minWidth = 'var(--seat-size)';
+        el.style.width = '6px';
+        el.style.minWidth = '6px';
         el.style.background = 'transparent';
         el.style.border = 'none';
         el.style.pointerEvents = 'none';
