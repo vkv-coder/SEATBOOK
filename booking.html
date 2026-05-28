@@ -335,15 +335,17 @@ async function loadEvent() {
       const wrap = document.getElementById('map-wrap');
       if (grid && wrap) {
         const gridW = grid.scrollWidth;
-        const wrapW = wrap.clientWidth - 12;
+        const wrapW = wrap.clientWidth - 8;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
           grid.style.transform = `scale(${scale})`;
           grid.style.transformOrigin = 'top center';
-          grid.style.marginBottom = `-${gridW * (1 - scale)}px`;
+          const scaledH = grid.scrollHeight * scale;
+          grid.parentElement.style.minHeight = scaledH + 'px';
+          grid.style.marginBottom = `-${grid.scrollHeight * (1 - scale)}px`;
         }
       }
-    }, 100);
+    }, 200);
 
   } catch(e) {
     console.error(e);
@@ -414,8 +416,10 @@ function buildSeatMap(layout) {
   rows.forEach(row => {
     if (row.type === 'hgap') {
         const hgapDiv = document.createElement('div');
-        hgapDiv.style.height = '12px';
+        hgapDiv.style.height = '10px';
         hgapDiv.style.width = '100%';
+        hgapDiv.style.background = 'transparent';
+        hgapDiv.className = 'hgap-row';
         fragment.appendChild(hgapDiv);
         return;
       }
