@@ -389,53 +389,59 @@ function buildSeatMap(layout) {
   const grid = document.getElementById('seat-grid');
   grid.innerHTML = '';
 
-  // Build section lookup by seat: seatKey -> section
-  // sections have row ranges stored differently — we rely on seat.sectionId painted in layout
-  // layout.rows: [{label, seats:[{sn, type, sectionId, ...}]}]
+  // Layout JSON structure: rows array, each row has label and cells array
+  // Each cell: {t: type, sn: seat_number, secId: section_id}
+  // t values: 'empty'=available seat, 'blocked'=blocked, 'aisle'/'gap'=passage
   const rows = layout.rows || [];
 
   rows.forEach(row => {
+    if (row.type !== 'row') return; // skip non-row entries
+
     const rowWrap = document.createElement('div');
     rowWrap.className = 'row-wrap';
 
     const lblL = document.createElement('div');
     lblL.className = 'row-label';
-    lblL.textContent = row.label;
+    lblL.textContent = row.label || '';
     rowWrap.appendChild(lblL);
 
     const seatsDiv = document.createElement('div');
     seatsDiv.className = 'row-seats';
 
-    row.seats.forEach(seat => {
+    const cells = row.cells || [];
+    cells.forEach(cell => {
       const el = document.createElement('div');
+      const t = cell.t || '';
 
-      if (seat.type === 'aisle' || seat.type === 'gap') {
+      // Aisle / gap
+      if (t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
         el.style.width = '6px';
         seatsDiv.appendChild(el);
         return;
       }
-      if (seat.type === 'blocked' || !seat.sn) {
+
+      // Blocked or no seat number
+      if (t === 'blocked' || !cell.sn) {
         el.className = 'seat blocked';
-        el.style.background = '#e0e0dc';
         seatsDiv.appendChild(el);
         return;
       }
 
-      const sec = sections.find(s => s.id === seat.sectionId || s.name === seat.sectionId);
+      // Normal seat
+      const secId = cell.secId || '';
+      const sec = sections.find(s => s.id === secId || s.name === secId);
       const colour = sec ? (sec.colour || '#4a90d9') : '#4a90d9';
-      const price = sec ? (sec.price || 0) : 0;
-      const secId = sec ? (sec.id || sec.name) : '';
+      const price = sec ? (parseInt(sec.price) || 0) : 0;
 
-      const seatKey = row.label + '-' + seat.sn;
+      const seatKey = (row.label || '') + '-' + cell.sn;
       const status = seatStatusMap[seatKey] || 'available';
 
       el.className = 'seat ' + status;
-      el.style.background = colour;
-      if (status !== 'available') el.style.background = '';
-      el.textContent = seat.sn;
-      el.dataset.row = row.label;
-      el.dataset.sn = seat.sn;
+      if (status === 'available') el.style.background = colour;
+      el.textContent = cell.sn;
+      el.dataset.row = row.label || '';
+      el.dataset.sn = cell.sn;
       el.dataset.sec = String(secId);
       el.dataset.price = price;
       el.dataset.colour = colour;
@@ -452,7 +458,7 @@ function buildSeatMap(layout) {
 
     const lblR = document.createElement('div');
     lblR.className = 'row-label';
-    lblR.textContent = row.label;
+    lblR.textContent = row.label || '';
     rowWrap.appendChild(lblR);
 
     grid.appendChild(rowWrap);
