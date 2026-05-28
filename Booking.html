@@ -4,553 +4,698 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Khursilo — Book Seats</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#f5f5f3;--white:#fff;--s2:#f0eeea;
   --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
-  --text:#1a1a1a;--muted:#888;
+  --text:#1a1a1a;--muted:#888;--muted2:#bbb;
   --accent:#c8860a;--green:#2e9e60;--red:#cc3333;--blue:#2b6fd4;
   --radius:12px;--rsm:8px;
+  --seat-size:22px;--seat-gap:3px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;}
-
-/* LOADING */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;}
-.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
 
 /* TOPBAR */
-.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;}
-.tlogo{font-family:'DM Serif Display',serif;font-size:17px;}
-.timer-pill{background:rgba(204,51,51,0.1);color:var(--red);font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;display:none;}
-.timer-pill.active{display:block;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;flex-shrink:0;}
+.tlogo{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
+.tback{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;}
 
-/* EVENT CARD */
-.event-card{background:var(--text);color:#fff;padding:16px;margin:12px;border-radius:var(--radius);}
-.event-name{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:6px;}
-.event-meta{font-size:12px;opacity:0.7;display:flex;flex-direction:column;gap:3px;}
+/* EVENT INFO */
+.event-card{background:var(--white);border-bottom:1px solid var(--border);padding:12px 14px;}
+.ev-name{font-size:15px;font-weight:600;margin-bottom:2px;}
+.ev-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
 
-/* SECTION FILTER */
-.sec-filter{background:var(--white);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
-.sec-filter::-webkit-scrollbar{display:none;}
-.sec-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;border:1.5px solid var(--border2);background:var(--white);color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
-.sec-btn.active{color:#fff;border-color:transparent;}
+/* SECTION TABS */
+.sec-tabs-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:0 14px;overflow-x:auto;display:flex;gap:6px;scrollbar-width:none;}
+.sec-tabs-wrap::-webkit-scrollbar{display:none;}
+.sec-tab{flex-shrink:0;padding:10px 12px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.sec-tab.active{color:var(--text);border-bottom-color:var(--text);}
+.sec-tab .tab-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;}
 
 /* LEGEND */
-.legend{display:flex;gap:12px;padding:8px 14px;background:var(--white);border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
-.leg-dot{width:10px;height:10px;border-radius:2px;}
+.legend{display:flex;gap:12px;padding:8px 14px;background:var(--bg);flex-shrink:0;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.leg-sq{width:12px;height:12px;border-radius:2px;}
 
 /* SEAT MAP */
-.map-outer{overflow-x:auto;padding:10px 8px 120px;-webkit-overflow-scrolling:touch;}
-.stage-wrap{text-align:center;margin-bottom:10px;}
-.stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
-.stage-line{height:3px;background:var(--text);border-radius:2px;margin:0 auto;width:100%;}
-.grid-area{display:flex;flex-direction:column;gap:0;width:max-content;}
-.grid-row{display:flex;align-items:stretch;gap:2px;margin-bottom:0;}
-.row-lbl{font-size:8px;color:var(--muted);width:14px;text-align:center;flex-shrink:0;font-weight:600;display:flex;align-items:center;justify-content:center;}
-.seat{width:16px;height:15px;border-radius:0;border:none;cursor:pointer;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.08s;outline:none;}
-.seat:active{transform:scale(0.85);}
-.seat.available{cursor:pointer;}
-.seat.held{background:#ddd!important;color:#aaa!important;cursor:not-allowed;}
-.seat.booked{background:#333!important;color:#666!important;cursor:not-allowed;}
-.seat.selected{background:var(--green)!important;color:#fff!important;box-shadow:0 0 0 2px var(--green);}
-.seat.empty{background:transparent;cursor:default;}
-.vgap{flex-shrink:0;background:transparent;}
-.vgap.w1{width:8px;}
-.vgap.w2{width:14px;}
-.vgap.w3{width:20px;}
-.hpass-row{display:flex;align-items:center;gap:2px;margin-bottom:0;}
-.hpass-cell{background:transparent;flex-shrink:0;}
-.hpass-cell.h1{height:6px;}
-.hpass-cell.h2{height:12px;}
-.hpass-cell.h3{height:20px;}
+.map-wrap{flex:1;overflow:auto;padding:10px 6px 120px;-webkit-overflow-scrolling:touch;}
+.stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 10px 14px;opacity:.7;}
+
+.hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
+.row-wrap{display:flex;align-items:center;gap:4px;}
+.row-label{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;}
+.row-seats{display:flex;gap:var(--seat-gap);flex-wrap:nowrap;}
+
+.seat{
+  width:var(--seat-size);height:var(--seat-size);
+  border-radius:3px 3px 5px 5px;
+  font-size:7px;font-weight:600;color:rgba(255,255,255,0.85);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  border:1.5px solid transparent;
+  transition:transform .1s, box-shadow .1s;
+  position:relative;
+}
+.seat:active{transform:scale(0.9);}
+.seat.available{opacity:1;}
+.seat.selected{
+  border-color:var(--text)!important;
+  transform:scale(1.12);
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  z-index:2;
+}
+.seat.booked{
+  background:#d0d0cc!important;
+  color:#999;cursor:not-allowed;opacity:0.6;
+}
+.seat.held{
+  background:#f0e0c0!important;
+  color:#c8860a;cursor:not-allowed;opacity:0.75;
+}
+.seat.blocked{
+  background:#e0e0dc!important;
+  color:#bbb;cursor:not-allowed;opacity:0.4;
+}
+.seat.dimmed{opacity:0.2;cursor:not-allowed;}
+.seat.aisle{background:transparent!important;border:none!important;cursor:default;pointer-events:none;}
 
 /* BOTTOM BAR */
-.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);padding:10px 14px;z-index:20;}
-.sel-info{font-size:12px;color:var(--muted);margin-bottom:6px;min-height:16px;}
-.sel-info strong{color:var(--text);}
-.book-btn{width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;}
-.book-btn:disabled{background:#ccc;cursor:not-allowed;}
+.bottom-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:var(--white);border-top:1px solid var(--border);
+  padding:12px 14px;z-index:40;
+}
+.sel-summary{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sel-seats-list{font-size:12px;color:var(--muted);flex:1;}
+.sel-total{font-size:15px;font-weight:600;color:var(--text);}
+.proceed-btn{
+  width:100%;background:var(--text);color:var(--white);
+  border:none;border-radius:var(--rsm);padding:13px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;
+}
+.proceed-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.timer-bar{font-size:11px;color:var(--red);text-align:center;margin-top:6px;display:none;}
 
-/* SCREENS */
-.screen{display:none;min-height:100vh;flex-direction:column;}
-.screen.active{display:flex;}
+/* HOLD NOTICE */
+.hold-chip{
+  display:inline-block;background:#fff3e0;color:#c8860a;
+  font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;
+  margin-left:6px;vertical-align:middle;
+}
 
-/* CHECKOUT SCREEN */
-.checkout-body{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
-.chk-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px;}
-.chk-title{font-size:13px;font-weight:600;margin-bottom:12px;}
-.field-group{margin-bottom:10px;}
-.field-label{font-size:11px;color:var(--muted);margin-bottom:3px;}
-.inp{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;}
-.inp:focus{border-color:var(--accent);}
-.seat-summary{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
-.seat-tag{background:var(--s2);border-radius:5px;padding:3px 8px;font-size:11px;font-weight:500;}
-.price-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);}
-.price-row:last-child{border:none;font-weight:600;font-size:14px;}
-.pay-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;}
+/* BOOKING FORM PANEL */
+.form-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:60;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.form-overlay.show{display:flex;}
+.form-panel{
+  background:var(--white);border-radius:16px 16px 0 0;
+  width:100%;max-width:430px;padding:20px 16px 32px;
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.fp-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+.fp-sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.fp-seats{font-size:12px;color:var(--text);background:var(--s2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:16px;}
+.fp-seats strong{display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+.field{margin-bottom:14px;}
+.field label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;}
+.field input{width:100%;background:var(--s2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:11px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;}
+.field input:focus{border-color:var(--text);}
+.field .hint{font-size:10px;color:var(--muted);margin-top:3px;}
+.confirm-btn{
+  width:100%;background:var(--green);color:#fff;
+  border:none;border-radius:var(--rsm);padding:13px;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;margin-top:4px;
+}
+.cancel-btn{
+  width:100%;background:none;color:var(--muted);
+  border:none;padding:10px;font-family:'DM Sans',sans-serif;
+  font-size:13px;cursor:pointer;margin-top:4px;
+}
 
 /* SUCCESS SCREEN */
-.success-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;gap:14px;}
-.success-icon{font-size:64px;}
-.success-title{font-family:'DM Serif Display',serif;font-size:26px;}
-.success-sub{font-size:14px;color:var(--muted);line-height:1.6;}
-.booking-ref{background:var(--s2);border-radius:var(--rsm);padding:10px 16px;font-size:13px;font-weight:600;letter-spacing:1px;}
-.home-btn{width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px;}
+.success-overlay{
+  position:fixed;inset:0;background:var(--white);z-index:70;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px;text-align:center;
+}
+.success-overlay.show{display:flex;}
+.success-icon{font-size:56px;margin-bottom:16px;}
+.success-title{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px;}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
+.success-detail{background:var(--s2);border-radius:var(--radius);padding:14px 16px;width:100%;text-align:left;margin-bottom:24px;}
+.sd-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.sd-row span:first-child{color:var(--muted);}
+.sd-row span:last-child{font-weight:600;}
+.home-btn{background:var(--text);color:#fff;border:none;border-radius:var(--rsm);padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;width:100%;}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;padding:40px;}
+.spinner{width:28px;height:28px;border:3px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted);}
 
 /* ERROR */
-.err-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;gap:10px;}
+.error-screen{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:40px;text-align:center;}
+.error-screen.show{display:flex;}
+.err-icon{font-size:40px;margin-bottom:12px;}
+.err-msg{font-size:14px;color:var(--muted);}
+
+/* CONSECUTIVE WARNING */
+.consec-warn{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;font-size:12px;font-weight:500;
+  padding:8px 16px;border-radius:20px;z-index:55;
+  display:none;white-space:nowrap;
+  animation:fadeInOut 2.5s ease forwards;
+}
+@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-6px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen" class="loading">
-  <div class="spinner"></div>
-  <div style="font-size:13px;color:var(--muted);">Loading event...</div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="tback" onclick="history.back()">←</button>
+  <div class="tlogo">Khursilo.</div>
+  <div style="width:32px;"></div>
 </div>
 
-<!-- ERROR -->
-<div id="error-screen" class="err-screen" style="display:none;">
-  <div style="font-size:48px;">⚠️</div>
-  <div style="font-size:18px;font-weight:600;" id="err-msg">Event not found</div>
-  <div style="font-size:13px;color:var(--muted);">Check the link and try again.</div>
-  <a href="/" style="margin-top:8px;color:var(--accent);font-size:13px;">← Go home</a>
-</div>
-
-<!-- SEAT MAP SCREEN -->
-<div class="screen" id="screen-map">
-  <div class="topbar">
-    <div class="tlogo">Khursilo.</div>
-    <div class="timer-pill" id="timer-pill">⏱ <span id="timer-txt">5:00</span></div>
-  </div>
-  <div class="event-card" id="event-card">
-    <div class="event-name" id="event-name">Loading...</div>
-    <div class="event-meta" id="event-meta"></div>
-  </div>
-  <div class="sec-filter" id="sec-filter"></div>
-  <div class="legend">
-    <div class="leg"><div class="leg-dot" style="background:#e8e8e8;"></div>Available</div>
-    <div class="leg"><div class="leg-dot" style="background:var(--green);"></div>Selected</div>
-    <div class="leg"><div class="leg-dot" style="background:#555;"></div>Booked</div>
-    <div class="leg"><div class="leg-dot" style="background:#ddd;border:1px dashed #aaa;"></div>On hold</div>
-  </div>
-  <div class="map-outer">
-    <div class="stage-wrap"><div class="stage-box">STAGE</div><div class="stage-line"></div></div>
-    <div class="grid-area" id="grid-area"></div>
-  </div>
-  <div class="bottom-bar">
-    <div class="sel-info" id="sel-info">Select seats to book</div>
-    <button class="book-btn" id="book-btn" disabled onclick="goCheckout()">Proceed to book</button>
+<!-- EVENT INFO -->
+<div class="event-card" id="event-info">
+  <div class="ev-name" id="ev-name">Loading…</div>
+  <div class="ev-meta">
+    <span id="ev-date">—</span>
+    <span id="ev-hall">—</span>
   </div>
 </div>
 
-<!-- CHECKOUT SCREEN -->
-<div class="screen" id="screen-checkout">
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button onclick="showScreen('screen-map')" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text);">←</button>
-      <div class="tlogo">Khursilo.</div>
-    </div>
-    <div class="timer-pill active" id="timer-pill2">⏱ <span id="timer-txt2">5:00</span></div>
+<!-- SECTION TABS -->
+<div class="sec-tabs-wrap" id="sec-tabs">
+  <button class="sec-tab active" data-sec="ALL" onclick="filterSection('ALL',this)">All seats</button>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg-item"><div class="leg-sq" style="background:#4a90d9;"></div>Available</div>
+  <div class="leg-item"><div class="leg-sq" style="background:#1a1a1a;border:1.5px solid #1a1a1a;"></div>Selected</div>
+  <div class="leg-item"><div class="leg-sq" style="background:#d0d0cc;"></div>Booked</div>
+  <div class="leg-item"><div class="leg-sq" style="background:#f0e0c0;"></div>Held</div>
+</div>
+
+<!-- MAP -->
+<div class="map-wrap" id="map-wrap">
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading seat map…</div>
   </div>
-  <div class="checkout-body">
-    <div class="chk-card">
-      <div class="chk-title">Your seats</div>
-      <div class="seat-summary" id="chk-seats"></div>
-      <div id="chk-price-rows"></div>
-    </div>
-    <div class="chk-card">
-      <div class="chk-title">Your details</div>
-      <div class="field-group">
-        <div class="field-label">Full name *</div>
-        <input class="inp" type="text" id="chk-name" placeholder="Enter your name">
-      </div>
-      <div class="field-group" style="margin:0;">
-        <div class="field-label">Mobile number *</div>
-        <input class="inp" type="tel" id="chk-mobile" placeholder="98765 43210" maxlength="10">
-      </div>
-    </div>
-    <div class="chk-card" style="background:rgba(46,158,96,0.05);border-color:rgba(46,158,96,0.2);">
-      <div style="font-size:12px;color:#1a5c3a;line-height:1.6;">
-        🔒 Payment goes directly to the organiser's account. Khursilo does not handle your payment.
-      </div>
-    </div>
-    <button class="pay-btn" onclick="confirmBooking()" id="pay-btn">Confirm & Pay →</button>
+  <div class="error-screen" id="error-screen">
+    <div class="err-icon">⚠️</div>
+    <div class="err-msg" id="err-msg">Could not load event.</div>
+  </div>
+  <div id="hall-grid" style="display:none;">
+    <div class="stage-bar">◆ STAGE ◆</div>
+    <div class="hall-grid" id="seat-grid"></div>
   </div>
 </div>
 
-<!-- SUCCESS SCREEN -->
-<div class="screen" id="screen-success">
-  <div class="success-body">
-    <div class="success-icon">🎉</div>
-    <div class="success-title">Booking confirmed!</div>
-    <div class="success-sub" id="success-sub">Your seats have been reserved.</div>
-    <div class="booking-ref" id="booking-ref">BKG-XXXXXXXX</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Screenshot this for gate entry</div>
-    <button class="home-btn" onclick="window.location.href='/'">← Back to home</button>
+<!-- CONSECUTIVE WARNING -->
+<div class="consec-warn" id="consec-warn">Select consecutive seats only</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="sel-summary">
+    <div class="sel-seats-list" id="sel-seats-list">No seats selected</div>
+    <div class="sel-total" id="sel-total"></div>
   </div>
+  <button class="proceed-btn" id="proceed-btn" disabled onclick="openForm()">Select seats to proceed</button>
+  <div class="timer-bar" id="timer-bar">⏱ Hold expires in <span id="timer-count">5:00</span></div>
+</div>
+
+<!-- BOOKING FORM OVERLAY -->
+<div class="form-overlay" id="form-overlay">
+  <div class="form-panel">
+    <div class="fp-title">Confirm booking</div>
+    <div class="fp-sub">Your seats are held for 5 minutes</div>
+    <div class="fp-seats" id="fp-seats-detail">
+      <strong>Selected seats</strong>
+      <span id="fp-seats-text">—</span>
+    </div>
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="inp-name" placeholder="Full name" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Mobile number</label>
+      <input type="tel" id="inp-mobile" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" autocomplete="tel">
+      <div class="hint">QR ticket will be sent to this number on WhatsApp</div>
+    </div>
+    <button class="confirm-btn" onclick="confirmBooking()">Confirm & Pay →</button>
+    <button class="cancel-btn" onclick="closeForm()">Cancel</button>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-icon">🎟️</div>
+  <div class="success-title">Booking confirmed!</div>
+  <div class="success-sub">Your QR ticket will be sent on WhatsApp shortly. Show it at entry.</div>
+  <div class="success-detail" id="success-detail"></div>
+  <button class="home-btn" onclick="window.location.href='index.html'">Back to home</button>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2MjcyNDIsImV4cCI6MjA2MjIwMzI0Mn0.hpQHOBWYhJHJGMwFOyvB7eBBF1erCdpHPVLKAd3y5RY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const HOLD_MINUTES = 5;
-let eventData = null, layoutData = null, heldSeats = {}, bookedSeats = {};
-let selectedSeats = []; // [{rowLabel, seatNum, secId, seatKey}]
-let holdId = null, timerInterval = null, holdExpiry = null;
-let sections = [];
+let eventData = null;
+let hallLayout = null;
+let sections = [];       // [{id, name, colour, price, mode}]
+let seatStatusMap = {};  // seatKey -> 'available'|'booked'|'held'|'blocked'
+let selectedSeats = [];  // [{rowLabel, seatNum, sectionId, price, colour, seatKey}]
+let activeFilter = 'ALL';
+let holdTimer = null;
+let holdSeconds = 300;
+let bookingId = null;
 
-// ── Init ──
-window.addEventListener('load', async () => {
-  const params = new URLSearchParams(window.location.search);
-  const eventId = params.get('event');
-  if (!eventId) { showError('No event specified.'); return; }
-  await loadEvent(eventId);
-});
+// ── INIT ──────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const eventId = params.get('event') || 'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 
-async function loadEvent(eventId) {
+window.addEventListener('DOMContentLoaded', loadEvent);
+
+async function loadEvent() {
   try {
-    // Fetch event
-    const { data: ev, error: evErr } = await sb.from('events').select('*').eq('id', eventId).single();
-    if (evErr || !ev) { showError('Event not found.'); return; }
-    if (ev.status !== 'live') { showError('Booking is not open for this event.'); return; }
+    // 1. Fetch event
+    const { data: ev, error: evErr } = await sb
+      .from('events').select('*').eq('id', eventId).single();
+    if (evErr) throw evErr;
     eventData = ev;
 
-    // Fetch hall layout
-    const { data: hall, error: hErr } = await sb.from('halls').select('*').eq('id', ev.hall_id).single();
-    if (hErr || !hall || !hall.layout_json) { showError('Hall layout not found.'); return; }
-    layoutData = hall.layout_json;
-    sections = layoutData.sections || [];
-
-    // Fetch held/booked seats
-    await refreshSeatStatus(eventId);
-
-    // Render event info
-    document.getElementById('event-name').textContent = ev.name;
+    document.getElementById('ev-name').textContent = ev.name;
     const d = new Date(ev.event_date);
-    document.getElementById('event-meta').innerHTML = `
-      <span>📅 ${d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · ${formatTime(ev.event_time)}</span>
-      <span>📍 ${hall.name}, ${hall.city}</span>`;
+    document.getElementById('ev-date').textContent =
+      d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
+      + ' · ' + (ev.event_time || '');
 
-    // Render section filter
-    renderSecFilter();
+    // 2. Fetch hall
+    const { data: hall, error: hErr } = await sb
+      .from('halls').select('*').eq('id', ev.hall_id).single();
+    if (hErr) throw hErr;
+    hallLayout = hall;
+    document.getElementById('ev-hall').textContent = hall.name;
 
-    // Render seat map
-    renderMap();
+    // 3. Parse sections from hall layout JSON
+    const layout = typeof hall.layout_json === 'string'
+      ? JSON.parse(hall.layout_json) : hall.layout_json;
+    sections = layout.sections || [];
+
+    // 4. Fetch seat status for this event
+    await loadSeatStatus();
+
+    // 5. Build UI
+    buildSectionTabs();
+    buildSeatMap(layout);
 
     document.getElementById('loading-screen').style.display = 'none';
-    showScreen('screen-map');
+    document.getElementById('hall-grid').style.display = 'block';
 
-    // Poll seat status every 30 seconds
-    setInterval(() => refreshSeatStatus(eventId), 30000);
   } catch(e) {
-    showError('Something went wrong. Please try again.');
     console.error(e);
+    document.getElementById('loading-screen').style.display = 'none';
+    const es = document.getElementById('error-screen');
+    es.classList.add('show');
+    document.getElementById('err-msg').textContent = 'Could not load event. ' + (e.message||'');
   }
 }
 
-async function refreshSeatStatus(eventId) {
-  const now = new Date().toISOString();
-  // Fetch active holds
-  const { data: holds } = await sb.from('seat_holds')
-    .select('seat_ids')
-    .eq('event_id', eventId)
-    .gt('held_until', now);
-  heldSeats = {};
-  if (holds) holds.forEach(h => (h.seat_ids||[]).forEach(k => heldSeats[k] = true));
+async function loadSeatStatus() {
+  // Fetch all bookings for this event to know which seats are taken
+  const { data: bookings } = await sb
+    .from('bookings')
+    .select('seat_key, status')
+    .eq('event_id', eventId);
 
-  // Fetch confirmed bookings
-  const { data: bookings } = await sb.from('bookings')
-    .select('seat_ids')
-    .eq('event_id', eventId)
-    .eq('payment_status', 'confirmed');
-  bookedSeats = {};
-  if (bookings) bookings.forEach(b => (b.seat_ids||[]).forEach(k => bookedSeats[k] = true));
-
-  renderMap();
+  seatStatusMap = {};
+  (bookings || []).forEach(b => {
+    if (b.status === 'confirmed') seatStatusMap[b.seat_key] = 'booked';
+    else if (b.status === 'held') seatStatusMap[b.seat_key] = 'held';
+  });
 }
 
-function seatKey(rowLabel, seatNum) { return `${rowLabel}-${seatNum}`; }
-
-function renderSecFilter() {
-  const f = document.getElementById('sec-filter');
-  f.innerHTML = '<button class="sec-btn active" onclick="filterSec(null,this)" style="background:var(--text);color:#fff;border-color:var(--text);">All</button>';
+// ── SECTION TABS ─────────────────────────────────────────────────────────
+function buildSectionTabs() {
+  const wrap = document.getElementById('sec-tabs');
   sections.forEach(sec => {
+    if (!sec.name) return;
     const btn = document.createElement('button');
-    btn.className = 'sec-btn';
-    btn.textContent = sec.name + (sec.price && sec.price !== '0' ? ' ₹'+sec.price : ' (Free)');
-    btn.style.borderColor = sec.color;
-    btn.onclick = function(){ filterSec(sec.id, this); };
-    f.appendChild(btn);
+    btn.className = 'sec-tab';
+    btn.dataset.sec = sec.id || sec.name;
+    btn.innerHTML = `<span class="tab-dot" style="background:${sec.colour||'#888'}"></span>${sec.name}${sec.price ? ' ₹'+sec.price : ''}`;
+    btn.onclick = () => filterSection(sec.id || sec.name, btn);
+    wrap.appendChild(btn);
   });
 }
 
-let activeSecFilter = null;
-function filterSec(secId, btn) {
-  activeSecFilter = secId;
-  document.querySelectorAll('.sec-btn').forEach(b => {
-    b.classList.remove('active');
-    b.style.background = '';
-    b.style.color = '';
-  });
+function filterSection(secId, btn) {
+  activeFilter = secId;
+  document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  if(secId) {
-    const sec = sections.find(s=>s.id===secId);
-    btn.style.background = sec.color;
-    btn.style.color = '#fff';
-    btn.style.borderColor = sec.color;
-  } else {
-    btn.style.background = 'var(--text)';
-    btn.style.color = '#fff';
-  }
-  renderMap();
+  // Re-render dimmed state
+  document.querySelectorAll('.seat[data-sec]').forEach(el => {
+    if (activeFilter === 'ALL') {
+      el.classList.remove('dimmed');
+    } else {
+      if (el.dataset.sec === String(activeFilter)) {
+        el.classList.remove('dimmed');
+      } else {
+        if (!el.classList.contains('selected')) el.classList.add('dimmed');
+      }
+    }
+  });
 }
 
-function renderMap() {
-  const grid = document.getElementById('grid-area');
+// ── SEAT MAP ──────────────────────────────────────────────────────────────
+function buildSeatMap(layout) {
+  const grid = document.getElementById('seat-grid');
   grid.innerHTML = '';
-  if (!layoutData || !layoutData.rows) return;
 
-  layoutData.rows.forEach(rowData => {
-    if (rowData.type === 'hpass') {
-      const hrow = document.createElement('div');
-      hrow.className = 'hpass-row';
-      const lbl = document.createElement('div');
-      lbl.style.cssText = 'width:14px;flex-shrink:0;';
-      hrow.appendChild(lbl);
-      for(let i=0;i<60;i++){
-        const c = document.createElement('div');
-        c.className = `hpass-cell h${rowData.height}`;
-        c.style.width = '16px';
-        c.style.marginRight = '2px';
-        hrow.appendChild(c);
+  // Build section lookup by seat: seatKey -> section
+  // sections have row ranges stored differently — we rely on seat.sectionId painted in layout
+  // layout.rows: [{label, seats:[{sn, type, sectionId, ...}]}]
+  const rows = layout.rows || [];
+
+  rows.forEach(row => {
+    const rowWrap = document.createElement('div');
+    rowWrap.className = 'row-wrap';
+
+    const lblL = document.createElement('div');
+    lblL.className = 'row-label';
+    lblL.textContent = row.label;
+    rowWrap.appendChild(lblL);
+
+    const seatsDiv = document.createElement('div');
+    seatsDiv.className = 'row-seats';
+
+    row.seats.forEach(seat => {
+      const el = document.createElement('div');
+
+      if (seat.type === 'aisle' || seat.type === 'gap') {
+        el.className = 'seat aisle';
+        el.style.width = '6px';
+        seatsDiv.appendChild(el);
+        return;
       }
-      grid.appendChild(hrow);
-      return;
-    }
-
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'grid-row';
-
-    const lbl = document.createElement('div');
-    lbl.className = 'row-lbl';
-    lbl.textContent = rowData.label;
-    rowDiv.appendChild(lbl);
-
-    let seatNum = 1;
-    rowData.cells.forEach(cell => {
-      if (cell.t === 'vgap') {
-        const gap = document.createElement('div');
-        gap.className = `vgap w${cell.gapW}`;
-        rowDiv.appendChild(gap);
+      if (seat.type === 'blocked' || !seat.sn) {
+        el.className = 'seat blocked';
+        el.style.background = '#e0e0dc';
+        seatsDiv.appendChild(el);
         return;
       }
 
-      const sec = sections.find(s => s.id === cell.secId);
-      const key = seatKey(rowData.label, cell.sn || seatNum);
-      const isBooked = bookedSeats[key];
-      const isHeld = heldSeats[key];
-      const isSelected = selectedSeats.some(s => s.seatKey === key);
-      const isFiltered = activeSecFilter && cell.secId !== activeSecFilter;
+      const sec = sections.find(s => s.id === seat.sectionId || s.name === seat.sectionId);
+      const colour = sec ? (sec.colour || '#4a90d9') : '#4a90d9';
+      const price = sec ? (sec.price || 0) : 0;
+      const secId = sec ? (sec.id || sec.name) : '';
 
-      const btn = document.createElement('button');
-      btn.className = 'seat';
+      const seatKey = row.label + '-' + seat.sn;
+      const status = seatStatusMap[seatKey] || 'available';
 
-      if (cell.t === 'seat' && sec) {
-        if (isBooked) {
-          btn.style.cssText = 'background:#333;color:#666;';
-          btn.className += ' booked';
-        } else if (isHeld) {
-          btn.style.cssText = 'background:#ddd;color:#aaa;';
-          btn.className += ' held';
-        } else if (isSelected) {
-          btn.className += ' selected';
-        } else {
-          const opacity = isFiltered ? '0.2' : '1';
-          btn.style.cssText = `background:${sec.color}22;color:${sec.color};box-shadow:inset 0 0 0 1px ${sec.color}55;opacity:${opacity};`;
-          btn.className += ' available';
-          if (!isFiltered) {
-            const capturedKey = key;
-            const capturedSeatNum = cell.sn || seatNum;
-            btn.onclick = () => toggleSeat(rowData.label, capturedSeatNum, cell.secId, capturedKey);
-          }
-        }
-        btn.textContent = cell.sn || seatNum;
-      } else {
-        btn.className += ' empty';
+      el.className = 'seat ' + status;
+      el.style.background = colour;
+      if (status !== 'available') el.style.background = '';
+      el.textContent = seat.sn;
+      el.dataset.row = row.label;
+      el.dataset.sn = seat.sn;
+      el.dataset.sec = String(secId);
+      el.dataset.price = price;
+      el.dataset.colour = colour;
+      el.dataset.key = seatKey;
+
+      if (status === 'available') {
+        el.addEventListener('click', () => toggleSeat(el));
       }
 
-      rowDiv.appendChild(btn);
-      seatNum++;
+      seatsDiv.appendChild(el);
     });
 
-    grid.appendChild(rowDiv);
+    rowWrap.appendChild(seatsDiv);
+
+    const lblR = document.createElement('div');
+    lblR.className = 'row-label';
+    lblR.textContent = row.label;
+    rowWrap.appendChild(lblR);
+
+    grid.appendChild(rowWrap);
   });
 }
 
-function toggleSeat(rowLabel, seatNum, secId, key) {
-  const idx = selectedSeats.findIndex(s => s.seatKey === key);
-  if (idx >= 0) {
-    selectedSeats.splice(idx, 1);
-  } else {
-    if (selectedSeats.length >= 6) { alert('Maximum 6 seats per booking.'); return; }
-    selectedSeats.push({ rowLabel, seatNum, secId, seatKey: key });
-  }
-  updateSelInfo();
-  renderMap();
-}
+// ── SEAT SELECTION ────────────────────────────────────────────────────────
+function toggleSeat(el) {
+  const key = el.dataset.key;
+  const isSelected = el.classList.contains('selected');
 
-function updateSelInfo() {
-  const info = document.getElementById('sel-info');
-  const btn = document.getElementById('book-btn');
-  if (!selectedSeats.length) {
-    info.innerHTML = 'Select seats to book';
-    btn.disabled = true;
+  if (isSelected) {
+    // Deselect — only allowed if it's at the edge of selection
+    const idx = selectedSeats.findIndex(s => s.seatKey === key);
+    if (idx !== 0 && idx !== selectedSeats.length - 1) {
+      showWarn('Can only deselect from the ends');
+      return;
+    }
+    el.classList.remove('selected');
+    selectedSeats.splice(idx, 1);
+    updateBottomBar();
     return;
   }
-  const total = selectedSeats.reduce((sum, s) => {
-    const sec = sections.find(x => x.id === s.secId);
-    return sum + (sec && sec.price ? parseFloat(sec.price) : 0);
-  }, 0);
-  const seatLabels = selectedSeats.map(s => s.rowLabel + s.seatNum).join(', ');
-  info.innerHTML = `<strong>${selectedSeats.length} seat${selectedSeats.length>1?'s':''}</strong> selected — ${seatLabels} · <strong>₹${total}</strong>`;
-  btn.disabled = false;
-}
 
-async function goCheckout() {
-  if (!selectedSeats.length) return;
-
-  // Create seat hold
-  const expiry = new Date(Date.now() + HOLD_MINUTES * 60 * 1000).toISOString();
-  const seatIds = selectedSeats.map(s => s.seatKey);
-
-  const { data: hold, error } = await sb.from('seat_holds').insert({
-    event_id: eventData.id,
-    seat_ids: seatIds,
-    held_until: expiry
-  }).select().single();
-
-  if (error) { alert('Could not hold seats. Please try again.'); return; }
-  holdId = hold.id;
-  holdExpiry = new Date(expiry);
-
-  // Refresh seat status to show held
-  await refreshSeatStatus(eventData.id);
-
-  // Render checkout
-  const chkSeats = document.getElementById('chk-seats');
-  chkSeats.innerHTML = selectedSeats.map(s =>
-    `<div class="seat-tag">${s.rowLabel}${s.seatNum}</div>`
-  ).join('');
-
-  const priceRows = document.getElementById('chk-price-rows');
-  let total = 0;
-  const secGroups = {};
-  selectedSeats.forEach(s => {
-    const sec = sections.find(x => x.id === s.secId);
-    if (!secGroups[s.secId]) secGroups[s.secId] = {name: sec?.name||'Seat', price: parseFloat(sec?.price||0), count:0};
-    secGroups[s.secId].count++;
-    total += parseFloat(sec?.price||0);
-  });
-  priceRows.innerHTML = Object.values(secGroups).map(g =>
-    `<div class="price-row"><span>${g.name} × ${g.count}</span><span>₹${g.price * g.count}</span></div>`
-  ).join('') + `<div class="price-row"><span>Total</span><span>₹${total}</span></div>`;
-
-  startTimer();
-  showScreen('screen-checkout');
-}
-
-function startTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  function update() {
-    const left = Math.max(0, holdExpiry - Date.now());
-    const mins = Math.floor(left / 60000);
-    const secs = Math.floor((left % 60000) / 1000);
-    const txt = `${mins}:${secs.toString().padStart(2,'0')}`;
-    document.getElementById('timer-txt').textContent = txt;
-    document.getElementById('timer-txt2').textContent = txt;
-    document.getElementById('timer-pill').classList.add('active');
-    if (left === 0) {
-      clearInterval(timerInterval);
-      alert('Your seat hold has expired. Please select seats again.');
-      selectedSeats = [];
-      updateSelInfo();
-      showScreen('screen-map');
-      refreshSeatStatus(eventData.id);
-    }
+  if (selectedSeats.length >= 6) {
+    showWarn('Maximum 6 seats per booking');
+    return;
   }
-  update();
-  timerInterval = setInterval(update, 1000);
+
+  // Consecutive check: new seat must be adjacent to existing selection (same row)
+  if (selectedSeats.length > 0) {
+    const lastSeat = selectedSeats[selectedSeats.length - 1];
+    const firstSeat = selectedSeats[0];
+    const newRow = el.dataset.row;
+    const newSn = parseInt(el.dataset.sn);
+
+    // Must be same row
+    if (newRow !== lastSeat.rowLabel && newRow !== firstSeat.rowLabel) {
+      showWarn('Select consecutive seats only');
+      return;
+    }
+
+    // Must be adjacent to start or end of current selection
+    const firstSn = parseInt(firstSeat.seatNum);
+    const lastSn = parseInt(lastSeat.seatNum);
+
+    const adjacentToEnd = (newRow === lastSeat.rowLabel && newSn === lastSn + 1);
+    const adjacentToStart = (newRow === firstSeat.rowLabel && newSn === firstSn - 1);
+
+    if (!adjacentToEnd && !adjacentToStart) {
+      showWarn('Select consecutive seats only');
+      return;
+    }
+
+    // Check no gap — must check there's no booked/held seat between
+    const checkKey = newRow + '-' + (adjacentToEnd ? lastSn + 1 : firstSn - 1);
+    // Already passed above — this IS the seat. Just verify nothing blocked between.
+
+    if (adjacentToStart) {
+      selectedSeats.unshift({
+        rowLabel: el.dataset.row,
+        seatNum: el.dataset.sn,
+        sectionId: el.dataset.sec,
+        price: parseInt(el.dataset.price),
+        colour: el.dataset.colour,
+        seatKey: key
+      });
+    } else {
+      selectedSeats.push({
+        rowLabel: el.dataset.row,
+        seatNum: el.dataset.sn,
+        sectionId: el.dataset.sec,
+        price: parseInt(el.dataset.price),
+        colour: el.dataset.colour,
+        seatKey: key
+      });
+    }
+  } else {
+    selectedSeats.push({
+      rowLabel: el.dataset.row,
+      seatNum: el.dataset.sn,
+      sectionId: el.dataset.sec,
+      price: parseInt(el.dataset.price),
+      colour: el.dataset.colour,
+      seatKey: key
+    });
+  }
+
+  el.classList.add('selected');
+  updateBottomBar();
+}
+
+function showWarn(msg) {
+  const w = document.getElementById('consec-warn');
+  w.textContent = msg;
+  w.style.display = 'block';
+  w.style.animation = 'none';
+  setTimeout(() => {
+    w.style.animation = 'fadeInOut 2.5s ease forwards';
+    setTimeout(() => w.style.display = 'none', 2500);
+  }, 10);
+}
+
+function updateBottomBar() {
+  const btn = document.getElementById('proceed-btn');
+  const list = document.getElementById('sel-seats-list');
+  const total = document.getElementById('sel-total');
+
+  if (selectedSeats.length === 0) {
+    list.textContent = 'No seats selected';
+    total.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Select seats to proceed';
+  } else {
+    const seatLabels = selectedSeats.map(s => s.rowLabel + '-' + s.seatNum).join(', ');
+    const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
+    list.textContent = seatLabels;
+    total.textContent = totalAmt > 0 ? '₹' + totalAmt : 'Free';
+    btn.disabled = false;
+    btn.textContent = `Proceed →`;
+  }
+}
+
+// ── HOLD TIMER ────────────────────────────────────────────────────────────
+function startHoldTimer() {
+  holdSeconds = 300;
+  const timerBar = document.getElementById('timer-bar');
+  const timerCount = document.getElementById('timer-count');
+  timerBar.style.display = 'block';
+
+  if (holdTimer) clearInterval(holdTimer);
+  holdTimer = setInterval(() => {
+    holdSeconds--;
+    const m = Math.floor(holdSeconds / 60);
+    const s = holdSeconds % 60;
+    timerCount.textContent = m + ':' + String(s).padStart(2,'0');
+    if (holdSeconds <= 0) {
+      clearInterval(holdTimer);
+      timerBar.textContent = '⏱ Hold expired. Please re-select your seats.';
+      releaseHold();
+    }
+  }, 1000);
+}
+
+function releaseHold() {
+  selectedSeats.forEach(s => {
+    const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
+    if (el) {
+      el.classList.remove('selected');
+      el.classList.add('available');
+    }
+  });
+  selectedSeats = [];
+  updateBottomBar();
+  document.getElementById('timer-bar').style.display = 'none';
+  closeForm();
+}
+
+// ── BOOKING FORM ──────────────────────────────────────────────────────────
+function openForm() {
+  if (selectedSeats.length === 0) return;
+
+  // Show form
+  const seatLabels = selectedSeats.map(s => s.rowLabel + '-' + s.seatNum).join(', ');
+  const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
+  const secNames = [...new Set(selectedSeats.map(s => {
+    const sec = sections.find(x => (x.id||x.name) === s.sectionId);
+    return sec ? sec.name : '';
+  }))].filter(Boolean).join(', ');
+
+  document.getElementById('fp-seats-text').innerHTML =
+    `<b>${seatLabels}</b><br><span style="color:var(--muted);font-size:11px;">${secNames} · ₹${totalAmt}</span>`;
+
+  document.getElementById('form-overlay').classList.add('show');
+  startHoldTimer();
+}
+
+function closeForm() {
+  document.getElementById('form-overlay').classList.remove('show');
 }
 
 async function confirmBooking() {
-  const name = document.getElementById('chk-name').value.trim();
-  const mobile = document.getElementById('chk-mobile').value.trim();
-  if (!name) { alert('Please enter your name.'); return; }
-  if (!mobile || mobile.length < 10) { alert('Please enter a valid 10-digit mobile number.'); return; }
+  const name = document.getElementById('inp-name').value.trim();
+  const mobile = document.getElementById('inp-mobile').value.trim();
 
-  const btn = document.getElementById('pay-btn');
-  btn.textContent = 'Processing...';
+  if (!name) { alert('Please enter your name'); return; }
+  if (!/^[0-9]{10}$/.test(mobile)) { alert('Enter a valid 10-digit mobile number'); return; }
+
+  const btn = document.querySelector('.confirm-btn');
+  btn.textContent = 'Saving…';
   btn.disabled = true;
 
-  const seatIds = selectedSeats.map(s => s.seatKey);
-  const total = selectedSeats.reduce((sum,s) => {
-    const sec = sections.find(x=>x.id===s.secId);
-    return sum + parseFloat(sec?.price||0);
-  }, 0);
-  const ref = 'KHR-' + Date.now().toString(36).toUpperCase();
+  try {
+    const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
+    const seatKeys = selectedSeats.map(s => s.seatKey);
 
-  const { error } = await sb.from('bookings').insert({
-    event_id: eventData.id,
-    booker_name: name,
-    booker_mobile: mobile,
-    seat_ids: seatIds,
-    amount: total,
-    payment_status: 'confirmed',
-    qr_code: ref
-  });
+    // Save booking to Supabase
+    const { data, error } = await sb.from('bookings').insert({
+      event_id: eventId,
+      customer_name: name,
+      customer_mobile: mobile,
+      seat_keys: seatKeys,
+      seat_count: selectedSeats.length,
+      amount: totalAmt,
+      status: 'pending_payment',
+      created_at: new Date().toISOString()
+    }).select().single();
 
-  if (error) {
+    if (error) throw error;
+    bookingId = data.id;
+
+    // Mark seats on UI
+    selectedSeats.forEach(s => {
+      const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
+      if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
+    });
+
+    clearInterval(holdTimer);
+    document.getElementById('timer-bar').style.display = 'none';
+    closeForm();
+
+    // Show success
+    showSuccess(name, mobile, seatKeys, totalAmt);
+
+  } catch(e) {
+    alert('Error saving booking: ' + (e.message || 'Unknown error'));
     btn.textContent = 'Confirm & Pay →';
     btn.disabled = false;
-    alert('Booking failed: ' + error.message);
-    return;
   }
-
-  // Delete hold
-  if (holdId) await sb.from('seat_holds').delete().eq('id', holdId);
-  if (timerInterval) clearInterval(timerInterval);
-
-  document.getElementById('booking-ref').textContent = ref;
-  document.getElementById('success-sub').textContent =
-    `${selectedSeats.map(s=>s.rowLabel+s.seatNum).join(', ')} — ${eventData.name}`;
-  showScreen('screen-success');
 }
 
-function formatTime(t) {
-  if (!t) return '';
-  const [h, m] = t.split(':');
-  const hr = parseInt(h);
-  return `${hr > 12 ? hr-12 : hr}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
-}
-
-function showError(msg) {
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('err-msg').textContent = msg;
-  document.getElementById('error-screen').style.display = 'flex';
+function showSuccess(name, mobile, seatKeys, amount) {
+  const detail = document.getElementById('success-detail');
+  detail.innerHTML = `
+    <div class="sd-row"><span>Name</span><span>${name}</span></div>
+    <div class="sd-row"><span>Mobile</span><span>${mobile}</span></div>
+    <div class="sd-row"><span>Seats</span><span>${seatKeys.join(', ')}</span></div>
+    <div class="sd-row"><span>Amount</span><span>${amount > 0 ? '₹'+amount : 'Free'}</span></div>
+    <div class="sd-row"><span>Status</span><span style="color:var(--accent)">Payment pending</span></div>
+  `;
+  document.getElementById('success-overlay').classList.add('show');
+  selectedSeats = [];
+  updateBottomBar();
 }
 </script>
 </body>
