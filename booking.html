@@ -334,17 +334,16 @@ async function loadEvent() {
     // Auto-scale seat grid to fit screen width
     setTimeout(() => {
       const grid = document.getElementById('seat-grid');
+      const hallGrid = document.getElementById('hall-grid');
       const wrap = document.getElementById('map-wrap');
       if (grid && wrap) {
-        const gridW = grid.scrollWidth;
+        const gridW = hallGrid.scrollWidth;
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
-          grid.style.transform = `scale(${scale})`;
-          grid.style.transformOrigin = 'top center';
-          const scaledH = grid.scrollHeight * scale;
-          grid.style.marginBottom = `-${grid.scrollHeight * (1 - scale)}px`;
-          wrap.style.overflowX = 'hidden';
+          hallGrid.style.transform = 'scale(' + scale + ')';
+          hallGrid.style.transformOrigin = 'top center';
+          hallGrid.style.marginBottom = '-' + (hallGrid.scrollHeight * (1 - scale)) + 'px';
         }
       }
     }, 300);
