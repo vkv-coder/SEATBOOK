@@ -16,21 +16,18 @@
   --accent: #c8860a;
   --accent-dim: rgba(200,134,10,0.10);
   --green: #2e9e60;
-  --blue: #2b6fd4;
   --radius: 16px;
   --rsm: 10px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden; display: flex; flex-direction: column; }
 
-/* TOPBAR */
 .topbar { padding: 24px 24px 0; }
 .logo { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); line-height: 1; }
 .logo span { color: var(--accent); }
 .logo-city { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
 .city-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 
-/* HERO */
 .hero-text { padding: 28px 24px 24px; }
 .hero-tag {
   display: inline-flex; align-items: center; gap: 6px;
@@ -42,7 +39,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .hero-title em { color: var(--accent); font-style: italic; }
 .hero-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-/* EVENTS */
 .section { padding: 0 24px 20px; }
 .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
 .events-list { display: flex; flex-direction: column; gap: 10px; }
@@ -67,29 +63,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .events-loading { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0; }
 .events-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 16px; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); line-height: 1.6; }
 
-/* DIVIDER */
 .divider { height: 1px; background: var(--border); margin: 4px 24px 20px; }
 
-/* ZERO FEE */
-.zero-fee {
-  margin: 0 24px 12px;
+/* BLACK INFO BOX — zero fee + payment info combined */
+.info-box {
+  margin: 0 24px 28px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-radius: var(--radius); padding: 16px 18px;
-  display: flex; align-items: center; gap: 14px;
+  border-radius: var(--radius); padding: 18px 18px;
 }
-.zf-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.2; }
-.zf-sub { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 3px; }
+.info-row { display: flex; align-items: flex-start; gap: 12px; }
+.info-row + .info-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.info-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.info-title { color: #fff; font-size: 14px; font-weight: 600; line-height: 1.2; margin-bottom: 3px; }
+.info-sub { color: rgba(255,255,255,0.5); font-size: 11px; line-height: 1.5; }
 
-/* DISCLAIMER */
-.disclaimer {
-  margin: 0 24px 32px;
-  background: rgba(43,111,212,0.07); border: 1px solid rgba(43,111,212,0.15);
-  border-radius: var(--rsm); padding: 12px 14px;
-  display: flex; gap: 8px; align-items: flex-start;
-}
-.disclaimer-text { font-size: 11px; color: #1a4a8a; line-height: 1.65; }
-
-/* FOOTER */
 .footer { margin-top: auto; padding: 16px 24px 28px; border-top: 1px solid var(--border); text-align: center; }
 .footer-legal { font-size: 10px; color: #bbb; line-height: 1.5; margin-bottom: 10px; }
 .footer-link { font-size: 11px; color: var(--muted); text-decoration: none; }
@@ -117,19 +104,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 <div class="divider"></div>
 
-<div class="zero-fee">
-  <div style="font-size:26px;flex-shrink:0;">🎉</div>
-  <div>
-    <div class="zf-title">Zero convenience fee</div>
-    <div class="zf-sub">No hidden charges. Pay only the ticket price — nothing extra.</div>
+<div class="info-box">
+  <div class="info-row">
+    <div class="info-icon">🎉</div>
+    <div>
+      <div class="info-title">Zero convenience fee</div>
+      <div class="info-sub">No hidden charges. Pay only the ticket price — nothing extra.</div>
+    </div>
   </div>
-</div>
-
-<div class="disclaimer">
-  <div style="font-size:15px;flex-shrink:0;margin-top:1px;">ℹ️</div>
-  <div class="disclaimer-text">
-    Your payment goes <strong>directly to the event organiser</strong> — not to Khursilo.
-    Khursilo is a <strong>technology platform only</strong> and is not responsible for the event, refunds, or cancellations. Please contact the organiser for any queries.
+  <div class="info-row">
+    <div class="info-icon">ℹ️</div>
+    <div>
+      <div class="info-title">Payment goes directly to the organiser</div>
+      <div class="info-sub">Khursilo is a technology platform only and is not responsible for the event, refunds, or cancellations. Please contact the organiser for any queries.</div>
+    </div>
   </div>
 </div>
 
