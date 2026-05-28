@@ -13,7 +13,7 @@
   --text:#1a1a1a;--muted:#888;--muted2:#bbb;
   --accent:#c8860a;--green:#2e9e60;--red:#cc3333;--blue:#2b6fd4;
   --radius:12px;--rsm:8px;
-  --seat-size:18px;--seat-gap:2px;
+  --seat-size:16px;--seat-gap:2px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
@@ -410,6 +410,7 @@ function buildSeatMap(layout) {
   // t values: 'empty'=available seat, 'blocked'=blocked, 'aisle'/'gap'=passage
   const rows = layout.rows || [];
 
+  const fragment = document.createDocumentFragment();
   rows.forEach(row => {
     if (row.type !== 'row') return; // skip non-row entries
 
@@ -494,8 +495,9 @@ function buildSeatMap(layout) {
     lblR.textContent = row.label || '';
     rowWrap.appendChild(lblR);
 
-    grid.appendChild(rowWrap);
+    fragment.appendChild(rowWrap);
   });
+  grid.appendChild(fragment);
 }
 
 // ── SEAT SELECTION ────────────────────────────────────────────────────────
