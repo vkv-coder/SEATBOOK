@@ -65,17 +65,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 .divider { height: 1px; background: var(--border); margin: 4px 24px 20px; }
 
-/* BLACK INFO BOX — zero fee + payment info combined */
 .info-box {
   margin: 0 24px 28px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-radius: var(--radius); padding: 18px 18px;
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
 }
-.info-row { display: flex; align-items: flex-start; gap: 12px; }
-.info-row + .info-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
-.info-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-.info-title { color: #fff; font-size: 14px; font-weight: 600; line-height: 1.2; margin-bottom: 3px; }
-.info-sub { color: rgba(255,255,255,0.5); font-size: 11px; line-height: 1.5; }
+.info-icon { font-size: 20px; flex-shrink: 0; }
+.info-text { color: rgba(255,255,255,0.85); font-size: 12px; line-height: 1.6; }
+.info-text strong { color: #fff; font-weight: 600; }
 
 .footer { margin-top: auto; padding: 16px 24px 28px; border-top: 1px solid var(--border); text-align: center; }
 .footer-legal { font-size: 10px; color: #bbb; line-height: 1.5; margin-bottom: 10px; }
@@ -105,20 +103,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <div class="divider"></div>
 
 <div class="info-box">
-  <div class="info-row">
-    <div class="info-icon">🎉</div>
-    <div>
-      <div class="info-title">Zero convenience fee</div>
-      <div class="info-sub">No hidden charges. Pay only the ticket price — nothing extra.</div>
-    </div>
-  </div>
-  <div class="info-row">
-    <div class="info-icon">ℹ️</div>
-    <div>
-      <div class="info-title">Payment goes directly to the organiser</div>
-      <div class="info-sub">Khursilo is a technology platform only and is not responsible for the event, refunds, or cancellations. Please contact the organiser for any queries.</div>
-    </div>
-  </div>
+  <div class="info-icon">🎉</div>
+  <div class="info-text"><strong>Zero convenience fee</strong> — no hidden charges. Pay only the ticket price. Payment goes directly to the organiser.</div>
 </div>
 
 <div class="footer">
