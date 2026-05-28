@@ -46,24 +46,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
 .row-wrap{display:flex;align-items:center;gap:0;}
-.row-label{font-size:9px;color:var(--muted);width:12px;text-align:center;flex-shrink:0;font-weight:600;}
+.row-label{font-size:5px;color:var(--muted);width:12px;text-align:center;flex-shrink:0;font-weight:600;}
 .row-seats{display:flex;gap:0;flex-wrap:nowrap;}
 
 .seat{
   width:var(--seat-size);height:var(--seat-size);
   border-radius:3px 3px 5px 5px;
-  font-size:2px;font-weight:600;color:rgba(255,255,255,0.85);
+  font-size:2px;font-weight:600;color:#1a1a1a;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;flex-shrink:0;
   border:1.5px solid transparent;
   transition:transform .1s, box-shadow .1s;
   position:relative;
+  background:#fff;
 }
 
 .seat:active{transform:scale(0.9);}
-.seat.available{opacity:1;}
+.seat.available{opacity:1;background:#fff;}
 .seat.selected{
   border-color:var(--text)!important;
+  background:#1a1a1a!important;
+  color:#fff!important;
   transform:scale(1.12);
   box-shadow:0 2px 8px rgba(0,0,0,0.3);
   z-index:2;
@@ -206,8 +209,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 <!-- LEGEND -->
 <div class="legend">
-  <div class="leg-item"><div class="leg-sq" style="background:#4a90d9;"></div>Available</div>
-  <div class="leg-item"><div class="leg-sq" style="background:#1a1a1a;border:1.5px solid #1a1a1a;"></div>Selected</div>
+  <div class="leg-item"><div class="leg-sq" style="background:#fff;border:1.5px solid #4a90d9;"></div>Available</div>
+  <div class="leg-item"><div class="leg-sq" style="background:#1a1a1a;"></div>Selected</div>
   <div class="leg-item"><div class="leg-sq" style="background:#d0d0cc;"></div>Booked</div>
   <div class="leg-item"><div class="leg-sq" style="background:#f0e0c0;"></div>Held</div>
 </div>
@@ -223,9 +226,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="err-msg" id="err-msg">Could not load event.</div>
   </div>
   <div id="hall-grid" style="display:none;">
-  
     <div class="hall-grid" id="seat-grid"></div>
-  <div class="stage-bar" style="margin-top:8px;">◆ STAGE ◆</div>
+    <div class="stage-bar" style="margin-top:8px;">◆ STAGE ◆</div>
   </div>
 </div>
 
@@ -281,15 +283,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let eventData = null;
 let hallLayout = null;
-let sections = [];       // [{id, name, colour, price, mode}]
-let seatStatusMap = {};  // seatKey -> 'available'|'booked'|'held'|'blocked'
-let selectedSeats = [];  // [{rowLabel, seatNum, sectionId, price, colour, seatKey}]
+let sections = [];
+let seatStatusMap = {};
+let selectedSeats = [];
 let activeFilter = 'ALL';
 let holdTimer = null;
 let holdSeconds = 300;
 let bookingId = null;
 
-// ── INIT ──────────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
 const eventId = params.get('event') || 'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 
@@ -297,7 +298,6 @@ window.addEventListener('DOMContentLoaded', loadEvent);
 
 async function loadEvent() {
   try {
-    // 1. Fetch event
     const { data: ev, error: evErr } = await sb
       .from('events').select('*').eq('id', eventId).single();
     if (evErr) throw evErr;
@@ -309,34 +309,29 @@ async function loadEvent() {
       d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
       + ' · ' + (ev.event_time || '');
 
-    // 2. Fetch hall
     const { data: hall, error: hErr } = await sb
       .from('halls').select('*').eq('id', ev.hall_id).single();
     if (hErr) throw hErr;
     hallLayout = hall;
     document.getElementById('ev-hall').textContent = hall.name;
 
-    // 3. Parse sections from hall layout JSON
     const layout = typeof hall.layout_json === 'string'
       ? JSON.parse(hall.layout_json) : hall.layout_json;
     sections = layout.sections || [];
     console.log('Sections loaded:', JSON.stringify(sections));
 
-    // 4. Fetch seat status for this event
     await loadSeatStatus();
 
-    // 5. Build UI
     buildSectionTabs();
     buildSeatMap(layout);
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('hall-grid').style.display = 'block';
-    // Auto-scale seat grid to fit screen width
+
     setTimeout(() => {
-      const grid = document.getElementById('seat-grid');
       const hallGrid = document.getElementById('hall-grid');
       const wrap = document.getElementById('map-wrap');
-      if (grid && wrap) {
+      if (hallGrid && wrap) {
         const gridW = hallGrid.scrollWidth;
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
@@ -358,7 +353,6 @@ async function loadEvent() {
 }
 
 async function loadSeatStatus() {
-  // Fetch all bookings for this event to know which seats are taken
   const { data: bookings } = await sb
     .from('bookings')
     .select('seat_keys, status')
@@ -366,13 +360,13 @@ async function loadSeatStatus() {
 
   seatStatusMap = {};
   (bookings || []).forEach(b => {
-  (b.seat_keys || []).forEach(k => {
+    (b.seat_keys || []).forEach(k => {
       if (b.status === 'confirmed') seatStatusMap[k] = 'booked';
       else if (b.status === 'held') seatStatusMap[k] = 'held';
-    });  });
+    });
+  });
 }
 
-// ── SECTION TABS ─────────────────────────────────────────────────────────
 function buildSectionTabs() {
   const wrap = document.getElementById('sec-tabs');
   sections.forEach(sec => {
@@ -390,7 +384,6 @@ function filterSection(secId, btn) {
   activeFilter = secId;
   document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  // Re-render dimmed state
   document.querySelectorAll('.seat[data-sec]').forEach(el => {
     if (activeFilter === 'ALL') {
       el.classList.remove('dimmed');
@@ -404,33 +397,27 @@ function filterSection(secId, btn) {
   });
 }
 
-// ── SEAT MAP ──────────────────────────────────────────────────────────────
 function buildSeatMap(layout) {
   const grid = document.getElementById('seat-grid');
   grid.innerHTML = '';
 
-  // Layout JSON structure: rows array, each row has label and cells array
-  // Each cell: {t: type, sn: seat_number, secId: section_id}
-  // t values: 'empty'=available seat, 'blocked'=blocked, 'aisle'/'gap'=passage
   const rows = (layout.rows || []).slice().reverse();
-
   const fragment = document.createDocumentFragment();
+
   rows.forEach(row => {
     if (row.type === 'hgap') {
-        const hgapDiv = document.createElement('div');
-        hgapDiv.style.height = '10px';
-        hgapDiv.style.width = '100%';
-        hgapDiv.style.background = 'transparent';
-        hgapDiv.className = 'hgap-row';
-        fragment.appendChild(hgapDiv);
-        return;
-      }
-      if (row.type !== 'row') return;
+      const hgapDiv = document.createElement('div');
+      hgapDiv.style.height = '10px';
+      hgapDiv.style.width = '100%';
+      hgapDiv.style.background = 'transparent';
+      hgapDiv.className = 'hgap-row';
+      fragment.appendChild(hgapDiv);
+      return;
+    }
+    if (row.type !== 'row') return;
 
     const rowWrap = document.createElement('div');
     rowWrap.className = 'row-wrap';
-
-
 
     const seatsDiv = document.createElement('div');
     seatsDiv.className = 'row-seats';
@@ -440,7 +427,7 @@ function buildSeatMap(layout) {
       const el = document.createElement('div');
       const t = cell.t || '';
 
-      // Label cell - show row letter
+      // Label cell
       if (t === 'label') {
         el.className = 'seat aisle';
         el.style.background = 'transparent';
@@ -453,6 +440,7 @@ function buildSeatMap(layout) {
         seatsDiv.appendChild(el);
         return;
       }
+
       // Empty or gap cell
       if (t === 'empty' || t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
@@ -463,15 +451,15 @@ function buildSeatMap(layout) {
         return;
       }
 
-      // Blocked or no seat number
+      // Blocked cell
       if (t === 'blocked') {
         el.className = 'seat blocked';
         seatsDiv.appendChild(el);
         return;
       }
 
-      // Skip empty unnumbered cells
-      if (t === 'empty' || !cell.sn) {
+      // Skip unnumbered cells
+      if (!cell.sn) {
         el.className = 'seat blocked';
         el.style.opacity = '0';
         el.style.pointerEvents = 'none';
@@ -479,7 +467,7 @@ function buildSeatMap(layout) {
         return;
       }
 
-      // Normal seat (t === 'seat')
+      // Normal seat
       const secId = cell.secId || '';
       const sec = sections.find(s => s.id === secId || s.name === secId || String(s.id) === String(secId));
       const colour = sec ? (sec.color || sec.colour || '#4a90d9') : '#4a90d9';
@@ -510,27 +498,26 @@ function buildSeatMap(layout) {
     });
 
     rowWrap.appendChild(seatsDiv);
-
-
-
     fragment.appendChild(rowWrap);
   });
+
   grid.appendChild(fragment);
 }
 
-// ── SEAT SELECTION ────────────────────────────────────────────────────────
 function toggleSeat(el) {
   const key = el.dataset.key;
   const isSelected = el.classList.contains('selected');
 
   if (isSelected) {
-    // Deselect — only allowed if it's at the edge of selection
     const idx = selectedSeats.findIndex(s => s.seatKey === key);
     if (idx !== 0 && idx !== selectedSeats.length - 1) {
       showWarn('Can only deselect from the ends');
       return;
     }
     el.classList.remove('selected');
+    el.style.background = '#fff';
+    el.style.border = '1.5px solid ' + el.dataset.colour;
+    el.style.color = '#1a1a1a';
     selectedSeats.splice(idx, 1);
     updateBottomBar();
     return;
@@ -541,20 +528,17 @@ function toggleSeat(el) {
     return;
   }
 
-  // Consecutive check: new seat must be adjacent to existing selection (same row)
   if (selectedSeats.length > 0) {
     const lastSeat = selectedSeats[selectedSeats.length - 1];
     const firstSeat = selectedSeats[0];
     const newRow = el.dataset.row;
     const newSn = parseInt(el.dataset.sn);
 
-    // Must be same row
     if (newRow !== lastSeat.rowLabel && newRow !== firstSeat.rowLabel) {
       showWarn('Select consecutive seats only');
       return;
     }
 
-    // Must be adjacent to start or end of current selection
     const firstSn = parseInt(firstSeat.seatNum);
     const lastSn = parseInt(lastSeat.seatNum);
 
@@ -566,37 +550,24 @@ function toggleSeat(el) {
       return;
     }
 
-    // Check no gap — must check there's no booked/held seat between
-    const checkKey = newRow + '-' + (adjacentToEnd ? lastSn + 1 : firstSn - 1);
-    // Already passed above — this IS the seat. Just verify nothing blocked between.
-
     if (adjacentToStart) {
       selectedSeats.unshift({
-        rowLabel: el.dataset.row,
-        seatNum: el.dataset.sn,
-        sectionId: el.dataset.sec,
-        price: parseInt(el.dataset.price),
-        colour: el.dataset.colour,
-        seatKey: key
+        rowLabel: el.dataset.row, seatNum: el.dataset.sn,
+        sectionId: el.dataset.sec, price: parseInt(el.dataset.price),
+        colour: el.dataset.colour, seatKey: key
       });
     } else {
       selectedSeats.push({
-        rowLabel: el.dataset.row,
-        seatNum: el.dataset.sn,
-        sectionId: el.dataset.sec,
-        price: parseInt(el.dataset.price),
-        colour: el.dataset.colour,
-        seatKey: key
+        rowLabel: el.dataset.row, seatNum: el.dataset.sn,
+        sectionId: el.dataset.sec, price: parseInt(el.dataset.price),
+        colour: el.dataset.colour, seatKey: key
       });
     }
   } else {
     selectedSeats.push({
-      rowLabel: el.dataset.row,
-      seatNum: el.dataset.sn,
-      sectionId: el.dataset.sec,
-      price: parseInt(el.dataset.price),
-      colour: el.dataset.colour,
-      seatKey: key
+      rowLabel: el.dataset.row, seatNum: el.dataset.sn,
+      sectionId: el.dataset.sec, price: parseInt(el.dataset.price),
+      colour: el.dataset.colour, seatKey: key
     });
   }
 
@@ -631,11 +602,10 @@ function updateBottomBar() {
     list.textContent = seatLabels;
     total.textContent = totalAmt > 0 ? '₹' + totalAmt : 'Free';
     btn.disabled = false;
-    btn.textContent = `Proceed →`;
+    btn.textContent = 'Proceed →';
   }
 }
 
-// ── HOLD TIMER ────────────────────────────────────────────────────────────
 function startHoldTimer() {
   holdSeconds = 300;
   const timerBar = document.getElementById('timer-bar');
@@ -662,6 +632,9 @@ function releaseHold() {
     if (el) {
       el.classList.remove('selected');
       el.classList.add('available');
+      el.style.background = '#fff';
+      el.style.border = '1.5px solid ' + s.colour;
+      el.style.color = '#1a1a1a';
     }
   });
   selectedSeats = [];
@@ -670,11 +643,9 @@ function releaseHold() {
   closeForm();
 }
 
-// ── BOOKING FORM ──────────────────────────────────────────────────────────
 function openForm() {
   if (selectedSeats.length === 0) return;
 
-  // Show form
   const seatLabels = selectedSeats.map(s => s.rowLabel + '-' + s.seatNum).join(', ');
   const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
   const secNames = [...new Set(selectedSeats.map(s => {
@@ -708,7 +679,6 @@ async function confirmBooking() {
     const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
     const seatKeys = selectedSeats.map(s => s.seatKey);
 
-    // Save booking to Supabase
     const { data, error } = await sb.from('bookings').insert({
       event_id: eventId,
       booker_name: name,
@@ -724,7 +694,6 @@ async function confirmBooking() {
     if (error) throw error;
     bookingId = data.id;
 
-    // Mark seats on UI
     selectedSeats.forEach(s => {
       const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
       if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
@@ -733,8 +702,6 @@ async function confirmBooking() {
     clearInterval(holdTimer);
     document.getElementById('timer-bar').style.display = 'none';
     closeForm();
-
-    // Show success
     showSuccess(name, mobile, seatKeys, totalAmt);
 
   } catch(e) {
