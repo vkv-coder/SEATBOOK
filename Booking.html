@@ -318,6 +318,7 @@ async function loadEvent() {
     const layout = typeof hall.layout_json === 'string'
       ? JSON.parse(hall.layout_json) : hall.layout_json;
     sections = layout.sections || [];
+    console.log('Sections loaded:', JSON.stringify(sections));
 
     // 4. Fetch seat status for this event
     await loadSeatStatus();
@@ -422,15 +423,24 @@ function buildSeatMap(layout) {
       }
 
       // Blocked or no seat number
-      if (t === 'blocked' || !cell.sn) {
+      if (t === 'blocked') {
         el.className = 'seat blocked';
         seatsDiv.appendChild(el);
         return;
       }
 
-      // Normal seat
+      // Skip empty unnumbered cells
+      if (t === 'empty' || !cell.sn) {
+        el.className = 'seat blocked';
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        seatsDiv.appendChild(el);
+        return;
+      }
+
+      // Normal seat (t === 'seat')
       const secId = cell.secId || '';
-      const sec = sections.find(s => s.id === secId || s.name === secId);
+      const sec = sections.find(s => s.id === secId || s.name === secId || String(s.id) === String(secId));
       const colour = sec ? (sec.colour || '#4a90d9') : '#4a90d9';
       const price = sec ? (parseInt(sec.price) || 0) : 0;
 
