@@ -45,7 +45,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 10px 14px;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
-.row-wrap{display:flex;align-items:center;gap:4px;justify-content:center;}
+.row-wrap{display:flex;align-items:center;gap:0;}
 .row-label{font-size:9px;color:var(--muted);width:16px;text-align:center;flex-shrink:0;font-weight:600;}
 .row-seats{display:flex;gap:var(--seat-gap);flex-wrap:nowrap;}
 
@@ -442,7 +442,16 @@ function buildSeatMap(layout) {
       const el = document.createElement('div');
       const t = cell.t || '';
 
-      // Aisle / gap - render as wide empty space
+      // Empty padding cell - invisible, same width as seat
+      if (t === 'empty') {
+        el.className = 'seat aisle';
+        el.style.background = 'transparent';
+        el.style.border = 'none';
+        el.style.pointerEvents = 'none';
+        seatsDiv.appendChild(el);
+        return;
+      }
+      // Aisle / gap - narrow visible space
       if (t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
         el.style.width = '6px';
