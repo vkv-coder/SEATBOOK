@@ -445,7 +445,7 @@ function buildSeatMap(layout) {
         el.style.background = 'transparent';
         el.style.border = 'none';
         el.style.pointerEvents = 'none';
-        el.style.fontSize = '8px';
+        el.style.fontSize = '5px';
         el.style.fontWeight = '700';
         el.style.color = 'var(--muted)';
         el.textContent = row.label;
@@ -489,9 +489,9 @@ function buildSeatMap(layout) {
 
       el.className = 'seat ' + status;
       if (status === 'available') {
-        el.style.background = colour + '22';
+        el.style.background = '#fff';
         el.style.border = '1.5px solid ' + colour;
-        el.style.color = colour;
+        el.style.color = '#1a1a1a';
       }
       el.textContent = cell.sn;
       el.dataset.row = row.label || '';
