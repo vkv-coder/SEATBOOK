@@ -24,13 +24,13 @@
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; overflow-x: hidden; display: flex; flex-direction: column; }
 
 /* TOPBAR */
-.topbar { padding: 24px 24px 0; display: flex; align-items: flex-start; justify-content: space-between; }
+.topbar { padding: 24px 24px 0; }
 .logo { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); line-height: 1; }
 .logo span { color: var(--accent); }
 .logo-city { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
-.city-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink:0; }
+.city-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 
-/* HERO TEXT */
+/* HERO */
 .hero-text { padding: 28px 24px 24px; }
 .hero-tag {
   display: inline-flex; align-items: center; gap: 6px;
@@ -42,20 +42,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .hero-title em { color: var(--accent); font-style: italic; }
 .hero-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-/* EVENTS SECTION */
+/* EVENTS */
 .section { padding: 0 24px 20px; }
 .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
 .events-list { display: flex; flex-direction: column; gap: 10px; }
-
 .event-card {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 16px;
   display: flex; align-items: center; gap: 14px;
   text-decoration: none; color: var(--text);
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.event-card:active { border-color: var(--text); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-
+.event-card:active { border-color: var(--text); }
 .event-date-box {
   background: var(--text); color: #fff;
   border-radius: 8px; padding: 8px 10px;
@@ -63,31 +60,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 }
 .edb-day { font-size: 18px; font-weight: 700; line-height: 1; }
 .edb-mon { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.65; margin-top: 2px; }
-
 .event-info { flex: 1; min-width: 0; }
 .event-name { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .event-meta { font-size: 11px; color: var(--muted); }
 .event-arrow { font-size: 18px; color: var(--muted); flex-shrink: 0; }
-
 .events-loading { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0; }
-.events-empty {
-  font-size: 13px; color: var(--muted); text-align: center;
-  padding: 24px 16px; background: var(--bg2);
-  border-radius: var(--radius); border: 1px solid var(--border);
-  line-height: 1.6;
-}
+.events-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 16px; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); line-height: 1.6; }
 
 /* DIVIDER */
 .divider { height: 1px; background: var(--border); margin: 4px 24px 20px; }
 
-/* ZERO FEE BANNER */
+/* ZERO FEE */
 .zero-fee {
   margin: 0 24px 12px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
   border-radius: var(--radius); padding: 16px 18px;
   display: flex; align-items: center; gap: 14px;
 }
-.zf-icon { font-size: 26px; flex-shrink: 0; }
 .zf-title { color: #fff; font-size: 15px; font-weight: 600; line-height: 1.2; }
 .zf-sub { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 3px; }
 
@@ -102,29 +91,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 /* FOOTER */
 .footer { margin-top: auto; padding: 16px 24px 28px; border-top: 1px solid var(--border); text-align: center; }
-.footer-logo { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--text); margin-bottom: 4px; }
 .footer-legal { font-size: 10px; color: #bbb; line-height: 1.5; margin-bottom: 10px; }
 .footer-link { font-size: 11px; color: var(--muted); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
-  <div>
-    <div class="logo">Khursilo<span>.</span></div>
-    <div class="logo-city"><div class="city-dot"></div> Vadodara, Gujarat</div>
-  </div>
+  <div class="logo">Khursilo<span>.</span></div>
+  <div class="logo-city"><div class="city-dot"></div> Vadodara, Gujarat</div>
 </div>
 
-<!-- HERO -->
 <div class="hero-text">
   <div class="hero-tag">✦ Seat booking made simple</div>
   <div class="hero-title">Your seat,<br>your <em>choice.</em></div>
   <div class="hero-sub">Book seats for local events — dramas, concerts, functions — directly from the organiser.</div>
 </div>
 
-<!-- UPCOMING EVENTS -->
 <div class="section">
   <div class="section-label">Upcoming events</div>
   <div class="events-list" id="events-list">
@@ -134,16 +117,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 <div class="divider"></div>
 
-<!-- ZERO FEE -->
 <div class="zero-fee">
-  <div class="zf-icon">🎉</div>
+  <div style="font-size:26px;flex-shrink:0;">🎉</div>
   <div>
     <div class="zf-title">Zero convenience fee</div>
     <div class="zf-sub">No hidden charges. Pay only the ticket price — nothing extra.</div>
   </div>
 </div>
 
-<!-- DISCLAIMER -->
 <div class="disclaimer">
   <div style="font-size:15px;flex-shrink:0;margin-top:1px;">ℹ️</div>
   <div class="disclaimer-text">
@@ -152,7 +133,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
-<!-- FOOTER -->
 <div class="footer">
   <div class="footer-legal">Khursilo is a technology platform only. Payments go directly to event organisers. Not liable for events, refunds or cancellations.</div>
   <a class="footer-link" href="mailto:vkvcoder.support@gmail.com">Support</a>
@@ -189,7 +169,6 @@ async function loadEvents() {
       const mon = d.toLocaleDateString('en-IN', { month: 'short' });
       const time = ev.event_time ? ev.event_time.slice(0,5) : '';
       const hall = ev.halls ? ev.halls.name : '';
-
       const card = document.createElement('a');
       card.className = 'event-card';
       card.href = 'booking.html?event=' + ev.id;
@@ -206,7 +185,6 @@ async function loadEvents() {
       `;
       list.appendChild(card);
     });
-
   } catch(e) {
     list.innerHTML = '<div class="events-empty">Could not load events.<br>Please try again shortly.</div>';
   }
