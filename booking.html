@@ -329,6 +329,21 @@ async function loadEvent() {
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('hall-grid').style.display = 'block';
+    // Auto-scale seat grid to fit screen width
+    setTimeout(() => {
+      const grid = document.getElementById('seat-grid');
+      const wrap = document.getElementById('map-wrap');
+      if (grid && wrap) {
+        const gridW = grid.scrollWidth;
+        const wrapW = wrap.clientWidth - 12;
+        if (gridW > wrapW) {
+          const scale = wrapW / gridW;
+          grid.style.transform = `scale(${scale})`;
+          grid.style.transformOrigin = 'top center';
+          grid.style.marginBottom = `-${gridW * (1 - scale)}px`;
+        }
+      }
+    }, 100);
 
   } catch(e) {
     console.error(e);
@@ -417,8 +432,8 @@ function buildSeatMap(layout) {
       // Aisle / gap - render as wide empty space
       if (t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
-        el.style.width = '14px';
-        el.style.minWidth = '14px';
+        el.style.width = 'var(--seat-size)';
+        el.style.minWidth = 'var(--seat-size)';
         el.style.background = 'transparent';
         el.style.border = 'none';
         el.style.pointerEvents = 'none';
