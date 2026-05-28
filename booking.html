@@ -441,14 +441,18 @@ function buildSeatMap(layout) {
       // Normal seat (t === 'seat')
       const secId = cell.secId || '';
       const sec = sections.find(s => s.id === secId || s.name === secId || String(s.id) === String(secId));
-      const colour = sec ? (sec.colour || '#4a90d9') : '#4a90d9';
+      const colour = sec ? (sec.color || sec.colour || '#4a90d9') : '#4a90d9';
       const price = sec ? (parseInt(sec.price) || 0) : 0;
 
       const seatKey = (row.label || '') + '-' + cell.sn;
       const status = seatStatusMap[seatKey] || 'available';
 
       el.className = 'seat ' + status;
-      if (status === 'available') el.style.background = colour;
+      if (status === 'available') {
+        el.style.background = 'transparent';
+        el.style.border = '1.5px solid ' + colour;
+        el.style.color = colour;
+      }
       el.textContent = cell.sn;
       el.dataset.row = row.label || '';
       el.dataset.sn = cell.sn;
