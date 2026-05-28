@@ -414,10 +414,13 @@ function buildSeatMap(layout) {
       const el = document.createElement('div');
       const t = cell.t || '';
 
-      // Aisle / gap
+      // Aisle / gap - render as visible empty space
       if (t === 'aisle' || t === 'gap' || t === 'vgap') {
         el.className = 'seat aisle';
-        el.style.width = '6px';
+        el.style.width = 'var(--seat-size)';
+        el.style.background = 'transparent';
+        el.style.border = 'none';
+        el.style.pointerEvents = 'none';
         seatsDiv.appendChild(el);
         return;
       }
