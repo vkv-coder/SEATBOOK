@@ -13,7 +13,7 @@
   --text:#1a1a1a;--muted:#888;--muted2:#bbb;
   --accent:#c8860a;--green:#2e9e60;--red:#cc3333;--blue:#2b6fd4;
   --radius:12px;--rsm:8px;
-  --seat-size:22px;--seat-gap:3px;
+  --seat-size:18px;--seat-gap:2px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
@@ -361,7 +361,7 @@ function buildSectionTabs() {
     const btn = document.createElement('button');
     btn.className = 'sec-tab';
     btn.dataset.sec = sec.id || sec.name;
-    btn.innerHTML = `<span class="tab-dot" style="background:${sec.colour||'#888'}"></span>${sec.name}${sec.price ? ' ₹'+sec.price : ''}`;
+    btn.innerHTML = `<span class="tab-dot" style="background:${sec.color||sec.colour||'#888'}"></span>${sec.name}${sec.price ? ' ₹'+sec.price : ''}`;
     btn.onclick = () => filterSection(sec.id || sec.name, btn);
     wrap.appendChild(btn);
   });
@@ -449,7 +449,7 @@ function buildSeatMap(layout) {
 
       el.className = 'seat ' + status;
       if (status === 'available') {
-        el.style.background = 'transparent';
+        el.style.background = colour + '22';
         el.style.border = '1.5px solid ' + colour;
         el.style.color = colour;
       }
