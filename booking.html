@@ -41,7 +41,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .leg-sq{width:12px;height:12px;border-radius:2px;}
 
 /* SEAT MAP */
-.map-wrap{flex:1;overflow:auto;padding:10px 6px 120px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
+.map-wrap{flex:1;overflow:auto;padding:10px 6px 20px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 10px 14px;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
@@ -340,7 +340,7 @@ async function loadEvent() {
           hallGrid.style.transformOrigin = 'top left';
           hallGrid.style.width = (gridW) + 'px';
           wrap.style.width = (gridW * scale) + 'px';
-          hallGrid.style.marginBottom = '-' + ((hallGrid.scrollHeight * (1 - scale)) - 20) + 'px';
+          hallGrid.style.marginBottom = '-' + ((hallGrid.scrollHeight * (1 - scale)) - 30) + 'px';
         }
       }
     }, 300);
