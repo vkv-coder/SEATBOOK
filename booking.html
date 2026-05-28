@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khursilo — Book Seats</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,7 +13,7 @@
   --text:#1a1a1a;--muted:#888;--muted2:#bbb;
   --accent:#c8860a;--green:#2e9e60;--red:#cc3333;--blue:#2b6fd4;
   --radius:12px;--rsm:8px;
-  --seat-size:16px;--seat-gap:2px;
+  --seat-size:12px;--seat-gap:1px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
@@ -41,7 +41,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .leg-sq{width:12px;height:12px;border-radius:2px;}
 
 /* SEAT MAP */
-.map-wrap{flex:1;overflow:auto;padding:10px 6px 120px;-webkit-overflow-scrolling:touch;}
+.map-wrap{flex:1;overflow:auto;padding:10px 6px 120px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 10px 14px;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
@@ -58,8 +58,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   border:1.5px solid transparent;
   transition:transform .1s, box-shadow .1s;
   position:relative;
-  margin:1px;
 }
+
 .seat:active{transform:scale(0.9);}
 .seat.available{opacity:1;}
 .seat.selected{
@@ -331,11 +331,12 @@ async function loadEvent() {
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('hall-grid').style.display = 'block';
-   // Auto-scale seat grid to fit screen width
+    // Auto-scale seat grid to fit screen width
     setTimeout(() => {
+      const grid = document.getElementById('seat-grid');
       const hallGrid = document.getElementById('hall-grid');
       const wrap = document.getElementById('map-wrap');
-      if (hallGrid && wrap) {
+      if (grid && wrap) {
         const gridW = hallGrid.scrollWidth;
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
@@ -346,6 +347,7 @@ async function loadEvent() {
         }
       }
     }, 300);
+
   } catch(e) {
     console.error(e);
     document.getElementById('loading-screen').style.display = 'none';
