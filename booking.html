@@ -222,8 +222,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="err-msg" id="err-msg">Could not load event.</div>
   </div>
   <div id="hall-grid" style="display:none;">
-    <div class="stage-bar">◆ STAGE ◆</div>
+  
     <div class="hall-grid" id="seat-grid"></div>
+  <div class="stage-bar" style="margin-top:8px;">◆ STAGE ◆</div>
   </div>
 </div>
 
@@ -410,7 +411,7 @@ function buildSeatMap(layout) {
   // Layout JSON structure: rows array, each row has label and cells array
   // Each cell: {t: type, sn: seat_number, secId: section_id}
   // t values: 'empty'=available seat, 'blocked'=blocked, 'aisle'/'gap'=passage
-  const rows = layout.rows || [];
+  const rows = (layout.rows || []).slice().reverse();
 
   const fragment = document.createDocumentFragment();
   rows.forEach(row => {
