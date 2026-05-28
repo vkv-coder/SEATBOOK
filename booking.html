@@ -361,14 +361,15 @@ async function loadSeatStatus() {
   // Fetch all bookings for this event to know which seats are taken
   const { data: bookings } = await sb
     .from('bookings')
-    .select('seat_key, status')
+    .select('seat_keys, status')
     .eq('event_id', eventId);
 
   seatStatusMap = {};
   (bookings || []).forEach(b => {
-    if (b.status === 'confirmed') seatStatusMap[b.seat_key] = 'booked';
-    else if (b.status === 'held') seatStatusMap[b.seat_key] = 'held';
-  });
+  (b.seat_keys || []).forEach(k => {
+      if (b.status === 'confirmed') seatStatusMap[k] = 'booked';
+      else if (b.status === 'held') seatStatusMap[k] = 'held';
+    });  });
 }
 
 // ── SECTION TABS ─────────────────────────────────────────────────────────
