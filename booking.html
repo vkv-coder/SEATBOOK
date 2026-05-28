@@ -337,12 +337,13 @@ async function loadEvent() {
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
           hallGrid.style.transform = 'scale(' + scale + ')';
-          hallGrid.style.transformOrigin = 'top center';
+          hallGrid.style.transformOrigin = 'top left';
+          hallGrid.style.width = (gridW) + 'px';
+          wrap.style.width = (gridW * scale) + 'px';
           hallGrid.style.marginBottom = '-' + (hallGrid.scrollHeight * (1 - scale)) + 'px';
         }
       }
     }, 300);
-
   } catch(e) {
     console.error(e);
     document.getElementById('loading-screen').style.display = 'none';
