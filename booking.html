@@ -21,6 +21,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 /* TOPBAR */
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;flex-shrink:0;}
 .tlogo{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
+.ttagline{font-size:9px;color:var(--muted);letter-spacing:0.3px;margin-top:1px;}
 .tback{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;}
 
 /* EVENT INFO */
@@ -41,8 +42,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .leg-sq{width:12px;height:12px;border-radius:2px;}
 
 /* SEAT MAP */
-.map-wrap{flex:1;overflow:auto;padding:10px 6px 20px;max-height:calc(100vh - 220px);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
-.stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0;opacity:.7;width:100%;}
+.map-wrap{flex:1;overflow:auto;padding:10px 6px 120px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
+.stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0;opacity:.7;}
+
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
 .row-wrap{display:flex;align-items:center;gap:0;}
 .row-label{font-size:5px;color:var(--muted);width:12px;text-align:center;flex-shrink:0;font-weight:600;}
@@ -188,7 +190,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <!-- TOP BAR -->
 <div class="topbar">
   <button class="tback" onclick="history.back()">←</button>
-  <div class="tlogo">Khursilo.</div>
+  <div style="text-align:center;">
+    <div class="tlogo">Khursilo.</div>
+    <div class="ttagline">खुर्सी आपकी, पसंद आपकी &nbsp;·&nbsp; Khursi aapki, pasand aapki</div>
+  </div>
   <div style="width:32px;"></div>
 </div>
 
@@ -306,7 +311,7 @@ async function loadEvent() {
     const d = new Date(ev.event_date);
     document.getElementById('ev-date').textContent =
       d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
-      + ' · ' + (ev.event_time || '');
+      + ' · ' + (ev.event_time ? ev.event_time.slice(0,5) : '');
 
     const { data: hall, error: hErr } = await sb
       .from('halls').select('*').eq('id', ev.hall_id).single();
@@ -330,21 +335,29 @@ async function loadEvent() {
     setTimeout(() => {
       const hallGrid = document.getElementById('hall-grid');
       const wrap = document.getElementById('map-wrap');
+      const stageBar = document.querySelector('.stage-bar');
       if (hallGrid && wrap) {
-        const gridW = hallGrid.scrollWidth;
+        const seatGrid = document.getElementById('seat-grid');
+        const gridW = seatGrid.scrollWidth;
+        // Set stage bar to match seat grid width
+        if (stageBar) stageBar.style.width = gridW + 'px';
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
           hallGrid.style.transform = 'scale(' + scale + ')';
           hallGrid.style.transformOrigin = 'top left';
-          hallGrid.style.width = (gridW) + 'px';
+          hallGrid.style.width = gridW + 'px';
           wrap.style.width = (gridW * scale) + 'px';
           const scaledH = Math.ceil(hallGrid.scrollHeight * scale);
           hallGrid.style.marginBottom = '-' + (hallGrid.scrollHeight - scaledH) + 'px';
-          wrap.style.height = (scaledH + 80) + 'px';
+          wrap.style.height = (scaledH + 20) + 'px';
+        } else {
+          // No scaling needed — just set wrap height to fit content snugly
+          wrap.style.height = (hallGrid.scrollHeight + 20) + 'px';
         }
       }
     }, 300);
+
   } catch(e) {
     console.error(e);
     document.getElementById('loading-screen').style.display = 'none';
@@ -475,8 +488,8 @@ function buildSeatMap(layout) {
       el.className = 'seat ' + status;
       if (status === 'available') {
         el.style.background = '#fff';
-       el.style.border = '1.5px solid ' + colour;
-el.style.background = colour + '15';        el.style.color = '#1a1a1a';
+        el.style.border = '0.5px solid ' + colour + '66';
+        el.style.color = '#1a1a1a';
       }
       el.textContent = cell.sn;
       el.dataset.row = row.label || '';
