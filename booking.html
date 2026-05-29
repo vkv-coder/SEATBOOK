@@ -20,8 +20,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 /* TOPBAR */
 .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;flex-shrink:0;}
-.tlogo{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
-.ttagline{font-size:9px;color:var(--muted);letter-spacing:0.3px;margin-top:1px;}
+.tlogo{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);text-align:center;margin-bottom:6px;}
+.ttagline-wrap{display:flex;justify-content:center;gap:16px;margin-top:2px;}
+.ttagline-hindi{font-family:'DM Serif Display',serif;font-size:13px;color:var(--text);line-height:1.4;text-align:right;}
+.ttagline-eng{font-family:'DM Serif Display',serif;font-size:13px;color:var(--text);line-height:1.4;text-align:left;}
+.ttagline-eng em{color:var(--accent);font-style:italic;}
 .tback{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;}
 
 /* EVENT INFO */
@@ -42,7 +45,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .leg-sq{width:12px;height:12px;border-radius:2px;}
 
 /* SEAT MAP */
-.map-wrap{flex:1;overflow:auto;padding:10px 6px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
+.map-wrap{flex:0 0 auto;overflow:visible;padding:10px 6px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
@@ -192,7 +195,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <button class="tback" onclick="history.back()">←</button>
   <div style="text-align:center;">
     <div class="tlogo">Khursilo.</div>
-    <div class="ttagline">खुर्सी आपकी, पसंद आपकी &nbsp;·&nbsp; Khursi aapki, pasand aapki</div>
+    <div class="ttagline-wrap">
+      <div class="ttagline-hindi">खुर्सी आपकी<br><span style="color:var(--accent)">पसंद</span> आपकी</div>
+      <div class="ttagline-eng">Your seat,<br>your <em>choice.</em></div>
+    </div>
   </div>
   <div style="width:32px;"></div>
 </div>
