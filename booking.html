@@ -346,7 +346,10 @@ async function loadEvent() {
         const seatGrid = document.getElementById('seat-grid');
         const gridW = seatGrid.scrollWidth;
         // Set stage bar to match seat grid width
-      if (stageBar) stageBar.style.width = seatGrid.scrollWidth + 'px';
+      const rows = document.querySelectorAll('.row-seats');
+       let maxRowW = 0;
+       rows.forEach(r => { if(r.scrollWidth > maxRowW) maxRowW = r.scrollWidth; });
+        if (stageBar) stageBar.style.width = (maxRowW + 10) + 'px';
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
