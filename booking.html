@@ -349,7 +349,11 @@ async function loadEvent() {
         const allRows = document.querySelectorAll('.row-seats');
         let maxRowW = 0;
         allRows.forEach(r => { if(r.scrollWidth > maxRowW) maxRowW = r.scrollWidth; });
-        if (stageBar) stageBar.style.width = (maxRowW + 10) + 'px';
+       if (stageBar) {
+  stageBar.style.width = (maxRowW + 10) + 'px';
+  stageBar.style.marginLeft = 'auto';
+  stageBar.style.marginRight = 'auto';
+}
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
