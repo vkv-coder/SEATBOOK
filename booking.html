@@ -311,7 +311,7 @@ window.addEventListener('DOMContentLoaded', loadEvent);
 async function loadEvent() {
   try {
     const { data: ev, error: evErr } = await sb
-      .from('events').select('*').eq('id', eventId).single();
+      .from('kh_events').select('*').eq('id', eventId).single();
     if (evErr) throw evErr;
     eventData = ev;
 
@@ -322,7 +322,7 @@ async function loadEvent() {
       + ' · ' + (ev.event_time ? ev.event_time.slice(0,5) : '');
 
     const { data: hall, error: hErr } = await sb
-      .from('halls').select('*').eq('id', ev.hall_id).single();
+      .from('kh_halls').select('*').eq('id', ev.hall_id).single();
     if (hErr) throw hErr;
     hallLayout = hall;
     document.getElementById('ev-hall').textContent = hall.name;
@@ -330,7 +330,7 @@ async function loadEvent() {
     // Fetch organiser for Razorpay key
     if (ev.organiser_id) {
       const { data: org } = await sb
-        .from('organisers').select('razorpay_key_id').eq('id', ev.organiser_id).single();
+        .from('kh_organisers').select('razorpay_key_id').eq('id', ev.organiser_id).single();
       organiserData = org;
     }
 
@@ -387,7 +387,7 @@ async function loadEvent() {
 
 async function loadSeatStatus() {
   const { data: bookings } = await sb
-    .from('bookings')
+    .from('kh_bookings')
     .select('seat_keys, status')
     .eq('event_id', eventId);
 
@@ -708,7 +708,7 @@ function closeForm() {
 }
 
 async function handlePaymentSuccess(paymentId, name, mobile, seatKeys, totalAmt) {
-  await sb.from('bookings').update({
+  await sb.from('kh_bookings').update({
     status: 'confirmed',
     payment_status: 'paid',
     razorpay_payment_id: paymentId,
@@ -756,7 +756,7 @@ async function confirmBooking() {
     }
 
     // Save booking as pending first
-    const { data: booking, error } = await sb.from('bookings').insert({
+    const { data: booking, error } = await sb.from('kh_bookings').insert({
       event_id: eventId,
       booker_name: name,
       booker_mobile: mobile,
@@ -809,7 +809,7 @@ async function confirmBooking() {
     window._payPollTimer = setInterval(async () => {
       pollCount++;
       if (pollCount > 60) { clearInterval(window._payPollTimer); return; } // stop after 3 min
-      const { data: bk } = await sb.from('bookings').select('razorpay_payment_id, status').eq('id', bookingId).single();
+      const { data: bk } = await sb.from('kh_bookings').select('razorpay_payment_id, status').eq('id', bookingId).single();
       if (bk && bk.razorpay_payment_id) {
         clearInterval(window._payPollTimer);
         await handlePaymentSuccess(bk.razorpay_payment_id, name, mobile, seatKeys, totalAmt);
@@ -825,7 +825,7 @@ async function confirmBooking() {
 
 async function saveFreeBooking(name, mobile, seatKeys, totalAmt) {
   try {
-    const { data, error } = await sb.from('bookings').insert({
+    const { data, error } = await sb.from('kh_bookings').insert({
       event_id: eventId,
       booker_name: name,
       booker_mobile: mobile,
