@@ -6,6 +6,7 @@
 <title>Khursilo — Book Seats</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
 :root{
   --bg:#f5f5f3;--white:#fff;--s2:#f0eeea;
@@ -46,7 +47,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 /* SEAT MAP */
 .map-wrap{flex:0 0 auto;overflow:visible;padding:10px 6px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
-.stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0 auto;opacity:.7;display:block;}
+.stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 0;border-radius:4px;margin:0;opacity:.7;}
 
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
 .row-wrap{display:flex;align-items:center;gap:0;}
@@ -293,6 +294,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let eventData = null;
 let hallLayout = null;
+let organiserData = null;
 let sections = [];
 let seatStatusMap = {};
 let selectedSeats = [];
@@ -325,6 +327,13 @@ async function loadEvent() {
     hallLayout = hall;
     document.getElementById('ev-hall').textContent = hall.name;
 
+    // Fetch organiser for Razorpay key
+    if (ev.organiser_id) {
+      const { data: org } = await sb
+        .from('organisers').select('razorpay_key_id').eq('id', ev.organiser_id).single();
+      organiserData = org;
+    }
+
     const layout = typeof hall.layout_json === 'string'
       ? JSON.parse(hall.layout_json) : hall.layout_json;
     sections = layout.sections || [];
@@ -349,11 +358,7 @@ async function loadEvent() {
         const allRows = document.querySelectorAll('.row-seats');
         let maxRowW = 0;
         allRows.forEach(r => { if(r.scrollWidth > maxRowW) maxRowW = r.scrollWidth; });
-       if (stageBar) {
-  stageBar.style.width = (maxRowW + 10) + 'px';
-  stageBar.style.marginLeft = 'auto';
-  stageBar.style.marginRight = 'auto';
-}
+        if (stageBar) stageBar.style.width = (maxRowW + 10) + 'px';
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
@@ -710,14 +715,30 @@ async function confirmBooking() {
   if (!/^[0-9]{10}$/.test(mobile)) { alert('Enter a valid 10-digit mobile number'); return; }
 
   const btn = document.querySelector('.confirm-btn');
-  btn.textContent = 'Saving…';
+  btn.textContent = 'Processing…';
   btn.disabled = true;
 
   try {
     const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
     const seatKeys = selectedSeats.map(s => s.seatKey);
 
-    const { data, error } = await sb.from('bookings').insert({
+    // If free event, skip Razorpay
+    if (totalAmt === 0 || eventData.mode === 'free') {
+      await saveFreeBooking(name, mobile, seatKeys, totalAmt);
+      return;
+    }
+
+    // Check Razorpay key
+    const rzpKey = organiserData && organiserData.razorpay_key_id;
+    if (!rzpKey) {
+      alert('Payment gateway not configured. Please contact organiser.');
+      btn.textContent = 'Confirm & Pay →';
+      btn.disabled = false;
+      return;
+    }
+
+    // Save booking as pending first
+    const { data: booking, error } = await sb.from('bookings').insert({
       event_id: eventId,
       booker_name: name,
       booker_mobile: mobile,
@@ -726,6 +747,73 @@ async function confirmBooking() {
       amount: totalAmt,
       payment_status: 'pending',
       status: 'pending_payment',
+      created_at: new Date().toISOString()
+    }).select().single();
+
+    if (error) throw error;
+    bookingId = booking.id;
+
+    // Open Razorpay
+    const options = {
+      key: rzpKey,
+      amount: totalAmt * 100, // paise
+      currency: 'INR',
+      name: eventData.name || 'Khursilo',
+      description: seatKeys.join(', '),
+      prefill: { name: name, contact: mobile },
+      theme: { color: '#1a1a1a' },
+      modal: {
+        ondismiss: function() {
+          btn.textContent = 'Confirm & Pay →';
+          btn.disabled = false;
+        }
+      },
+      handler: async function(response) {
+        // Payment success
+        await sb.from('bookings').update({
+          status: 'confirmed',
+          payment_status: 'paid',
+          razorpay_payment_id: response.razorpay_payment_id,
+        }).eq('id', bookingId);
+
+        selectedSeats.forEach(s => {
+          const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
+          if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
+        });
+
+        clearInterval(holdTimer);
+        document.getElementById('timer-bar').style.display = 'none';
+        closeForm();
+        showSuccess(name, mobile, seatKeys, totalAmt);
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(response) {
+      alert('Payment failed: ' + response.error.description);
+      btn.textContent = 'Confirm & Pay →';
+      btn.disabled = false;
+    });
+    rzp.open();
+
+  } catch(e) {
+    alert('Error: ' + (e.message || 'Unknown error'));
+    btn.textContent = 'Confirm & Pay →';
+    btn.disabled = false;
+  }
+}
+
+async function saveFreeBooking(name, mobile, seatKeys, totalAmt) {
+  try {
+    const { data, error } = await sb.from('bookings').insert({
+      event_id: eventId,
+      booker_name: name,
+      booker_mobile: mobile,
+      seat_keys: seatKeys,
+      seat_count: selectedSeats.length,
+      amount: totalAmt,
+      payment_status: 'free',
+      status: 'confirmed',
       created_at: new Date().toISOString()
     }).select().single();
 
@@ -741,11 +829,10 @@ async function confirmBooking() {
     document.getElementById('timer-bar').style.display = 'none';
     closeForm();
     showSuccess(name, mobile, seatKeys, totalAmt);
-
   } catch(e) {
-    alert('Error saving booking: ' + (e.message || 'Unknown error'));
-    btn.textContent = 'Confirm & Pay →';
-    btn.disabled = false;
+    alert('Error: ' + (e.message || 'Unknown error'));
+    document.querySelector('.confirm-btn').textContent = 'Confirm & Pay →';
+    document.querySelector('.confirm-btn').disabled = false;
   }
 }
 
@@ -756,7 +843,7 @@ function showSuccess(name, mobile, seatKeys, amount) {
     <div class="sd-row"><span>Mobile</span><span>${mobile}</span></div>
     <div class="sd-row"><span>Seats</span><span>${seatKeys.join(', ')}</span></div>
     <div class="sd-row"><span>Amount</span><span>${amount > 0 ? '₹'+amount : 'Free'}</span></div>
-    <div class="sd-row"><span>Status</span><span style="color:var(--accent)">Payment pending</span></div>
+    <div class="sd-row"><span>Status</span><span style="color:var(--green)">✓ Confirmed</span></div>
   `;
   document.getElementById('success-overlay').classList.add('show');
   selectedSeats = [];
