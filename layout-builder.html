@@ -61,7 +61,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;}
 
 /* CANVAS */
-.canvas-outer{flex:1;overflow:auto;padding:10px 6px 180px;-webkit-overflow-scrolling:touch;}
+.canvas-outer{flex:1;overflow:auto;padding:10px 6px 220px;-webkit-overflow-scrolling:touch;}
 .stage-wrap{text-align:center;margin-bottom:10px;}
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
@@ -151,7 +151,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="atool" id="atool" style="display:none;">
     Active: <strong id="atool-name"></strong>
   </div>
-
 </div>
 
 <!-- PAINT TOOLS -->
@@ -198,7 +197,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <button class="ar-btn red" onclick="delLastRow()" style="flex:1;">− Row</button>
     <button class="ar-btn pur" onclick="showModal('modal-gaps')" style="flex:1;">Gaps ↕↔</button>
   </div>
-  <!-- hidden input to capture keyboard in number mode -->
+  <!-- FILL SECTION TOOL - fixes secId=null issue -->
+  <div class="ar-row" style="background:#e8f4ff;border-radius:6px;padding:5px;border:1px solid rgba(43,111,212,0.2);">
+    <span style="font-size:10px;color:#2b6fd4;font-weight:600;flex-shrink:0;">🎨 Fill:</span>
+    <select class="ar-in" id="fill-from" style="width:46px;font-size:11px;padding:4px;">
+      <option value="">From</option>
+    </select>
+    <select class="ar-in" id="fill-to" style="width:46px;font-size:11px;padding:4px;">
+      <option value="">To</option>
+    </select>
+    <button class="ar-btn col" onclick="fillSection()" style="flex:1;font-size:10px;">Fill rows</button>
+    <button class="ar-btn grn" onclick="fillAll()" style="flex:1;font-size:10px;">Fill ALL</button>
+  </div>
   <input id="ghost-input" type="tel" style="position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;">
 </div>
 
@@ -319,7 +329,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
 </div>
 
-<!-- MODAL: Seat number (right-click) -->
+<!-- MODAL: Seat number -->
 <div class="overlay" id="modal-renum" onclick="if(event.target===this)closeModal('modal-renum')">
   <div class="modal">
     <div class="mtitle">Seat action</div>
@@ -358,38 +368,8 @@ const HALL_IDS={sayjirao:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'};
 let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0],numMode=false;
 let painting=false,hallName='',currentHallKey='';
 let history=[];
-let _renumRi=-1,_renumCi=-1; // clicked cell for renumber
-let highlightSecId=null; // section being highlighted
-
-function vanishBlanks(ri){
-  // Make all un-numbered seats in this row empty (invisible)
-  const row=rows[ri];
-  if(!row||row.type!=='row')return;
-  saveHistory();
-  row.cells.forEach(cell=>{
-    if(cell.t==='seat'&&cell.sn==null){
-      cell.t='empty';
-      cell.secId=null;
-    }
-  });
-  render();renderSecs();
-}
-
-function restoreBlanks(ri){
-  // Restore all empty cells in this row back to blank seats
-  const row=rows[ri];
-  if(!row||row.type!=='row')return;
-  saveHistory();
-  // Find original seat count — add back empties as seats
-  row.cells.forEach(cell=>{
-    if(cell.t==='empty'){
-      cell.t='seat';
-      cell.sn=null;
-      cell.secId=null;
-    }
-  });
-  render();renderSecs();
-}
+let _renumRi=-1,_renumCi=-1;
+let highlightSecId=null;
 
 function saveHistory(){
   history.push(JSON.stringify({rows,sections}));
@@ -503,6 +483,47 @@ function paintCell(ri,ci){
   render();renderSecs();
 }
 
+// ── FILL SECTION TOOL (fixes secId=null) ──
+function fillSection(){
+  if(!activeSecId){alert('Select a section first by tapping it above.');return;}
+  const fromLabel=document.getElementById('fill-from').value;
+  const toLabel=document.getElementById('fill-to').value;
+  if(!fromLabel){alert('Select "From" row.');return;}
+  saveHistory();
+  const rowLabels=rows.filter(r=>r.type==='row').map(r=>r.label);
+  const fromIdx=rowLabels.indexOf(fromLabel);
+  const toIdx=toLabel?rowLabels.indexOf(toLabel):fromIdx;
+  const start=Math.min(fromIdx,toIdx);
+  const end=Math.max(fromIdx,toIdx);
+  const validLabels=new Set(rowLabels.slice(start,end+1));
+  let count=0;
+  rows.forEach(row=>{
+    if(row.type!=='row')return;
+    if(!validLabels.has(row.label))return;
+    row.cells.forEach(cell=>{
+      if(cell.t==='seat'){cell.secId=activeSecId;count++;}
+    });
+  });
+  render();renderSecs();
+  alert('✓ Filled '+count+' seats in rows '+fromLabel+(toLabel&&toLabel!==fromLabel?' to '+toLabel:'')+' with active section!');
+}
+
+function fillAll(){
+  if(!activeSecId){alert('Select a section first by tapping it above.');return;}
+  const secName=sections.find(s=>s.id===activeSecId)?.name||'active section';
+  if(!confirm('Assign "'+secName+'" to ALL seats in the layout?'))return;
+  saveHistory();
+  let count=0;
+  rows.forEach(row=>{
+    if(row.type!=='row')return;
+    row.cells.forEach(cell=>{
+      if(cell.t==='seat'){cell.secId=activeSecId;count++;}
+    });
+  });
+  render();renderSecs();
+  alert('✓ Filled '+count+' seats with "'+secName+'"!');
+}
+
 // ── RENDER ──
 function render(){
   const grid=document.getElementById('grid-area');
@@ -560,7 +581,6 @@ function render(){
 
       if(cell.t==='empty'){
         btn.className='seat empty';
-        // Show row label in middle empty cell of passage (run >= 3)
         let rs=ci,re=ci;
         while(rs>0&&rowData.cells[rs-1]&&rowData.cells[rs-1].t==='empty')rs--;
         while(re<rowData.cells.length-1&&rowData.cells[re+1]&&rowData.cells[re+1].t==='empty')re++;
@@ -573,7 +593,6 @@ function render(){
         btn.className='seat blocked';
         btn.textContent='✕';
       } else {
-        // seat — numbered or un-numbered
         const num=cell.sn!=null?cell.sn:'';
         btn.className='seat'+(isHighlighted?' highlight':'');
         if(sec){
@@ -592,31 +611,22 @@ function render(){
       btn.dataset.ri=ri; btn.dataset.ci=ci;
       btn.addEventListener('mousedown',e=>{
         e.preventDefault();
-        if(numMode){
-          // Number mode — click selects seat for numbering
-          selectSeat(ri,ci);
-        } else {
-          // Paint mode — click paints
-          painting=true; paintCell(ri,ci);
-        }
+        if(numMode){selectSeat(ri,ci);}
+        else{painting=true; paintCell(ri,ci);}
       });
       btn.addEventListener('contextmenu',e=>e.preventDefault());
       btn.addEventListener('mouseenter',()=>{if(painting&&!numMode)paintCell(ri,ci);});
       let pt;
       btn.addEventListener('touchstart',e=>{
         e.preventDefault();
-        if(numMode){
-          selectSeat(ri,ci);
-        } else {
-          painting=true; paintCell(ri,ci);
-        }
+        if(numMode){selectSeat(ri,ci);}
+        else{painting=true; paintCell(ri,ci);}
       },{passive:false});
       btn.addEventListener('touchend',()=>{painting=false; clearTimeout(pt);});
       btn.addEventListener('touchmove',()=>clearTimeout(pt));
       rowDiv.appendChild(btn);
     });
 
-    // Section price tags on right
     Object.values(rowSecPrices).forEach(p=>{
       const tag=document.createElement('div');
       tag.className='row-price';
@@ -693,8 +703,6 @@ function renderSecs(){
       <div class="scprice" style="background:${sec.color}18;color:${sec.color};">${sec.price?'₹'+sec.price:'Free'}</div>
       <button class="scdel" onclick="delSec('${sec.id}',event)">✕</button>`;
 
-    // Single click → select for painting
-    // Double click → highlight/un-highlight seats
     card.onclick=(e)=>{
       if(e.target.classList.contains('scdel'))return;
       activeSecId=sec.id;
@@ -706,7 +714,6 @@ function renderSecs(){
     w.appendChild(card);
   });
 
-  // Active tool label
   const atl=document.getElementById('atool');
   const atn=document.getElementById('atool-name');
   const active=sections.find(s=>s.id===activeSecId);
@@ -720,7 +727,6 @@ function renderSecs(){
     atn.style.color=active.color;
   } else {atl.style.display='none';}
 
-  // Stats
   const sw=document.getElementById('st-secs');sw.innerHTML='';
   sections.forEach(sec=>{
     let cnt=0;
@@ -754,9 +760,8 @@ function addRow(){
   const cells=[];
   for(let i=0;i<cnt;i++) cells.push({t:'seat',secId:activeSecId||null,sn:null});
   const newRow={type:'row',label:lbl,cells};
-  if(position==='end'||!refRow){
-    rows.push(newRow);
-  } else {
+  if(position==='end'||!refRow){rows.push(newRow);}
+  else{
     const refIdx=rows.findIndex(r=>r.type==='row'&&r.label===refRow);
     if(refIdx===-1)rows.push(newRow);
     else if(position==='before')rows.splice(refIdx,0,newRow);
@@ -812,10 +817,11 @@ function clearAll(){
 
 // ── Gap tools ──
 function updateSelects(){
-  ['hgap-from','vgap-from-row','vgap-to-row','ar-ref-row'].forEach((id,idx)=>{
+  ['hgap-from','vgap-from-row','vgap-to-row','ar-ref-row','fill-from','fill-to'].forEach((id)=>{
     const sel=document.getElementById(id);if(!sel)return;
     const prev=sel.value;
-    const placeholder=id==='ar-ref-row'?'— row —':id==='hgap-from'?'row':'from';
+    const placeholders={'ar-ref-row':'— row —','hgap-from':'row','fill-from':'From','fill-to':'To'};
+    const placeholder=placeholders[id]||'from';
     sel.innerHTML=`<option value="">${placeholder}</option>`;
     rows.filter(r=>r.type==='row').forEach(r=>{
       const opt=document.createElement('option');
@@ -824,7 +830,6 @@ function updateSelects(){
       sel.appendChild(opt);
     });
   });
-  // vgap-to-row
   const vto=document.getElementById('vgap-to-row');
   if(vto){
     const prev=vto.value;
@@ -847,29 +852,20 @@ function insertVGap(){
   const sz=parseInt(document.getElementById('vgap-size').value)||2;
   if(!fromRow){alert('Select from row.');return;}
   if(isNaN(colNo)||colNo<1){alert('Enter column number.');return;}
-  // Get ordered list of row labels to handle AA,BB,A,B... correctly
   const rowLabels=rows.filter(r=>r.type==='row').map(r=>r.label);
   const fromIdx=rowLabels.indexOf(fromRow);
   const toIdx=toRow?rowLabels.indexOf(toRow):fromIdx;
-  const validLabels=new Set(rowLabels.slice(
-    Math.min(fromIdx,toIdx),
-    Math.max(fromIdx,toIdx)+1
-  ));
+  const validLabels=new Set(rowLabels.slice(Math.min(fromIdx,toIdx),Math.max(fromIdx,toIdx)+1));
   let count=0;
   rows.forEach(row=>{
     if(row.type!=='row')return;
     if(!validLabels.has(row.label))return;
     let insertAt=-1;
-    // Find by seat number (sn) — colNo is the seat number to insert before/after
     for(let i=0;i<row.cells.length;i++){
       const cell=row.cells[i];
       if(cell.t==='vgap'||cell.t==='empty') continue;
-      if(cell.sn===colNo){
-        insertAt = position==='before' ? i : i+1;
-        break;
-      }
+      if(cell.sn===colNo){insertAt=position==='before'?i:i+1;break;}
     }
-    // Fallback: if no sn set, count physical non-empty seats
     if(insertAt===-1){
       let colCount=0;
       for(let i=0;i<row.cells.length;i++){
@@ -897,18 +893,14 @@ function insertHGap(){
 }
 
 // ── KEYBOARD SEAT NUMBERING ──
-// Click seat → highlighted → type number directly into seat cell → Enter/Tab=next · Space=vanish+next · Backspace=undo · Esc=exit
-
 let _selRi=-1, _selCi=-1;
 let _typedDigits='';
 let _lastAction=null;
 
 function selectSeat(ri,ci){
   if(!numMode)return;
-  _selRi=ri;_selCi=ci;
-  _typedDigits='';
+  _selRi=ri;_selCi=ci;_typedDigits='';
   renderHighlight();
-  // Focus ghost input to capture keys on desktop
   const ghost=document.getElementById('ghost-input');
   if(ghost){ghost.value='';ghost.focus();}
 }
@@ -919,10 +911,8 @@ function clearSelection(){
 }
 
 function renderHighlight(){
-  // Remove old highlights
   document.querySelectorAll('.seat.selected').forEach(b=>{
     b.classList.remove('selected');
-    // Restore displayed text from sn or blank
     const ri=parseInt(b.dataset.ri),ci=parseInt(b.dataset.ci);
     if(!isNaN(ri)&&!isNaN(ci)&&rows[ri]&&rows[ri].cells[ci]){
       const sn=rows[ri].cells[ci].sn;
@@ -933,7 +923,6 @@ function renderHighlight(){
   const btn=document.querySelector(`.seat[data-ri="${_selRi}"][data-ci="${_selCi}"]`);
   if(!btn)return;
   btn.classList.add('selected');
-  // Show typed digits or cursor in seat
   btn.textContent=_typedDigits||'_';
 }
 
@@ -944,7 +933,6 @@ function getNextSeat(ri,ci){
       if(row.cells[i].t!=='vgap'&&row.cells[i].t!=='empty')return{ri,ci:i};
       if(row.cells[i].t==='seat')return{ri,ci:i};
     }
-    // Try including empty seats
     for(let i=ci+1;i<row.cells.length;i++){
       if(row.cells[i].t!=='vgap')return{ri,ci:i};
     }
@@ -993,10 +981,7 @@ function skipSeat(){
 }
 
 function undoLastSeat(){
-  if(_typedDigits.length>0){
-    _typedDigits=_typedDigits.slice(0,-1);
-    renderHighlight();return;
-  }
+  if(_typedDigits.length>0){_typedDigits=_typedDigits.slice(0,-1);renderHighlight();return;}
   if(_lastAction){
     const cell=rows[_lastAction.ri].cells[_lastAction.ci];
     cell.sn=_lastAction.prevSn;cell.t=_lastAction.prevT||'seat';
@@ -1008,22 +993,15 @@ function undoLastSeat(){
 
 document.addEventListener('keydown',function(e){
   if(!numMode||_selRi<0)return;
-  if(e.key>='0'&&e.key<='9'){
-    e.preventDefault();_typedDigits+=e.key;renderHighlight();
-  } else if(e.key==='Enter'||e.key==='Tab'){
-    e.preventDefault();commitNum();
-  } else if(e.key===' '){
-    e.preventDefault();
-    if(_typedDigits)commitNum(); else skipSeat();
-  } else if(e.key==='Backspace'){
-    e.preventDefault();undoLastSeat();
-  } else if(e.key==='Escape'){
-    e.preventDefault();clearSelection();setNumMode();
-  }
+  if(e.key>='0'&&e.key<='9'){e.preventDefault();_typedDigits+=e.key;renderHighlight();}
+  else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();commitNum();}
+  else if(e.key===' '){e.preventDefault();if(_typedDigits)commitNum();else skipSeat();}
+  else if(e.key==='Backspace'){e.preventDefault();undoLastSeat();}
+  else if(e.key==='Escape'){e.preventDefault();clearSelection();setNumMode();}
 });
 
-function applySeatNum(){commitNum();}
-function cutSelected(){
+function applyRenum(){commitNum();}
+function cutHere(){
   if(_selRi<0||_selCi<0)return;
   const rowData=rows[_selRi];
   if(!rowData||rowData.type!=='row')return;
@@ -1033,8 +1011,6 @@ function cutSelected(){
   clearSelection();render();renderSecs();
 }
 function openRenum(ri,ci){selectSeat(ri,ci);}
-function applyRenum(){commitNum();}
-function cutHere(){cutSelected();}
 
 // ── Save ──
 function showSave(){
@@ -1077,18 +1053,10 @@ async function doSave(){
   }
 }
 
-function showModal(id){
-  document.getElementById(id).classList.add('show');
-  updateSelects();
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('show');
-  // Reset renum state when modal closes
-  if(id==='modal-renum'){_renumRi=-1;_renumCi=-1;}
-}
+function showModal(id){document.getElementById(id).classList.add('show');updateSelects();}
+function closeModal(id){document.getElementById(id).classList.remove('show');if(id==='modal-renum'){_renumRi=-1;_renumCi=-1;}}
 
 window.addEventListener('DOMContentLoaded',()=>{
-  // Default quick build values for Sayjirao
   document.getElementById('qb-rows').value='AA BB A B C D E F G H I J K L M N O P Q R S T U V W';
   document.getElementById('qb-seats').value='63';
 });
