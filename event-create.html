@@ -677,47 +677,10 @@ function selectMode(mode) {
 }
 
 // ── EXCEL DOWNLOAD ──
-async function downloadTemplate() {
-  // Fetch hall layout from Supabase
-  let layout = hallLayout?.layout_json;
-  if (!layout) {
-    const { data: hall } = await sb.from('kh_halls').select('layout_json').eq('id', HALL_ID).single();
-    layout = hall?.layout_json;
-  }
-  if (typeof layout === 'string') layout = JSON.parse(layout);
-  if (!layout) { alert('Could not load hall layout.'); return; }
-
-  // Build Excel using SheetJS
-  const wb = XLSX.utils.book_new();
-  const wsData = [];
-
-  // Title row
-  wsData.push([layout.hall || 'Sayajirao Nagar Gruha, Akota, Vadodara']);
-  // Stage row (empty cells then STAGE label)
-  wsData.push(['', '', '', '', '', 'S T A G E']);
-  // Passage row
-  wsData.push([]);
-
-  const rows = layout.rows || [];
-  let maxCols = 0;
-
-  rows.forEach(row => {
-    if (row.type === 'hgap') { wsData.push([]); return; }
-    if (row.type !== 'row') return;
-    const rowData = [];
-    row.cells.forEach(cell => {
-      if (cell.t === 'seat' && cell.sn != null) rowData.push(cell.sn);
-      else if (cell.t === 'label') rowData.push(row.label);
-      else rowData.push('');
-    });
-    if (rowData.length > maxCols) maxCols = rowData.length;
-    wsData.push(rowData);
-  });
-
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb, ws, 'Seating Layout');
-  XLSX.writeFile(wb, 'Sayajirao_Hall_Seat_Template.xlsx');
+function downloadTemplate() {
+  window.location.href = 'https://raw.githubusercontent.com/vkv-coder/SEATBOOK/main/Sayajirao_Hall_Seat_Template.xlsx';
 }
+
 
 // ── EXCEL UPLOAD & PARSE ──
 function handleExcelUpload(input) {
