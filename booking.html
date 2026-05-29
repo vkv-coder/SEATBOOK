@@ -238,7 +238,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <div id="hall-grid" style="display:none;">
     <div class="hall-grid" id="seat-grid"></div>
-    <div class="stage-bar" style="margin-top:20px;">◆ STAGE ◆</div>
+    <div class="stage-bar" style="margin-top:8px;">◆ STAGE ◆</div>
   </div>
 </div>
 
@@ -358,7 +358,7 @@ async function loadEvent() {
         const allRows = document.querySelectorAll('.row-seats');
         let maxRowW = 0;
         allRows.forEach(r => { if(r.scrollWidth > maxRowW) maxRowW = r.scrollWidth; });
-       if (stageBar) { stageBar.style.width = (maxRowW + 20) + 'px'; stageBar.style.marginLeft = ((gridW - maxRowW - 20) / 2) + 'px'; }
+        if (stageBar) stageBar.style.width = (maxRowW + 10) + 'px';
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
@@ -707,6 +707,24 @@ function closeForm() {
   document.getElementById('form-overlay').classList.remove('show');
 }
 
+async function handlePaymentSuccess(paymentId, name, mobile, seatKeys, totalAmt) {
+  await sb.from('bookings').update({
+    status: 'confirmed',
+    payment_status: 'paid',
+    razorpay_payment_id: paymentId,
+  }).eq('id', bookingId);
+
+  selectedSeats.forEach(s => {
+    const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
+    if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
+  });
+
+  clearInterval(holdTimer);
+  document.getElementById('timer-bar').style.display = 'none';
+  closeForm();
+  showSuccess(name, mobile, seatKeys, totalAmt);
+}
+
 async function confirmBooking() {
   const name = document.getElementById('inp-name').value.trim();
   const mobile = document.getElementById('inp-mobile').value.trim();
@@ -766,35 +784,37 @@ async function confirmBooking() {
         ondismiss: function() {
           btn.textContent = 'Confirm & Pay →';
           btn.disabled = false;
+          // Stop polling if modal dismissed
+          if (window._payPollTimer) clearInterval(window._payPollTimer);
         }
       },
       handler: async function(response) {
-        // Payment success
-        await sb.from('bookings').update({
-          status: 'confirmed',
-          payment_status: 'paid',
-          razorpay_payment_id: response.razorpay_payment_id,
-        }).eq('id', bookingId);
-
-        selectedSeats.forEach(s => {
-          const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
-          if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
-        });
-
-        clearInterval(holdTimer);
-        document.getElementById('timer-bar').style.display = 'none';
-        closeForm();
-        showSuccess(name, mobile, seatKeys, totalAmt);
+        // Payment success via handler (desktop card/netbanking)
+        if (window._payPollTimer) clearInterval(window._payPollTimer);
+        await handlePaymentSuccess(response.razorpay_payment_id, name, mobile, seatKeys, totalAmt);
       }
     };
 
     const rzp = new Razorpay(options);
     rzp.on('payment.failed', function(response) {
+      if (window._payPollTimer) clearInterval(window._payPollTimer);
       alert('Payment failed: ' + response.error.description);
       btn.textContent = 'Confirm & Pay →';
       btn.disabled = false;
     });
     rzp.open();
+
+    // Poll Supabase every 3s for mobile QR/UPI payment confirmation
+    let pollCount = 0;
+    window._payPollTimer = setInterval(async () => {
+      pollCount++;
+      if (pollCount > 60) { clearInterval(window._payPollTimer); return; } // stop after 3 min
+      const { data: bk } = await sb.from('bookings').select('razorpay_payment_id, status').eq('id', bookingId).single();
+      if (bk && bk.razorpay_payment_id) {
+        clearInterval(window._payPollTimer);
+        await handlePaymentSuccess(bk.razorpay_payment_id, name, mobile, seatKeys, totalAmt);
+      }
+    }, 3000);
 
   } catch(e) {
     alert('Error: ' + (e.message || 'Unknown error'));
