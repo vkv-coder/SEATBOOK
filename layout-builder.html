@@ -394,7 +394,7 @@ async function pickHall(){
   document.getElementById('stage-wrap').style.display='block';
   if(v==='sayjirao'){
     rows=[];sections=[];render();renderSecs();
-    const {data:hall}=await sb.from('halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
+    const {data:hall}=await sb.from('kh_halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
     if(hall&&hall.layout_json&&hall.layout_json.rows?.length>0){
       const ok=confirm('Existing layout found ('+hall.layout_json.rows.filter(r=>r.type==='row').length+' rows). Load it?');
       if(ok){
@@ -1039,7 +1039,7 @@ async function doSave(){
   const hallId=HALL_IDS[currentHallKey];
   const data={hall:hallName,sections,rows,savedAt:new Date().toISOString()};
   if(hallId){
-    const {error}=await sb.from('halls').update({layout_json:data}).eq('id',hallId);
+    const {error}=await sb.from('kh_halls').update({layout_json:data}).eq('id',hallId);
     if(error){alert('Supabase error: '+error.message);return;}
     closeModal('modal-save');
     alert('✓ Layout saved to Supabase!');
