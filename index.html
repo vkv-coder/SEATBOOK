@@ -122,7 +122,7 @@ async function loadEvents() {
   try {
     const today = new Date().toISOString().split('T')[0];
     const { data: events, error } = await sb
-      .from('events')
+      .from('kh_events')
       .select('id, name, event_date, event_time, halls(name)')
       .eq('status', 'live')
       .gte('event_date', today)
