@@ -346,7 +346,7 @@ async function loadEvent() {
         const seatGrid = document.getElementById('seat-grid');
         const gridW = seatGrid.scrollWidth;
         // Set stage bar to match seat grid width
-      if (stageBar) stageBar.style.width = '90%';
+      if (stageBar) stageBar.style.width = seatGrid.scrollWidth + 'px';
         const wrapW = wrap.clientWidth - 4;
         if (gridW > wrapW) {
           const scale = wrapW / gridW;
