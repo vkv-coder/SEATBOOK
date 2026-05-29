@@ -383,10 +383,10 @@ async function loginWithSession(session){
   const email=session.user.email;
   // Try email_1 first, then email_2 as fallback
   let org=null;
-  const {data:org1}=await sb.from('organisers').select('*').ilike('email_1',email).maybeSingle();
+  const {data:org1}=await sb.from('kh_organisers').select('*').ilike('email_1',email).maybeSingle();
   if(org1) org=org1;
   if(!org){
-    const {data:org2}=await sb.from('organisers').select('*').ilike('email_2',email).maybeSingle();
+    const {data:org2}=await sb.from('kh_organisers').select('*').ilike('email_2',email).maybeSingle();
     if(org2) org=org2;
   }
   if(!org){
@@ -456,7 +456,7 @@ async function saveProfile(){
   if(rzpKey) updates.razorpay_key_id=rzpKey;
   if(rzpSecret) updates.razorpay_key_secret=rzpSecret;
 
-  const {error}=await sb.from('organisers').update(updates).eq('id',currentOrganiser.id);
+  const {error}=await sb.from('kh_organisers').update(updates).eq('id',currentOrganiser.id);
 
   btn.textContent='Save & go to dashboard →';
   btn.disabled=false;
