@@ -23,7 +23,7 @@ async function updateLayout() {
   
   // First get existing layout to preserve sections
   const { data: hall, error: fetchErr } = await sb
-    .from('halls')
+    .from('kh_halls')
     .select('layout_json')
     .eq('id', '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a')
     .single();
@@ -39,7 +39,7 @@ async function updateLayout() {
   status.textContent = 'Updating layout (' + NEW_ROWS.length + ' rows, checking seats)...';
   
   const { error: updateErr } = await sb
-    .from('halls')
+    .from('kh_halls')
     .update({ layout_json: updated })
     .eq('id', '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a');
   
