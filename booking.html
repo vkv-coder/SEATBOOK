@@ -346,6 +346,21 @@ async function loadEvent() {
     sections = layout.sections || [];
     console.log('Sections loaded:', JSON.stringify(sections));
 
+    // Build price→colour map from event seat_price_map
+    if (ev.seat_price_map && Object.keys(ev.seat_price_map).length > 0) {
+      const prices = [...new Set(Object.values(ev.seat_price_map))].sort((a,b) => b - a);
+      const COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
+      const NAMES = ['Premium','Gold','Silver','Regular','Economy','Balcony','Gallery','Back'];
+      sections = prices.map((price, idx) => ({
+        id: 'price_' + price,
+        name: NAMES[idx] || ('Zone ' + (idx+1)),
+        color: COLORS[idx % COLORS.length],
+        price: String(price)
+      }));
+      window._seatPriceMap = ev.seat_price_map;
+      console.log('Built sections from seat_price_map:', sections);
+    }
+
     await loadSeatStatus();
 
     buildSectionTabs();
@@ -503,7 +518,17 @@ function buildSeatMap(layout) {
       }
 
       const secId = cell.secId || '';
-      const sec = sections.find(s => s.id === secId || s.name === secId || String(s.id) === String(secId));
+      let sec = sections.find(s => s.id === secId || s.name === secId || String(s.id) === String(secId));
+
+      // If seat_price_map exists, override section lookup with price-based section
+      if (window._seatPriceMap) {
+        const seatKey = (row.label || '') + '-' + cell.sn;
+        const seatPrice = window._seatPriceMap[seatKey];
+        if (seatPrice) {
+          sec = sections.find(s => parseInt(s.price) === seatPrice);
+        }
+      }
+
       const colour = sec ? (sec.color || sec.colour || '#4a90d9') : '#4a90d9';
       const price = sec ? (parseInt(sec.price) || 0) : 0;
 
