@@ -719,27 +719,59 @@ function handleExcelUpload(input) {
         });
       });
 
-      // Parse the uploaded Excel: skip header rows (title, stage, passage)
-      // Find rows that have row labels
-      let seatIdx = 0;
+      // Parse the uploaded Excel using hall layout to map seat positions
+      // Build seat price map: {"AA-1": 500, "AA-2": 500, ...}
+      let seatPriceMap = {};
+      let layout = hallLayout?.layout_json;
+      if (typeof layout === 'string') layout = JSON.parse(layout);
+      const hallRows = layout?.rows?.filter(r => r.type === 'row') || [];
+
+      // Excel data rows start at index 3 (0=title, 1=stage, 2=passage)
+      // Match excel rows to hall rows by position
+      let hallRowIdx = 0;
       for (let ri = 3; ri < data.length; ri++) {
         const rowArr = data[ri];
-        if (!rowArr || rowArr.every(c => c === '')) continue;
+        if (!rowArr || rowArr.every(c => c === '')) {
+          hallRowIdx++; // hgap
+          continue;
+        }
 
-        rowArr.forEach(cell => {
+        // Find corresponding hall row
+        while (hallRowIdx < hallRows.length && hallRows[hallRowIdx].type === 'hgap') hallRowIdx++;
+        if (hallRowIdx >= hallRows.length) break;
+
+        const hallRow = hallRows[hallRowIdx];
+        const rowLabel = hallRow.label;
+        let hallCellIdx = 0;
+
+        rowArr.forEach((cell, excelColIdx) => {
           const val = String(cell).trim().toUpperCase();
-          if (val === '' || val === null) return;
-          // Skip row labels (single/double letters)
-          if (/^[A-Z]{1,2}$/.test(val)) return;
-          // Check if X = blocked
-          if (val === 'X') { blockedCount++; return; }
-          // Check if numeric = price
-          const num = parseInt(val);
-          if (!isNaN(num) && num > 0) {
-            priceMap[num] = (priceMap[num] || 0) + 1;
+          if (val === '' || /^[A-Z]{1,2}$/.test(val)) return;
+
+          // Find next seat in hall row
+          while (hallCellIdx < hallRow.cells.length) {
+            const hc = hallRow.cells[hallCellIdx];
+            hallCellIdx++;
+            if (hc.t === 'seat' && hc.sn != null) {
+              const seatKey = rowLabel + '-' + hc.sn;
+              if (val === 'X') { blockedCount++; }
+              else {
+                const num = parseInt(val);
+                if (!isNaN(num) && num > 0) {
+                  priceMap[num] = (priceMap[num] || 0) + 1;
+                  seatPriceMap[seatKey] = num;
+                }
+              }
+              break;
+            }
           }
         });
+        hallRowIdx++;
       }
+
+      // Store seat price map globally
+      window._seatPriceMap = seatPriceMap;
+      console.log('Seat price map built:', Object.keys(seatPriceMap).length, 'seats');
 
       // Build sections from price groups
       const prices = Object.keys(priceMap).map(Number).sort((a, b) => b - a);
@@ -882,6 +914,7 @@ async function publishEvent() {
       booking_open: bookingOpen.toISOString(),
       booking_close: bookingClose.toISOString(),
       status: 'draft',
+      seat_price_map: window._seatPriceMap || {},
       created_at: new Date().toISOString()
     }).select().single();
 
