@@ -787,106 +787,109 @@ function downloadTicketPDF() {
   if (!ticketData || !qrDataUrl) { alert('Ticket data not ready. Please wait.'); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 105] });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 95] });
 
-  const W = 80, H = 105;
+  const W = 80, H = 95;
 
-  // Background
+  // ── DARK HEADER ──
   doc.setFillColor(26, 26, 26);
-  doc.rect(0, 0, W, 45, 'F');
+  doc.rect(0, 0, W, 38, 'F');
 
-  // Brand
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('Khursilo', 6, 10);
+  doc.text('Khursilo', 6, 8);
 
-  // Event name
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   const eventLines = doc.splitTextToSize(ticketData.eventName, W - 12);
-  doc.text(eventLines, 6, 18);
+  doc.text(eventLines, 6, 15);
 
-  // Date & Hall
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(200, 200, 200);
-  const yMeta = 18 + (eventLines.length * 5);
+  const yMeta = 15 + (eventLines.length * 5);
   doc.text(ticketData.eventDate, 6, yMeta);
   doc.text(ticketData.hallName, 6, yMeta + 4);
 
-  // Dashed divider
+  // ── DASHED DIVIDER ──
   doc.setDrawColor(200, 200, 200);
   doc.setLineDashPattern([1, 1], 0);
-  doc.line(0, 46, W, 46);
+  doc.line(0, 39, W, 39);
   doc.setLineDashPattern([], 0);
 
-  // White body
+  // ── WHITE BODY ──
   doc.setFillColor(255, 255, 255);
-  doc.rect(0, 46, W, H - 46, 'F');
+  doc.rect(0, 39, W, H - 39, 'F');
 
-  // Info rows
+  // Left column info | Right column QR
+  // QR at top-right of body
+  if (qrDataUrl) {
+    doc.addImage(qrDataUrl, 'PNG', W - 34, 42, 28, 28);
+  }
+  // Booking ID below QR
   doc.setTextColor(136, 136, 136);
-  doc.setFontSize(6.5);
+  doc.setFontSize(4.5);
   doc.setFont('helvetica', 'normal');
+  const shortId = ticketData.bookingId.slice(0, 20) + '...';
+  doc.text(shortId, W - 34, 72, { maxWidth: 28 });
 
-  const infoY = 54;
-  doc.text('NAME', 6, infoY);
+  // Left info rows
+  let y = 46;
+
+  doc.setTextColor(136, 136, 136);
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.text('NAME', 6, y);
+  y += 4;
   doc.setTextColor(26, 26, 26);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text(ticketData.bookerName, 6, infoY + 4);
+  doc.text(ticketData.bookerName, 6, y);
+  y += 7;
 
   doc.setTextColor(136, 136, 136);
-  doc.setFontSize(6.5);
+  doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
-  doc.text('SEATS', 6, infoY + 11);
+  doc.text('SEATS', 6, y);
+  y += 4;
   doc.setTextColor(26, 26, 26);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   const seatsText = ticketData.seatKeys.join(', ');
-  const seatLines = doc.splitTextToSize(seatsText, 40);
-  doc.text(seatLines, 6, infoY + 15);
+  const seatLines = doc.splitTextToSize(seatsText, 38);
+  doc.text(seatLines, 6, y);
+  y += (seatLines.length * 4) + 4;
 
-  doc.setTextColor(136, 136, 136);
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text('AMOUNT', 6, infoY + 23);
-  doc.setTextColor(200, 134, 10);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text(ticketData.amount > 0 ? 'Rs ' + ticketData.amount : 'Free', 6, infoY + 28);
-
-  // QR Code
-  if (qrDataUrl) {
-    doc.addImage(qrDataUrl, 'PNG', W - 36, infoY, 30, 30);
-  }
-
-  // Booking ID below QR
-  doc.setTextColor(136, 136, 136);
-  doc.setFontSize(5);
-  doc.setFont('helvetica', 'normal');
-  const shortId = ticketData.bookingId.slice(0, 18) + '...';
-  doc.text(shortId, W - 36, infoY + 33, { maxWidth: 30 });
-
-  // Booked at timestamp
-  doc.setTextColor(136, 136, 136);
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text('BOOKED AT', 6, infoY + 36);
-  doc.setTextColor(26, 26, 26);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text(ticketData.bookedAt, 6, infoY + 40);
-
-  // Footer
-  doc.setFillColor(240, 238, 234);
-  doc.rect(0, H - 18, W, 18, 'F');
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
-  doc.text('Show QR at entry gate · Valid for one entry only', W / 2, H - 10, { align: 'center' });
-  doc.text('khursilo.in', W / 2, H - 5, { align: 'center' });
+  doc.text('AMOUNT', 6, y);
+  y += 4;
+  doc.setTextColor(200, 134, 10);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(ticketData.amount > 0 ? 'Rs ' + ticketData.amount : 'Free', 6, y);
+  y += 7;
+
+  doc.setTextColor(136, 136, 136);
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.text('BOOKED AT', 6, y);
+  y += 4;
+  doc.setTextColor(26, 26, 26);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text(ticketData.bookedAt, 6, y);
+
+  // ── FOOTER ──
+  doc.setFillColor(240, 238, 234);
+  doc.rect(0, H - 12, W, 12, 'F');
+  doc.setTextColor(136, 136, 136);
+  doc.setFontSize(5.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Show QR at entry gate · Valid for one entry only', W / 2, H - 7, { align: 'center' });
+  doc.text('khursilo.in', W / 2, H - 3, { align: 'center' });
 
   // Download
   const filename = 'Khursilo_Ticket_' + ticketData.seatKeys.join('_') + '.pdf';
