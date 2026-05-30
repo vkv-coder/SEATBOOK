@@ -21,6 +21,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
 
+/* ── LOGIN ── */
 .login-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; }
 .login-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 4px; }
 .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
@@ -33,25 +34,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .btn-primary { width: 100%; padding: 13px; background: var(--text); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; }
 .btn-primary:active { opacity: 0.85; }
 
+/* ── TOPBAR ── */
 .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
 .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 20px; }
 .topbar-user { display: flex; align-items: center; gap: 8px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(200,134,10,0.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--accent); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dim); border: 1px solid rgba(200,134,10,0.3); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
 .logout-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
+/* ── DASH BODY ── */
 .dash-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 
+/* ── LOADING / EMPTY ── */
+.loading-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 40px 20px; text-align: center; }
+.loading-spinner { width: 28px; height: 28px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--muted); }
+.empty-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 40px 20px; text-align: center; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.empty-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--muted); }
+
+/* ── EVENT CARD ── */
 .event-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
 .event-card-header { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); padding: 16px; color: #fff; }
 .event-card-tag { font-size: 10px; letter-spacing: 1px; opacity: 0.6; margin-bottom: 6px; text-transform: uppercase; }
-.event-card-name { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 10px; }
+.event-card-name { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 10px; line-height: 1.2; }
 .event-card-meta { display: flex; flex-direction: column; gap: 4px; }
 .event-meta-row { font-size: 12px; opacity: 0.8; display: flex; align-items: center; gap: 6px; }
 .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
 .status-pill.live { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,158,96,0.2); }
+.status-pill.closed { background: var(--red-dim); color: var(--red); border: 1px solid rgba(204,51,51,0.2); }
+.status-pill.upcoming { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(43,111,212,0.2); }
+.status-pill.draft { background: rgba(0,0,0,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
 .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
+/* ── OCCUPANCY ── */
 .occupancy-row { display: flex; align-items: center; gap: 16px; padding: 16px; border-bottom: 1px solid var(--border); }
 .donut-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
 .donut-wrap svg { transform: rotate(-90deg); }
@@ -64,38 +82,46 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .occ-dot { width: 8px; height: 8px; border-radius: 2px; }
 .occ-stat-val { font-size: 13px; font-weight: 500; color: var(--text); }
 
+/* ── QUICK ACTIONS ── */
 .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .qa-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; font-family: 'DM Sans', sans-serif; }
 .qa-icon { font-size: 20px; }
 .qa-label { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-.section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 8px; }
-.section-hdr-title { font-size: 13px; font-weight: 500; }
-.section-hdr-action { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
-
-.bookings-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-.booking-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: center; gap: 10px; }
-.booking-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue-dim); border: 1px solid rgba(43,111,212,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
-.booking-info { flex: 1; min-width: 0; }
-.booking-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.booking-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.booking-right { text-align: right; flex-shrink: 0; }
-.booking-amount { font-size: 13px; font-weight: 500; color: var(--text); }
-.booking-status { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 10px; margin-top: 3px; display: inline-block; }
-.bs-confirmed { background: var(--green-dim); color: var(--green); }
-.bs-pending { background: var(--accent-dim); color: var(--accent); }
-.bs-failed { background: var(--red-dim); color: var(--red); }
-
+/* ── REVENUE ── */
 .revenue-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
 .revenue-title { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
 .revenue-amount { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin-bottom: 12px; }
 .revenue-bars { display: flex; flex-direction: column; gap: 8px; }
 .rev-bar-row { display: flex; align-items: center; gap: 8px; }
-.rev-bar-label { font-size: 11px; color: var(--muted); width: 60px; flex-shrink: 0; }
+.rev-bar-label { font-size: 11px; color: var(--muted); width: 60px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev-bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-.rev-bar-fill { height: 100%; border-radius: 3px; }
-.rev-bar-val { font-size: 11px; color: var(--text); font-weight: 500; width: 40px; text-align: right; flex-shrink: 0; }
+.rev-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.rev-bar-val { font-size: 11px; color: var(--text); font-weight: 500; width: 50px; text-align: right; flex-shrink: 0; }
 
+/* ── BOOKINGS ── */
+.section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 8px; }
+.section-hdr-title { font-size: 13px; font-weight: 500; }
+.section-hdr-action { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+.filter-tabs { display: flex; gap: 6px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
+.filter-tabs::-webkit-scrollbar { display: none; }
+.ftab { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--muted); white-space: nowrap; font-family: 'DM Sans', sans-serif; }
+.ftab.active { background: var(--text); color: #fff; border-color: var(--text); }
+.bookings-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.booking-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; display: flex; align-items: center; gap: 10px; }
+.booking-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--blue-dim); border: 1px solid rgba(43,111,212,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
+.booking-info { flex: 1; min-width: 0; }
+.booking-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booking-detail { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booking-right { text-align: right; flex-shrink: 0; }
+.booking-amount { font-size: 13px; font-weight: 500; color: var(--text); }
+.booking-status { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 10px; margin-top: 3px; display: inline-block; }
+.bs-confirmed { background: var(--green-dim); color: var(--green); }
+.bs-pending,.bs-pending_payment { background: var(--accent-dim); color: var(--accent); }
+.bs-failed,.bs-cancelled { background: var(--red-dim); color: var(--red); }
+.bookings-loading { text-align:center; padding: 20px; color: var(--muted); font-size: 13px; }
+
+/* ── GATE ── */
 .gate-screen { flex: 1; display: flex; flex-direction: column; background: #0f0f0f; color: #fff; }
 .gate-top { padding: 48px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .gate-back { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-bottom: 16px; display: flex; align-items: center; gap: 4px; }
@@ -112,8 +138,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 @keyframes scan { 0%{top:20px;} 100%{top:190px;} }
 .scanner-icon { font-size: 40px; opacity: 0.3; }
 .scanner-hint { font-size: 13px; color: rgba(255,255,255,0.5); text-align: center; }
-.manual-entry { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; text-align: center; letter-spacing: 2px; }
-.manual-entry::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; }
+.manual-entry { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; text-align: center; }
+.manual-entry::placeholder { color: rgba(255,255,255,0.3); }
 .gate-check-btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
 .gate-result { width: 100%; border-radius: var(--radius); padding: 16px; text-align: center; display: none; }
 .gate-result.show { display: block; }
@@ -122,7 +148,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .gate-result-icon { font-size: 36px; margin-bottom: 8px; }
 .gate-result-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .gate-result-detail { font-size: 13px; opacity: 0.7; }
+.gate-event-select { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-sm); padding: 10px 14px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+.gate-event-select option { background: #1a1a1a; }
 
+/* ── PROFILE ── */
 .profile-screen { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 .profile-hero { background: linear-gradient(135deg,#1a1a1a 0%,#333 100%); border-radius: var(--radius); padding: 20px; color: #fff; text-align: center; }
 .profile-hero-icon { font-size: 48px; margin-bottom: 8px; }
@@ -133,17 +162,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .profile-save-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 4px; }
 .profile-save-btn:active { opacity: 0.85; }
 .profile-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.filter-tabs { display: flex; gap: 6px; padding: 0 16px 8px; overflow-x: auto; scrollbar-width: none; }
-.filter-tabs::-webkit-scrollbar { display: none; }
-.ftab { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--muted); white-space: nowrap; }
-.ftab.active { background: var(--text); color: #fff; border-color: var(--text); }
-
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
 .field-group { margin-bottom: 12px; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a1a; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── HALL NAME ── */
+.hall-name { font-size: 12px; opacity: 0.75; }
 </style>
 </head>
 <body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
@@ -235,61 +268,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
-  <div class="dash-body">
-    <div class="event-card">
-      <div class="event-card-header">
-        <div class="event-card-tag">Active event</div>
-        <div class="event-card-name">Garba Night 2025</div>
-        <div class="event-card-meta">
-          <div class="event-meta-row">📅 2 October 2025 · 7:00 PM</div>
-          <div class="event-meta-row">📍 Sayaji Hall, Vadodara</div>
-          <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
-            <span class="status-pill live"><span class="pulse"></span> Booking open</span>
-            <span style="font-size:11px;opacity:0.6;">Closes in 3 days</span>
-          </div>
-        </div>
-      </div>
-      <div class="occupancy-row">
-        <div class="donut-wrap">
-          <svg width="80" height="80" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="30" fill="none" stroke="#f0eeea" stroke-width="10"/>
-            <circle cx="40" cy="40" r="30" fill="none" stroke="#c8860a" stroke-width="10" stroke-dasharray="113 188" stroke-linecap="round"/>
-          </svg>
-          <div class="donut-center"><div class="donut-pct">60%</div><div class="donut-lbl">filled</div></div>
-        </div>
-        <div class="occ-stats">
-          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Confirmed</div><div class="occ-stat-val">51</div></div>
-          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div><div class="occ-stat-val">7</div></div>
-          <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div><div class="occ-stat-val">27</div></div>
-          <div class="occ-stat-row"><div class="occ-stat-label" style="font-weight:500;color:var(--text);">Total seats</div><div class="occ-stat-val">85</div></div>
-        </div>
-      </div>
-      <div class="quick-actions">
-        <button class="qa-btn" onclick="showScreen('screen-gate')"><div class="qa-icon">📷</div><div class="qa-label">Gate check-in</div></button>
-        <button class="qa-btn" onclick="downloadCSV()"><div class="qa-icon">📥</div><div class="qa-label">Download CSV</div></button>
-        <button class="qa-btn" onclick="shareLink()"><div class="qa-icon">🔗</div><div class="qa-label">Share booking link</div></button>
-        <button class="qa-btn" onclick="closeBooking()"><div class="qa-icon">🔒</div><div class="qa-label">Close booking</div></button>
-      </div>
-      <div style="padding:0 16px 16px;">
-        <div class="revenue-card">
-          <div class="revenue-title">Total revenue</div>
-          <div class="revenue-amount">₹16,400</div>
-          <div class="revenue-bars">
-            <div class="rev-bar-row"><div class="rev-bar-label">Premium</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:70%;background:var(--accent);"></div></div><div class="rev-bar-val">₹8,800</div></div>
-            <div class="rev-bar-row"><div class="rev-bar-label">Regular</div><div class="rev-bar-track"><div class="rev-bar-fill" style="width:50%;background:var(--blue);"></div></div><div class="rev-bar-val">₹7,600</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="event-card">
-      <div class="section-hdr"><div class="section-hdr-title">All bookings <span style="color:var(--muted);font-weight:400;">(58)</span></div><button class="section-hdr-action" onclick="downloadCSV()">Export ↓</button></div>
-      <div class="filter-tabs">
-        <button class="ftab active" onclick="filterBookings('all',this)">All</button>
-        <button class="ftab" onclick="filterBookings('confirmed',this)">Confirmed</button>
-        <button class="ftab" onclick="filterBookings('pending',this)">Pending</button>
-        <button class="ftab" onclick="filterBookings('failed',this)">Failed</button>
-      </div>
-      <div class="bookings-list" id="bookings-list"></div>
+  <div class="dash-body" id="dash-body">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading your events…</div>
     </div>
   </div>
 </div>
@@ -300,9 +282,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="gate-top">
       <button class="gate-back" onclick="showScreen('screen-dashboard')">← Back to dashboard</button>
       <div class="gate-title">Gate check-in</div>
-      <div class="gate-sub">Garba Night 2025 · Sayaji Hall</div>
+      <div class="gate-sub" id="gate-event-label">Select event below</div>
     </div>
     <div class="scanner-wrap">
+      <select class="gate-event-select" id="gate-event-select" onchange="onGateEventChange()">
+        <option value="">— Select event —</option>
+      </select>
       <div class="scanner-box">
         <div class="scanner-corner sc-tl"></div><div class="scanner-corner sc-tr"></div>
         <div class="scanner-corner sc-bl"></div><div class="scanner-corner sc-br"></div>
@@ -310,7 +295,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div class="scanner-icon">📷</div>
       </div>
       <div class="scanner-hint">Point camera at guest's QR ticket<br>or enter booking ID below</div>
-      <input class="manual-entry" placeholder="Enter booking ID  e.g. BKG-2025-12345" id="gate-input" type="text">
+      <input class="manual-entry" placeholder="Paste booking ID (UUID)" id="gate-input" type="text">
       <button class="gate-check-btn" onclick="checkIn()">Check In Guest →</button>
       <div class="gate-result" id="gate-result">
         <div class="gate-result-icon" id="gate-icon"></div>
@@ -322,193 +307,488 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 </div>
 
 <script>
-const BOOKINGS=[
-  {id:'BKG-2025-10234',name:'Rajesh Mehta',phone:'98765 43210',seats:'A4, A5',type:'premium',amount:800,status:'confirmed',time:'2h ago'},
-  {id:'BKG-2025-10235',name:'Priya Shah',phone:'87654 32109',seats:'C3',type:'regular',amount:200,status:'confirmed',time:'2h ago'},
-  {id:'BKG-2025-10236',name:'Amit Patel',phone:'76543 21098',seats:'B6, B7',type:'premium',amount:800,status:'pending',time:'1h ago'},
-  {id:'BKG-2025-10237',name:'Sunita Desai',phone:'65432 10987',seats:'E2, E3',type:'regular',amount:400,status:'confirmed',time:'45m ago'},
-  {id:'BKG-2025-10238',name:'Kiran Joshi',phone:'54321 09876',seats:'D8',type:'regular',amount:200,status:'failed',time:'30m ago'},
-  {id:'BKG-2025-10239',name:'Meena Trivedi',phone:'43210 98765',seats:'A8, A9',type:'premium',amount:800,status:'confirmed',time:'20m ago'},
-];
+// ── CONFIG ──
+const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const BOOKING_BASE = 'https://khursilo.in/booking.html?event=';
 
-function renderBookings(filter){
-  const list=document.getElementById('bookings-list');list.innerHTML='';
-  const filtered=filter==='all'?BOOKINGS:BOOKINGS.filter(b=>b.status===filter);
-  filtered.forEach(b=>{
-    const initial=b.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    const statusClass={confirmed:'bs-confirmed',pending:'bs-pending',failed:'bs-failed'}[b.status];
-    const statusLabel={confirmed:'✓ Confirmed',pending:'⏳ Pending',failed:'✗ Failed'}[b.status];
-    const el=document.createElement('div');el.className='booking-item';
-    el.innerHTML=`<div class="booking-avatar">${initial}</div>
-      <div class="booking-info"><div class="booking-name">${b.name}</div><div class="booking-detail">${b.seats} · ${b.type==='premium'?'Premium':'Regular'} · ${b.time}</div></div>
-      <div class="booking-right"><div class="booking-amount">₹${b.amount.toLocaleString('en-IN')}</div><div class="booking-status ${statusClass}">${statusLabel}</div></div>`;
-    list.appendChild(el);
-  });
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentOrganiser = null;
+let allEvents = [];        // [{event, bookings}]
+let hallCache = {};        // hall_id → hall name
+
+// ── UTILS ──
+function fmt(n){ return Number(n||0).toLocaleString('en-IN'); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtTime(t){ if(!t) return ''; try{ const [h,m]=t.split(':'); const hr=parseInt(h); const ampm=hr>=12?'PM':'AM'; return ((hr%12)||12)+':'+m+' '+ampm; }catch(e){return t;} }
+function timeAgo(ts){ if(!ts) return ''; const diff=(Date.now()-new Date(ts))/1000; if(diff<60) return 'just now'; if(diff<3600) return Math.floor(diff/60)+'m ago'; if(diff<86400) return Math.floor(diff/3600)+'h ago'; return Math.floor(diff/86400)+'d ago'; }
+function initials(name){ return (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+function statusLabel(s){ const m={confirmed:'✓ Confirmed',pending:'⏳ Pending',pending_payment:'⏳ Pending',failed:'✗ Failed',cancelled:'✗ Cancelled'}; return m[s]||s; }
+function statusClass(s){ if(s==='confirmed') return 'bs-confirmed'; if(s==='failed'||s==='cancelled') return 'bs-failed'; return 'bs-pending'; }
+
+function showToast(msg, duration=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
 }
 
-function filterBookings(filter,btn){
-  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  renderBookings(filter);
-}
-
-// ── Supabase ──
-const sb=window.supabase.createClient(
-  'https://jqqnnkzozjskziaizajg.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
-);
-
-let currentOrganiser=null;
-
-// ── Auto-login from magic link ──
-window.addEventListener('load',async()=>{
-  const hash=window.location.hash;
-  if(hash&&hash.includes('access_token')){
-    const {data:{session},error}=await sb.auth.getSession();
-    if(session&&session.user){
-      await loginWithSession(session);
-    } else {
-      setTimeout(async()=>{
-        const {data:{session:s2}}=await sb.auth.getSession();
-        if(s2) await loginWithSession(s2);
-      },1000);
-    }
-    return;
+// ── AUTH ──
+window.addEventListener('load', async()=>{
+  const hash = window.location.hash;
+  if(hash && hash.includes('access_token')){
+    await new Promise(r=>setTimeout(r,500));
   }
-  const {data:{session}}=await sb.auth.getSession();
-  if(session&&session.user) await loginWithSession(session);
+  const {data:{session}} = await sb.auth.getSession();
+  if(session && session.user) await loginWithSession(session);
 });
 
 async function loginWithSession(session){
-  const email=session.user.email;
-  // Try email_1 first, then email_2 as fallback
-  let org=null;
-  const {data:org1}=await sb.from('kh_organisers').select('*').ilike('email_1',email).maybeSingle();
-  if(org1) org=org1;
-  if(!org){
-    const {data:org2}=await sb.from('kh_organisers').select('*').ilike('email_2',email).maybeSingle();
-    if(org2) org=org2;
-  }
-  if(!org){
-    await sb.auth.signOut();
-    showScreen('screen-login');
-    showErr('email-err','Email '+email+' not registered with Khursilo. Contact admin.');
-    return;
-  }
-  if(org.status.toLowerCase()!=='active'){
-    await sb.auth.signOut();
-    showScreen('screen-login');
-    showErr('email-err','Account is '+org.status+'. Contact admin.');
-    return;
-  }
-  currentOrganiser=org;
+  const email = session.user.email;
+  let org = null;
+  const {data:o1} = await sb.from('kh_organisers').select('*').ilike('email_1',email).maybeSingle();
+  if(o1) org=o1;
+  if(!org){ const {data:o2}=await sb.from('kh_organisers').select('*').ilike('email_2',email).maybeSingle(); if(o2) org=o2; }
+  if(!org){ await sb.auth.signOut(); showErr('email-err','Email '+email+' not registered.'); return; }
+  if((org.status||'').toLowerCase()!=='active'){ await sb.auth.signOut(); showErr('email-err','Account is '+org.status+'. Contact admin.'); return; }
+  currentOrganiser = org;
   history.replaceState(null,'',window.location.pathname);
   setAvatar(org.name||org.email_1);
-  // If contact_1_name is null → profile incomplete → show profile screen
   if(!org.contact_1_name){
-    document.getElementById('prof-org-name').value=org.name||'';
-    document.getElementById('prof-contact-name').value=org.contact_1_name||'';
-    document.getElementById('prof-mobile').value=org.contact_1_mobile||'';
-    document.getElementById('prof-rzp-key').value=org.razorpay_key_id||'';
+    document.getElementById('prof-org-name').value = org.name||'';
+    document.getElementById('prof-contact-name').value = org.contact_1_name||'';
+    document.getElementById('prof-mobile').value = org.contact_1_mobile||'';
+    document.getElementById('prof-rzp-key').value = org.razorpay_key_id||'';
     showScreen('screen-profile');
   } else {
     showScreen('screen-dashboard');
-    renderBookings('all');
+    loadDashboard();
   }
 }
 
 function setAvatar(name){
-  const initials=(name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('user-avatar').textContent=initials;
+  document.getElementById('user-avatar').textContent = initials(name);
 }
 
-// ── saveProfile — THE MISSING FUNCTION ──
-async function saveProfile(){
-  const orgName=document.getElementById('prof-org-name').value.trim();
-  const contactName=document.getElementById('prof-contact-name').value.trim();
-  const mobile=document.getElementById('prof-mobile').value.trim();
-  const rzpKey=document.getElementById('prof-rzp-key').value.trim();
-  const rzpSecret=document.getElementById('prof-rzp-secret').value.trim();
+// ── LOAD DASHBOARD ──
+async function loadDashboard(){
+  const body = document.getElementById('dash-body');
+  body.innerHTML = '<div class="loading-card"><div class="loading-spinner"></div><div class="loading-text">Loading your events…</div></div>';
 
-  const errEl=document.getElementById('profile-err');
-  errEl.style.display='none';
+  // 1. Fetch all events for this organiser
+  const {data:events, error:evErr} = await sb.from('kh_events')
+    .select('*')
+    .eq('organiser_id', currentOrganiser.id)
+    .order('event_date', {ascending: true});
 
-  if(!orgName){errEl.textContent='Organisation name is required.';errEl.style.display='block';return;}
-  if(!contactName){errEl.textContent='Contact person name is required.';errEl.style.display='block';return;}
-  if(!mobile||mobile.length<10){errEl.textContent='Enter a valid 10-digit mobile number.';errEl.style.display='block';return;}
-
-  if(!currentOrganiser){
-    errEl.textContent='Session expired. Please login again.';
-    errEl.style.display='block';
-    setTimeout(()=>logout(),2000);
+  if(evErr || !events){
+    body.innerHTML = '<div class="empty-card"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load events</div><div class="empty-sub">'+( evErr?.message||'Unknown error')+'</div></div>';
     return;
   }
 
-  const btn=document.getElementById('profile-save-btn');
-  btn.textContent='Saving...';
-  btn.disabled=true;
+  if(events.length === 0){
+    body.innerHTML = '<div class="empty-card"><div class="empty-icon">📭</div><div class="empty-title">No events yet</div><div class="empty-sub">Contact admin to create your first event.</div></div>';
+    return;
+  }
 
-  const updates={
-    name: orgName,
-    contact_1_name: contactName,
-    contact_1_mobile: mobile,
-  };
+  // 2. Fetch hall names for unique hall_ids
+  const hallIds = [...new Set(events.map(e=>e.hall_id).filter(Boolean))];
+  if(hallIds.length){
+    const {data:halls} = await sb.from('kh_halls').select('id,name').in('id', hallIds);
+    (halls||[]).forEach(h=>{ hallCache[h.id]=h.name; });
+  }
+
+  // 3. Fetch all bookings for all these events in one query
+  const eventIds = events.map(e=>e.id);
+  const {data:allBookings} = await sb.from('kh_bookings')
+    .select('*')
+    .in('event_id', eventIds)
+    .order('created_at', {ascending: false});
+
+  // 4. Group bookings by event_id
+  const bookingsByEvent = {};
+  eventIds.forEach(id=>{ bookingsByEvent[id]=[]; });
+  (allBookings||[]).forEach(b=>{ if(bookingsByEvent[b.event_id]) bookingsByEvent[b.event_id].push(b); });
+
+  // 5. Build allEvents array & populate gate select
+  allEvents = events.map(e=>({ event:e, bookings: bookingsByEvent[e.id]||[] }));
+  populateGateSelect(events);
+
+  // 6. Render cards
+  body.innerHTML = '';
+  allEvents.forEach(({event,bookings}) => {
+    body.appendChild(buildEventCard(event, bookings));
+  });
+}
+
+// ── BUILD EVENT CARD ──
+function buildEventCard(event, bookings){
+  const wrapper = document.createElement('div');
+
+  // Stats
+  const confirmed = bookings.filter(b=> b.payment_status==='confirmed' || b.status==='confirmed').length;
+  const pending   = bookings.filter(b=> ['pending','pending_payment'].includes(b.payment_status||b.status)).length;
+  const failed    = bookings.filter(b=> ['failed','cancelled'].includes(b.payment_status||b.status)).length;
+  const total     = bookings.length;
+
+  // Total seats from seat_price_map
+  let totalSeats = 0;
+  let priceBuckets = []; // [{label, price, confirmedAmt, pct}]
+  if(event.seat_price_map){
+    try{
+      const spm = typeof event.seat_price_map==='string' ? JSON.parse(event.seat_price_map) : event.seat_price_map;
+      Object.entries(spm).forEach(([zone, info])=>{
+        const count = info.count || info.seats || 0;
+        const price = info.price || 0;
+        totalSeats += count;
+        priceBuckets.push({label: zone, price, count});
+      });
+    }catch(e){}
+  }
+
+  // Revenue — sum amount where payment confirmed
+  const confirmedBookings = bookings.filter(b=> b.payment_status==='confirmed' || b.status==='confirmed');
+  const totalRevenue = confirmedBookings.reduce((s,b)=> s + Number(b.amount||0), 0);
+
+  // Revenue by zone (match seat_keys prefix to zone)
+  priceBuckets = priceBuckets.map(z=>{
+    const zoneConfirmed = confirmedBookings.filter(b=>{
+      const keys = b.seat_keys || [];
+      return keys.some(k=> k.toUpperCase().startsWith(z.label.toUpperCase()));
+    });
+    const amt = zoneConfirmed.reduce((s,b)=>s+Number(b.amount||0),0);
+    return {...z, confirmedAmt: amt};
+  });
+
+  const bookedSeats = confirmed; // proxy: confirmed bookings
+  const pct = totalSeats > 0 ? Math.round((bookedSeats/totalSeats)*100) : (total>0?100:0);
+
+  // Donut math (circumference of r=30 → 188.5)
+  const CIRC = 188.5;
+  const filled = Math.round((pct/100)*CIRC);
+
+  // Status pill
+  const now = new Date();
+  const closeTime = event.booking_close ? new Date(event.booking_close) : null;
+  let pillHtml = '';
+  if(event.status==='active' && closeTime && closeTime > now){
+    const daysLeft = Math.ceil((closeTime-now)/(1000*60*60*24));
+    pillHtml = `<span class="status-pill live"><span class="pulse"></span> Booking open</span><span style="font-size:11px;opacity:0.6;">Closes in ${daysLeft}d</span>`;
+  } else if(event.status==='closed' || (closeTime && closeTime <= now)){
+    pillHtml = `<span class="status-pill closed">🔒 Booking closed</span>`;
+  } else if(event.status==='draft'){
+    pillHtml = `<span class="status-pill draft">📝 Draft</span>`;
+  } else {
+    pillHtml = `<span class="status-pill upcoming">🗓 Upcoming</span>`;
+  }
+
+  const hallName = hallCache[event.hall_id] || '';
+
+  // Revenue bars HTML
+  let revBarsHtml = '';
+  const maxAmt = Math.max(...priceBuckets.map(z=>z.confirmedAmt), 1);
+  if(priceBuckets.length > 0){
+    const barColors = ['var(--accent)','var(--blue)','var(--green)','#9b59b6','#e67e22'];
+    revBarsHtml = priceBuckets.map((z,i)=>`
+      <div class="rev-bar-row">
+        <div class="rev-bar-label">${z.label}</div>
+        <div class="rev-bar-track"><div class="rev-bar-fill" style="width:${Math.round((z.confirmedAmt/maxAmt)*100)}%;background:${barColors[i%barColors.length]};"></div></div>
+        <div class="rev-bar-val">₹${fmt(z.confirmedAmt)}</div>
+      </div>`).join('');
+  }
+
+  const eid = event.id;
+
+  wrapper.innerHTML = `
+  <div class="event-card">
+    <div class="event-card-header">
+      <div class="event-card-tag">Event</div>
+      <div class="event-card-name">${event.name||'Untitled Event'}</div>
+      <div class="event-card-meta">
+        <div class="event-meta-row">📅 ${fmtDate(event.event_date)} ${event.event_time?'· '+fmtTime(event.event_time):''}</div>
+        ${hallName?`<div class="event-meta-row">📍 <span class="hall-name">${hallName}</span></div>`:''}
+        <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">${pillHtml}</div>
+      </div>
+    </div>
+
+    <div class="occupancy-row">
+      <div class="donut-wrap">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#f0eeea" stroke-width="10"/>
+          <circle cx="40" cy="40" r="30" fill="none" stroke="#c8860a" stroke-width="10" stroke-dasharray="${filled} ${CIRC}" stroke-linecap="round"/>
+        </svg>
+        <div class="donut-center"><div class="donut-pct">${pct}%</div><div class="donut-lbl">filled</div></div>
+      </div>
+      <div class="occ-stats">
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Confirmed</div><div class="occ-stat-val">${confirmed}</div></div>
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div><div class="occ-stat-val">${pending}</div></div>
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div><div class="occ-stat-val">${totalSeats>0?Math.max(0,totalSeats-confirmed):'—'}</div></div>
+        <div class="occ-stat-row"><div class="occ-stat-label" style="font-weight:500;color:var(--text);">Total bookings</div><div class="occ-stat-val">${total}</div></div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="qa-btn" onclick="openGate('${eid}')"><div class="qa-icon">📷</div><div class="qa-label">Gate check-in</div></button>
+      <button class="qa-btn" onclick="downloadCSV('${eid}')"><div class="qa-icon">📥</div><div class="qa-label">Download CSV</div></button>
+      <button class="qa-btn" onclick="shareLink('${eid}')"><div class="qa-icon">🔗</div><div class="qa-label">Share booking link</div></button>
+      <button class="qa-btn" onclick="toggleBooking('${eid}',this)"><div class="qa-icon">${event.status==='active'?'🔒':'🔓'}</div><div class="qa-label">${event.status==='active'?'Close booking':'Open booking'}</div></button>
+    </div>
+
+    <div style="padding:0 16px 16px;">
+      <div class="revenue-card">
+        <div class="revenue-title">Total revenue (confirmed)</div>
+        <div class="revenue-amount">₹${fmt(totalRevenue)}</div>
+        ${revBarsHtml ? `<div class="revenue-bars">${revBarsHtml}</div>` : '<div style="font-size:12px;color:var(--muted);">No zone breakdown available</div>'}
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div class="section-hdr">
+        <div class="section-hdr-title">All bookings <span style="color:var(--muted);font-weight:400;">(${total})</span></div>
+        <button class="section-hdr-action" onclick="downloadCSV('${eid}')">Export ↓</button>
+      </div>
+      <div class="filter-tabs">
+        <button class="ftab active" onclick="filterBookings('${eid}','all',this)">All</button>
+        <button class="ftab" onclick="filterBookings('${eid}','confirmed',this)">Confirmed</button>
+        <button class="ftab" onclick="filterBookings('${eid}','pending',this)">Pending</button>
+        <button class="ftab" onclick="filterBookings('${eid}','failed',this)">Failed</button>
+      </div>
+      <div class="bookings-list" id="blist-${eid}"></div>
+    </div>
+  </div>`;
+
+  // Render bookings list
+  renderBookingsList(eid, bookings, 'all');
+  return wrapper;
+}
+
+// ── RENDER BOOKINGS LIST ──
+function renderBookingsList(eid, bookings, filter){
+  const list = document.getElementById('blist-'+eid);
+  if(!list) return;
+  list.innerHTML = '';
+
+  let filtered = bookings;
+  if(filter === 'confirmed') filtered = bookings.filter(b=> b.payment_status==='confirmed'||b.status==='confirmed');
+  else if(filter === 'pending')  filtered = bookings.filter(b=> ['pending','pending_payment'].includes(b.payment_status||b.status));
+  else if(filter === 'failed')   filtered = bookings.filter(b=> ['failed','cancelled'].includes(b.payment_status||b.status));
+
+  if(filtered.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">No bookings in this filter</div>';
+    return;
+  }
+
+  filtered.forEach(b=>{
+    const name   = b.booker_name || b.customer_name || 'Unknown';
+    const mobile = b.booker_mobile || b.customer_mobile || '—';
+    const seats  = (b.seat_keys||[]).join(', ') || '—';
+    const sc     = b.seat_count || (b.seat_keys||[]).length || 1;
+    const bStatus = b.payment_status || b.status || 'pending';
+    const ago    = timeAgo(b.created_at);
+
+    const el = document.createElement('div');
+    el.className = 'booking-item';
+    el.innerHTML = `
+      <div class="booking-avatar">${initials(name)}</div>
+      <div class="booking-info">
+        <div class="booking-name">${name}</div>
+        <div class="booking-detail">${seats} · ${sc} seat${sc>1?'s':''} · ${ago}</div>
+      </div>
+      <div class="booking-right">
+        <div class="booking-amount">₹${fmt(b.amount)}</div>
+        <div class="booking-status ${statusClass(bStatus)}">${statusLabel(bStatus)}</div>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+function filterBookings(eid, filter, btn){
+  const tabs = btn.closest('.filter-tabs');
+  tabs.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const ev = allEvents.find(e=>e.event.id===eid);
+  if(ev) renderBookingsList(eid, ev.bookings, filter);
+}
+
+// ── GATE CHECK-IN ──
+function populateGateSelect(events){
+  const sel = document.getElementById('gate-event-select');
+  sel.innerHTML = '<option value="">— Select event —</option>';
+  events.forEach(e=>{
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.name + (e.event_date?' ('+fmtDate(e.event_date)+')':'');
+    sel.appendChild(opt);
+  });
+}
+
+function openGate(eid){
+  document.getElementById('gate-event-select').value = eid;
+  onGateEventChange();
+  showScreen('screen-gate');
+}
+
+function onGateEventChange(){
+  const eid = document.getElementById('gate-event-select').value;
+  const ev = allEvents.find(e=>e.event.id===eid);
+  const lbl = document.getElementById('gate-event-label');
+  if(ev){ lbl.textContent = ev.event.name + (ev.event.event_date?' · '+fmtDate(ev.event.event_date):''); }
+  else { lbl.textContent = 'Select event below'; }
+  document.getElementById('gate-result').className = 'gate-result';
+  document.getElementById('gate-input').value = '';
+}
+
+async function checkIn(){
+  const val   = document.getElementById('gate-input').value.trim();
+  const eid   = document.getElementById('gate-event-select').value;
+  const result= document.getElementById('gate-result');
+
+  if(!eid){ showToast('Please select an event first'); return; }
+  if(!val){ showToast('Enter a booking ID'); return; }
+
+  result.className = 'gate-result';
+
+  // Query Supabase for this booking ID under the selected event
+  const {data:bk, error} = await sb.from('kh_bookings')
+    .select('*')
+    .eq('id', val)
+    .eq('event_id', eid)
+    .maybeSingle();
+
+  if(error || !bk){
+    result.className = 'gate-result show fail';
+    document.getElementById('gate-icon').textContent = '❌';
+    document.getElementById('gate-title').textContent = 'Ticket not found';
+    document.getElementById('gate-detail').textContent = 'No booking matches this ID for the selected event.';
+  } else {
+    const name = bk.booker_name || bk.customer_name || 'Guest';
+    const seats = (bk.seat_keys||[]).join(', ') || '—';
+    const bStatus = bk.payment_status || bk.status || '';
+    if(bStatus === 'confirmed'){
+      result.className = 'gate-result show success';
+      document.getElementById('gate-icon').textContent = '✅';
+      document.getElementById('gate-title').textContent = 'Valid ticket — ' + name;
+      document.getElementById('gate-detail').textContent = 'Seats: ' + seats + ' · Entry allowed';
+    } else {
+      result.className = 'gate-result show fail';
+      document.getElementById('gate-icon').textContent = '⚠️';
+      document.getElementById('gate-title').textContent = name + ' — Payment ' + bStatus;
+      document.getElementById('gate-detail').textContent = 'Seats: ' + seats + ' · Payment not confirmed';
+    }
+  }
+  setTimeout(()=>{
+    result.className = 'gate-result';
+    document.getElementById('gate-input').value = '';
+  }, 5000);
+}
+
+// ── SHARE ──
+function shareLink(eid){
+  const url = BOOKING_BASE + eid + '&v=3';
+  if(navigator.share){ navigator.share({title:'Book seats',url}); }
+  else { navigator.clipboard.writeText(url).then(()=>showToast('Booking link copied!')); }
+}
+
+// ── CSV EXPORT ──
+function downloadCSV(eid){
+  const ev = allEvents.find(e=>e.event.id===eid);
+  if(!ev){ showToast('Event not found'); return; }
+  const {event, bookings} = ev;
+  const headers = ['Booking ID','Name','Mobile','Seats','Seat Count','Amount (₹)','Payment Status','Booked At'];
+  const rows = bookings.map(b=>[
+    b.id,
+    b.booker_name||b.customer_name||'',
+    b.booker_mobile||b.customer_mobile||'',
+    (b.seat_keys||[]).join(' | '),
+    b.seat_count||(b.seat_keys||[]).length||'',
+    b.amount||0,
+    b.payment_status||b.status||'',
+    b.created_at?new Date(b.created_at).toLocaleString('en-IN'):''
+  ]);
+  const csv = [headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (event.name||'bookings').replace(/\s+/g,'_')+'_bookings.csv';
+  a.click();
+  showToast('CSV downloaded');
+}
+
+// ── TOGGLE BOOKING STATUS ──
+async function toggleBooking(eid, btn){
+  const ev = allEvents.find(e=>e.event.id===eid);
+  if(!ev) return;
+  const currentStatus = ev.event.status;
+  const newStatus = currentStatus==='active' ? 'closed' : 'active';
+  if(!confirm(`${newStatus==='closed'?'Close':'Open'} booking for "${ev.event.name}"?`)) return;
+  const {error} = await sb.from('kh_events').update({status:newStatus}).eq('id',eid);
+  if(error){ showToast('Error: '+error.message); return; }
+  ev.event.status = newStatus;
+  showToast('Booking '+newStatus);
+  // Refresh dashboard
+  loadDashboard();
+}
+
+// ── PROFILE ──
+async function saveProfile(){
+  const orgName     = document.getElementById('prof-org-name').value.trim();
+  const contactName = document.getElementById('prof-contact-name').value.trim();
+  const mobile      = document.getElementById('prof-mobile').value.trim();
+  const rzpKey      = document.getElementById('prof-rzp-key').value.trim();
+  const rzpSecret   = document.getElementById('prof-rzp-secret').value.trim();
+  const errEl       = document.getElementById('profile-err');
+  errEl.style.display = 'none';
+  if(!orgName){ errEl.textContent='Organisation name is required.'; errEl.style.display='block'; return; }
+  if(!contactName){ errEl.textContent='Contact person name is required.'; errEl.style.display='block'; return; }
+  if(!mobile||mobile.length<10){ errEl.textContent='Enter a valid 10-digit mobile number.'; errEl.style.display='block'; return; }
+  if(!currentOrganiser){ errEl.textContent='Session expired. Please login again.'; errEl.style.display='block'; setTimeout(()=>logout(),2000); return; }
+  const btn = document.getElementById('profile-save-btn');
+  btn.textContent='Saving…'; btn.disabled=true;
+  const updates = { name:orgName, contact_1_name:contactName, contact_1_mobile:mobile };
   if(rzpKey) updates.razorpay_key_id=rzpKey;
   if(rzpSecret) updates.razorpay_key_secret=rzpSecret;
-
-  const {error}=await sb.from('kh_organisers').update(updates).eq('id',currentOrganiser.id);
-
-  btn.textContent='Save & go to dashboard →';
-  btn.disabled=false;
-
-  if(error){
-    errEl.textContent='Save failed: '+error.message;
-    errEl.style.display='block';
-    return;
-  }
-
-  // Update local organiser object
-  currentOrganiser={...currentOrganiser,...updates};
+  const {error} = await sb.from('kh_organisers').update(updates).eq('id',currentOrganiser.id);
+  btn.textContent='Save & go to dashboard →'; btn.disabled=false;
+  if(error){ errEl.textContent='Save failed: '+error.message; errEl.style.display='block'; return; }
+  currentOrganiser = {...currentOrganiser,...updates};
   setAvatar(orgName);
   showScreen('screen-dashboard');
-  renderBookings('all');
+  loadDashboard();
 }
 
-// ── Login ──
+// ── LOGIN ──
 async function sendOTP(){
-  const email=document.getElementById('inp-email').value.trim();
-  const errEl=document.getElementById('email-err');
-  const btn=document.getElementById('send-otp-btn');
+  const email = document.getElementById('inp-email').value.trim();
+  const errEl = document.getElementById('email-err');
+  const btn   = document.getElementById('send-otp-btn');
   errEl.style.display='none';
-  if(!email||!email.includes('@')){showErr('email-err','Enter a valid email address.');return;}
-  btn.textContent='Sending link...';btn.disabled=true;
-  const {error}=await sb.auth.signInWithOtp({
+  if(!email||!email.includes('@')){ showErr('email-err','Enter a valid email address.'); return; }
+  btn.textContent='Sending link…'; btn.disabled=true;
+  const {error} = await sb.auth.signInWithOtp({
     email,
-    options:{shouldCreateUser:false,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}
+    options:{shouldCreateUser:false, emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}
   });
   if(error){
-    btn.textContent='Send login link →';btn.disabled=false;
-    if(error.message.includes('Signups not allowed')){
-      errEl.innerHTML='Email not registered.<br>Contact: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>';
-    } else {
-      errEl.textContent='Error: '+error.message;
-    }
+    btn.textContent='Send login link →'; btn.disabled=false;
+    errEl.innerHTML = error.message.includes('Signups not allowed')
+      ? 'Email not registered.<br>Contact: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--accent);">vkvcoder.support@gmail.com</a>'
+      : 'Error: '+error.message;
     errEl.style.display='block';
     return;
   }
-  btn.textContent='✓ Link sent!';btn.style.background='#2e9e60';
+  btn.textContent='✓ Link sent!'; btn.style.background='#2e9e60';
   setTimeout(()=>{
     document.getElementById('otp-sent-to').textContent='Login link sent to '+email;
     document.getElementById('card-email').style.display='none';
     document.getElementById('card-otp').style.display='block';
-    btn.textContent='Send login link →';btn.style.background='';btn.disabled=false;
+    btn.textContent='Send login link →'; btn.style.background=''; btn.disabled=false;
   },1500);
 }
 
 async function resendOTP(){
-  const email=document.getElementById('inp-email').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
   await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}});
-  alert('Login link resent to '+email);
+  showToast('Login link resent to '+email);
 }
 
 function goBackToEmail(){
@@ -518,58 +798,22 @@ function goBackToEmail(){
 
 async function logout(){
   await sb.auth.signOut();
-  currentOrganiser=null;
+  currentOrganiser=null; allEvents=[];
   showScreen('screen-login');
   document.getElementById('card-email').style.display='block';
   document.getElementById('card-otp').style.display='none';
   document.getElementById('inp-email').value='';
 }
 
-// ── Gate ──
-function checkIn(){
-  const val=document.getElementById('gate-input').value.trim().toUpperCase();
-  const result=document.getElementById('gate-result');
-  const found=BOOKINGS.find(b=>b.id===val);
-  result.className='gate-result show '+(found?'success':'fail');
-  if(found){
-    document.getElementById('gate-icon').textContent='✅';
-    document.getElementById('gate-title').textContent='Valid ticket — '+found.name;
-    document.getElementById('gate-detail').textContent='Seats: '+found.seats+' · Entry allowed';
-  } else {
-    document.getElementById('gate-icon').textContent='❌';
-    document.getElementById('gate-title').textContent='Invalid ticket';
-    document.getElementById('gate-detail').textContent='Booking ID not found.';
-  }
-  setTimeout(()=>{result.className='gate-result';document.getElementById('gate-input').value='';},4000);
-}
-
-function downloadCSV(){
-  const headers=['Booking ID','Name','Phone','Seats','Type','Amount','Status','Time'];
-  const rowsData=BOOKINGS.map(b=>[b.id,b.name,b.phone,b.seats,b.type,b.amount,b.status,b.time]);
-  const csv=[headers,...rowsData].map(r=>r.join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bookings.csv';a.click();
-}
-
-function shareLink(){
-  const url='https://khursilo.in/';
-  if(navigator.share){navigator.share({title:'Book seats',url});}
-  else{navigator.clipboard.writeText(url);alert('Booking link copied!');}
-}
-
-function closeBooking(){
-  if(confirm('Close booking for this event?')){alert('Booking closed.');}
-}
-
+// ── UTILS ──
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
-
 function showErr(id,msg){
   const el=document.getElementById(id);
-  if(el){el.textContent=msg;el.style.display='block';}
+  if(el){el.innerHTML=msg;el.style.display='block';}
 }
 </script>
 </body>
