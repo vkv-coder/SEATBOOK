@@ -787,9 +787,9 @@ function downloadTicketPDF() {
   if (!ticketData || !qrDataUrl) { alert('Ticket data not ready. Please wait.'); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 140] });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 105] });
 
-  const W = 80, H = 140;
+  const W = 80, H = 105;
 
   // Background
   doc.setFillColor(26, 26, 26);
@@ -855,7 +855,7 @@ function downloadTicketPDF() {
   doc.setTextColor(200, 134, 10);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text(ticketData.amount > 0 ? 'Rs.' + ticketData.amount : 'Free', 6, infoY + 28);
+  doc.text(ticketData.amount > 0 ? 'Rs ' + ticketData.amount : 'Free', 6, infoY + 28);
 
   // QR Code
   if (qrDataUrl) {
@@ -868,6 +868,16 @@ function downloadTicketPDF() {
   doc.setFont('helvetica', 'normal');
   const shortId = ticketData.bookingId.slice(0, 18) + '...';
   doc.text(shortId, W - 36, infoY + 33, { maxWidth: 30 });
+
+  // Booked at timestamp
+  doc.setTextColor(136, 136, 136);
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('BOOKED AT', 6, infoY + 36);
+  doc.setTextColor(26, 26, 26);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text(ticketData.bookedAt, 6, infoY + 40);
 
   // Footer
   doc.setFillColor(240, 238, 234);
@@ -924,6 +934,9 @@ async function showSuccess(name, mobile, seatKeys, amount) {
   document.getElementById('success-overlay').classList.add('show');
 
   // Store ticket data for PDF
+  const now = new Date();
+  const bookedAt = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+    + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
   ticketData = {
     bookingId: bookingId || '',
     eventName,
@@ -932,7 +945,8 @@ async function showSuccess(name, mobile, seatKeys, amount) {
     bookerName: name,
     bookerMobile: mobile,
     seatKeys,
-    amount
+    amount,
+    bookedAt
   };
 
   // Generate QR
