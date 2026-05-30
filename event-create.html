@@ -476,7 +476,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div id="chk-details" style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Event details filled</div>
         <div id="chk-pricing" style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Seat pricing configured</div>
         <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Booking window selected</div>
-        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--accent);">⏳</span> Platform fee payment pending</div>
+        
       </div>
     </div>
   </div>
@@ -631,9 +631,17 @@ function startCreateEvent() {
 
 function goStep(n) {
   if (n === 2) { if (!validateStep1()) return; showStep2(); }
-  else if (n === 3) { if (!validateStep2()) return; }
+  else if (n === 3) { if (!validateStep2()) return; updateWindowSummary(); }
   else if (n === 4) { buildPreview(); }
   if (n <= 4) showScreen('s' + n);
+}
+
+function updateWindowSummary() {
+  const openDate = document.getElementById('booking-open-date').value;
+  const closeDate = document.getElementById('booking-close-date').value;
+  const fmt = (d) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  document.getElementById('sum-open').textContent = fmt(openDate);
+  document.getElementById('sum-close').textContent = fmt(closeDate);
 }
 
 function validateStep1() {
@@ -888,7 +896,7 @@ async function publishEvent() {
         color: sec.color,
         price: sec.price,
         mode: eventMode === 'free' ? 'free' : 'paid',
-        created_at: now.toISOString()
+        created_at: new Date().toISOString()
       }));
       if (sectionsToInsert.length > 0) {
         const { error: secErr } = await sb.from('kh_sections').insert(sectionsToInsert);
