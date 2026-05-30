@@ -524,8 +524,19 @@ function buildSeatMap(layout) {
       if (window._seatPriceMap) {
         const seatKey = (row.label || '') + '-' + cell.sn;
         const seatPrice = window._seatPriceMap[seatKey];
+        if (seatPrice === 'X') {
+          // Blocked seat — treat as blocked
+          el.className = 'seat blocked';
+          seatEls.push({ el, isSeat: false });
+          return;
+        }
         if (seatPrice) {
           sec = sections.find(s => parseInt(s.price) === seatPrice);
+        } else {
+          // Seat not in price map — treat as blocked
+          el.className = 'seat blocked';
+          seatEls.push({ el, isSeat: false });
+          return;
         }
       }
 
