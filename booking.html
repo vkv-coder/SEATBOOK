@@ -351,7 +351,7 @@ async function loadEvent() {
       const prices = [...new Set(Object.values(ev.seat_price_map))].sort((a,b) => b - a);
       const COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
       const NAMES = ['Premium','Gold','Silver','Regular','Economy','Balcony','Gallery','Back'];
-      sections = prices.map((price, idx) => ({
+      sections = prices.filter(p => p !== 'X' && typeof p === 'number').map((price, idx) => ({
         id: 'price_' + price,
         name: NAMES[idx] || ('Zone ' + (idx+1)),
         color: COLORS[idx % COLORS.length],
@@ -543,7 +543,8 @@ function buildSeatMap(layout) {
       const colour = sec ? (sec.color || sec.colour || '#4a90d9') : '#4a90d9';
       const price = sec ? (parseInt(sec.price) || 0) : 0;
 
-      const status = seatStatusMap[seatKey] || 'available';
+      const seatKeyForStatus = (row.label || '') + '-' + cell.sn;
+      const status = seatStatusMap[seatKeyForStatus] || 'available';
 
       el.className = 'seat ' + status;
       if (status === 'available') {
@@ -558,7 +559,7 @@ function buildSeatMap(layout) {
       el.dataset.sec = String(secId);
       el.dataset.price = price;
       el.dataset.colour = colour;
-      el.dataset.key = seatKey;
+      el.dataset.key = seatKeyForStatus;
 
       if (status === 'available') {
         el.addEventListener('click', () => toggleSeat(el));
