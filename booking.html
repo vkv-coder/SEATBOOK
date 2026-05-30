@@ -60,7 +60,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   font-size:2px;font-weight:600;color:#1a1a1a;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;flex-shrink:0;
-  border:1.5px solid transparent;
+  border:1px solid transparent;
   transition:transform .1s, box-shadow .1s;
   position:relative;
   background:#fff;
@@ -549,8 +549,8 @@ function buildSeatMap(layout) {
       el.className = 'seat ' + status;
       if (status === 'available') {
         el.style.background = '#fff';
-        el.style.border = '1.5px solid ' + colour + 'cc';
-        el.style.background = colour + '15';
+        el.style.border = '1px solid ' + colour + '99';
+        el.style.background = colour + '22';
         el.style.color = '#1a1a1a';
       }
       el.textContent = cell.sn;
@@ -602,7 +602,7 @@ function toggleSeat(el) {
     }
     el.classList.remove('selected');
     el.style.background = '#fff';
-    el.style.border = '1.5px solid ' + el.dataset.colour;
+    el.style.border = '1px solid ' + el.dataset.colour + '99';
     el.style.color = '#1a1a1a';
     selectedSeats.splice(idx, 1);
     updateBottomBar();
@@ -719,7 +719,7 @@ function releaseHold() {
       el.classList.remove('selected');
       el.classList.add('available');
       el.style.background = '#fff';
-      el.style.border = '1.5px solid ' + s.colour;
+      el.style.border = '1px solid ' + s.colour + '99';
       el.style.color = '#1a1a1a';
     }
   });
