@@ -543,7 +543,6 @@ function buildSeatMap(layout) {
       const colour = sec ? (sec.color || sec.colour || '#4a90d9') : '#4a90d9';
       const price = sec ? (parseInt(sec.price) || 0) : 0;
 
-      const seatKey = (row.label || '') + '-' + cell.sn;
       const status = seatStatusMap[seatKey] || 'available';
 
       el.className = 'seat ' + status;
