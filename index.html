@@ -121,9 +121,11 @@ async function loadEvents() {
   const list = document.getElementById('events-list');
   try {
     const today = new Date().toISOString().split('T')[0];
+
+    // Step 1: fetch events
     const { data: events, error } = await sb
       .from('kh_events')
-      .select('id, name, event_date, event_time, halls(name)')
+      .select('id, name, event_date, event_time, hall_id')
       .eq('status', 'live')
       .gte('event_date', today)
       .order('event_date', { ascending: true })
@@ -136,16 +138,25 @@ async function loadEvents() {
       return;
     }
 
+    // Step 2: fetch hall names for unique hall_ids
+    const hallIds = [...new Set(events.map(e => e.hall_id).filter(Boolean))];
+    const hallMap = {};
+    if (hallIds.length) {
+      const { data: halls } = await sb.from('kh_halls').select('id, name').in('id', hallIds);
+      (halls || []).forEach(h => { hallMap[h.id] = h.name; });
+    }
+
+    // Step 3: render
     list.innerHTML = '';
     events.forEach(ev => {
       const d = new Date(ev.event_date + 'T00:00:00');
       const day = d.getDate();
       const mon = d.toLocaleDateString('en-IN', { month: 'short' });
       const time = ev.event_time ? ev.event_time.slice(0,5) : '';
-      const hall = ev.halls ? ev.halls.name : '';
+      const hall = hallMap[ev.hall_id] || '';
       const card = document.createElement('a');
       card.className = 'event-card';
-      card.href = 'booking.html?event=' + ev.id;
+      card.href = 'booking.html?event=' + ev.id + '&v=3';
       card.innerHTML = `
         <div class="event-date-box">
           <div class="edb-day">${day}</div>
@@ -160,6 +171,7 @@ async function loadEvents() {
       list.appendChild(card);
     });
   } catch(e) {
+    console.error('loadEvents error:', e);
     list.innerHTML = '<div class="events-empty">Could not load events.<br>Please try again shortly.</div>';
   }
 }
