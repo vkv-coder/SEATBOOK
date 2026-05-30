@@ -499,17 +499,49 @@ function buildEventCard(event, bookings){
 
   const hallName = hallCache[event.hall_id] || '';
 
-  // Revenue bars HTML
+  // Revenue tier table HTML
   let revBarsHtml = '';
-  const maxAmt = Math.max(...priceBuckets.map(z=>z.confirmedAmt), 1);
   if(priceBuckets.length > 0){
-    const barColors = ['var(--accent)','var(--blue)','var(--green)','#9b59b6','#e67e22'];
-    revBarsHtml = priceBuckets.map((z,i)=>`
-      <div class="rev-bar-row">
-        <div class="rev-bar-label">${z.label}</div>
-        <div class="rev-bar-track"><div class="rev-bar-fill" style="width:${Math.round((z.confirmedAmt/maxAmt)*100)}%;background:${barColors[i%barColors.length]};"></div></div>
-        <div class="rev-bar-val">₹${fmt(z.confirmedAmt)}</div>
-      </div>`).join('');
+    const tierColors = ['#c8860a','#2b6fd4','#2e9e60','#9b59b6','#e67e22','#e74c3c','#1abc9c'];
+    revBarsHtml = priceBuckets.map((z,i)=>{
+      const potential = z.count * z.price;
+      const bookedCount = confirmedBookings.reduce((s,b)=>{
+        return s + (b.seat_keys||[]).filter(k=> Number(seatPriceMap[k])===z.price).length;
+      },0);
+      const fillPct = z.count > 0 ? Math.round((bookedCount/z.count)*100) : 0;
+      const color = tierColors[i % tierColors.length];
+      return `
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0;"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--text);">₹${fmt(z.price)} tier</span>
+          </div>
+          <span style="font-size:11px;color:var(--muted);">${fillPct}% filled</span>
+        </div>
+        <div class="rev-bar-track" style="margin-bottom:8px;">
+          <div class="rev-bar-fill" style="width:${fillPct}%;background:${color};"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;">
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Total seats</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);">${z.count}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Booked</div>
+            <div style="font-size:13px;font-weight:600;color:${color};">${bookedCount}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Potential</div>
+            <div style="font-size:12px;font-weight:500;color:var(--text);">₹${fmt(potential)}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Collected</div>
+            <div style="font-size:12px;font-weight:600;color:var(--green);">₹${fmt(z.confirmedAmt)}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   const eid = event.id;
@@ -553,7 +585,7 @@ function buildEventCard(event, bookings){
       <div class="revenue-card">
         <div class="revenue-title">Total revenue (confirmed)</div>
         <div class="revenue-amount">₹${fmt(totalRevenue)}</div>
-        ${revBarsHtml ? `<div class="revenue-bars">${revBarsHtml}</div>` : '<div style="font-size:12px;color:var(--muted);">No zone breakdown available</div>'}
+        ${revBarsHtml || '<div style="font-size:12px;color:var(--muted);">No price tier data available</div>'}
       </div>
     </div>
 
