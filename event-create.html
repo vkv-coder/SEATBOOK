@@ -752,11 +752,15 @@ function handleExcelUpload(input) {
 
           if (v === 'X') {
             blockedCount++;
+            seatPriceMap[seatKey] = 'X'; // mark as blocked
           } else {
             const num = parseInt(v);
             if (!isNaN(num) && num > 0) {
               priceMap[num] = (priceMap[num] || 0) + 1;
               seatPriceMap[seatKey] = num;
+            } else {
+              // unrecognised value — skip seat index back (don't consume seat)
+              seatIdx--;
             }
           }
         }
