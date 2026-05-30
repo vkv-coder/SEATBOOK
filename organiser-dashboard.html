@@ -431,17 +431,15 @@ function buildEventCard(event, bookings){
   const failed    = bookings.filter(b=> ['failed','cancelled'].includes(b.payment_status||b.status)).length;
   const total     = bookings.length;
 
-  // Total seats from seat_price_map
+  // seat_price_map = { "A-1": 600, "H-1": "X", ... }
+  // "X" = blocked/aisle seat — exclude from total
   let totalSeats = 0;
-  let priceBuckets = []; // [{label, price, confirmedAmt, pct}]
+  let seatPriceMap = {};
   if(event.seat_price_map){
     try{
-      const spm = typeof event.seat_price_map==='string' ? JSON.parse(event.seat_price_map) : event.seat_price_map;
-      Object.entries(spm).forEach(([zone, info])=>{
-        const count = info.count || info.seats || 0;
-        const price = info.price || 0;
-        totalSeats += count;
-        priceBuckets.push({label: zone, price, count});
+      seatPriceMap = typeof event.seat_price_map==='string' ? JSON.parse(event.seat_price_map) : event.seat_price_map;
+      Object.values(seatPriceMap).forEach(v=>{
+        if(v !== 'X' && v !== 'x' && !isNaN(Number(v))) totalSeats++;
       });
     }catch(e){}
   }
@@ -450,15 +448,32 @@ function buildEventCard(event, bookings){
   const confirmedBookings = bookings.filter(b=> b.payment_status==='confirmed' || b.status==='confirmed');
   const totalRevenue = confirmedBookings.reduce((s,b)=> s + Number(b.amount||0), 0);
 
-  // Revenue by zone (match seat_keys prefix to zone)
-  priceBuckets = priceBuckets.map(z=>{
-    const zoneConfirmed = confirmedBookings.filter(b=>{
-      const keys = b.seat_keys || [];
-      return keys.some(k=> k.toUpperCase().startsWith(z.label.toUpperCase()));
-    });
-    const amt = zoneConfirmed.reduce((s,b)=>s+Number(b.amount||0),0);
-    return {...z, confirmedAmt: amt};
+  // Group by price tier for revenue bars
+  // Collect all unique numeric prices
+  const tierMap = {}; // price → {count, confirmedSeats, confirmedAmt}
+  Object.values(seatPriceMap).forEach(v=>{
+    if(v !== 'X' && v !== 'x' && !isNaN(Number(v))){
+      const p = Number(v);
+      if(!tierMap[p]) tierMap[p] = {count:0, confirmedAmt:0};
+      tierMap[p].count++;
+    }
   });
+  // For each confirmed booking, find seat prices from map and bucket revenue
+  confirmedBookings.forEach(b=>{
+    const keys = b.seat_keys || [];
+    keys.forEach(k=>{
+      const p = Number(seatPriceMap[k]);
+      if(p && tierMap[p]) tierMap[p].confirmedAmt += p;
+    });
+  });
+  const priceBuckets = Object.entries(tierMap)
+    .sort((a,b)=>Number(b[0])-Number(a[0]))  // highest price first
+    .map(([price, data])=>({
+      label: '₹'+fmt(price)+' tier',
+      price: Number(price),
+      count: data.count,
+      confirmedAmt: data.confirmedAmt
+    }));
 
   const bookedSeats = confirmed; // proxy: confirmed bookings
   const pct = totalSeats > 0 ? Math.round((bookedSeats/totalSeats)*100) : (total>0?100:0);
