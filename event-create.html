@@ -721,49 +721,58 @@ function handleExcelUpload(input) {
           .map(c => c.sn);
       });
 
-      // Process each Excel data row (skip first 3: title, stage, passage)
-      for (let ri = 3; ri < data.length; ri++) {
-        const rowArr = data[ri];
-        if (!rowArr || rowArr.every(c => c === '')) continue;
-
-        // Find the row label in this Excel row (first cell matching A-Z{1,2})
-        let rowLabel = null;
-        for (let ci = 0; ci < rowArr.length; ci++) {
-          const v = String(rowArr[ci]).trim().toUpperCase();
-          if (/^[A-Z]{1,2}$/.test(v) && hallSeatMap[v]) {
-            rowLabel = v;
-            break;
+      // Build column->seatKey map using hall layout cell positions directly
+      // Excel column index maps 1:1 to hall layout cell index
+      const colSeatMap = {}; // { "AA": { 10: "AA-1", 11: "AA-2", ... }, ... }
+      allHallRows.forEach(row => {
+        if (row.type !== 'row') return;
+        colSeatMap[row.label] = {};
+        row.cells.forEach((cell, ci) => {
+          if (cell.t === 'seat' && cell.sn != null) {
+            colSeatMap[row.label][ci] = row.label + '-' + cell.sn;
           }
+        });
+      });
+
+      // Process each Excel data row using column positions
+      // Row order in Excel matches hall layout row order (including hgaps)
+      let hallRowPointer = 0;
+      for (let ri = 3; ri < data.length; ri++) {
+        // Skip hgap rows
+        while (hallRowPointer < allHallRows.length && allHallRows[hallRowPointer].type === 'hgap') {
+          hallRowPointer++;
         }
-        if (!rowLabel) continue;
+        if (hallRowPointer >= allHallRows.length) break;
 
-        const seatNums = hallSeatMap[rowLabel]; // ordered seat numbers for this row
-        let seatIdx = 0; // index into seatNums
+        const rowArr = data[ri];
+        const hallRow = allHallRows[hallRowPointer];
+        hallRowPointer++;
 
-        // Now scan all cells: skip labels, empty, gaps — prices go to seats in order
-        for (let ci = 0; ci < rowArr.length; ci++) {
-          const v = String(rowArr[ci]).trim().toUpperCase();
-          if (v === '') continue;
-          if (/^[A-Z]{1,2}$/.test(v)) continue; // skip row labels
+        if (!rowArr || rowArr.every(c => c === '')) continue;
+        if (hallRow.type !== 'row') continue;
 
-          if (seatIdx >= seatNums.length) break;
-          const seatKey = rowLabel + '-' + seatNums[seatIdx];
-          seatIdx++;
+        const rowLabel = hallRow.label;
+        const colMap = colSeatMap[rowLabel] || {};
+
+        // Map each column directly to seat using position
+        rowArr.forEach((cell, ci) => {
+          const seatKey = colMap[ci]; // ci = Excel col, colMap has seat col indices
+          if (!seatKey) return; // not a seat column
+
+          const v = String(cell).trim().toUpperCase();
+          if (v === '') return; // unfilled — keep as-is (will be blocked in booking page)
 
           if (v === 'X') {
             blockedCount++;
-            seatPriceMap[seatKey] = 'X'; // mark as blocked
+            seatPriceMap[seatKey] = 'X';
           } else {
             const num = parseInt(v);
             if (!isNaN(num) && num > 0) {
               priceMap[num] = (priceMap[num] || 0) + 1;
               seatPriceMap[seatKey] = num;
-            } else {
-              // unrecognised value — skip seat index back (don't consume seat)
-              seatIdx--;
             }
           }
-        }
+        });
       }
 
       // Store seat price map globally
