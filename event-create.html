@@ -704,21 +704,6 @@ function handleExcelUpload(input) {
       const priceMap = {}; // price -> seat count
       let blockedCount = 0;
 
-      // Load hall layout to cross-reference
-      let exLayout = hallLayout?.layout_json;
-      if (typeof exLayout === 'string') exLayout = JSON.parse(exLayout);
-      const hallRows = exLayout?.rows?.filter(r => r.type === 'row') || [];
-
-      // Build seat list from hall layout
-      const seatList = []; // [{row, sn, colIdx}]
-      hallRows.forEach(row => {
-        row.cells.forEach((cell, ci) => {
-          if (cell.t === 'seat' && cell.sn != null) {
-            seatList.push({ rowLabel: row.label, sn: cell.sn });
-          }
-        });
-      });
-
       // Parse the uploaded Excel using hall layout to map seat positions
       // Build seat price map: {"AA-1": 500, "AA-2": 500, ...}
       let seatPriceMap = {};
