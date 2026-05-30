@@ -704,59 +704,67 @@ function handleExcelUpload(input) {
       const priceMap = {}; // price -> seat count
       let blockedCount = 0;
 
-      // Parse the uploaded Excel using hall layout to map seat positions
-      // Build seat price map: {"AA-1": 500, "AA-2": 500, ...}
+      // Parse Excel: each data row maps to a hall row
+      // Row label (AA, BB, A...) identifies the hall row
+      // Non-label, non-empty cells are prices in seat order
       let seatPriceMap = {};
       let exLayout = hallLayout?.layout_json;
       if (typeof exLayout === 'string') exLayout = JSON.parse(exLayout);
-      const hallRows = exLayout?.rows?.filter(r => r.type === 'row') || [];
+      const allHallRows = exLayout?.rows || [];
 
-      // Excel data rows start at index 3 (0=title, 1=stage, 2=passage)
-      // Match excel rows to hall rows by position
-      let hallRowIdx = 0;
+      // Build a map of rowLabel -> ordered seat numbers from hall layout
+      const hallSeatMap = {}; // { "AA": [1,2,3,...35], "BB": [...], ... }
+      allHallRows.forEach(row => {
+        if (row.type !== 'row') return;
+        hallSeatMap[row.label] = row.cells
+          .filter(c => c.t === 'seat' && c.sn != null)
+          .map(c => c.sn);
+      });
+
+      // Process each Excel data row (skip first 3: title, stage, passage)
       for (let ri = 3; ri < data.length; ri++) {
         const rowArr = data[ri];
-        if (!rowArr || rowArr.every(c => c === '')) {
-          hallRowIdx++; // hgap
-          continue;
+        if (!rowArr || rowArr.every(c => c === '')) continue;
+
+        // Find the row label in this Excel row (first cell matching A-Z{1,2})
+        let rowLabel = null;
+        for (let ci = 0; ci < rowArr.length; ci++) {
+          const v = String(rowArr[ci]).trim().toUpperCase();
+          if (/^[A-Z]{1,2}$/.test(v) && hallSeatMap[v]) {
+            rowLabel = v;
+            break;
+          }
         }
+        if (!rowLabel) continue;
 
-        // Find corresponding hall row
-        while (hallRowIdx < hallRows.length && hallRows[hallRowIdx].type === 'hgap') hallRowIdx++;
-        if (hallRowIdx >= hallRows.length) break;
+        const seatNums = hallSeatMap[rowLabel]; // ordered seat numbers for this row
+        let seatIdx = 0; // index into seatNums
 
-        const hallRow = hallRows[hallRowIdx];
-        const rowLabel = hallRow.label;
-        let hallCellIdx = 0;
+        // Now scan all cells: skip labels, empty, gaps — prices go to seats in order
+        for (let ci = 0; ci < rowArr.length; ci++) {
+          const v = String(rowArr[ci]).trim().toUpperCase();
+          if (v === '') continue;
+          if (/^[A-Z]{1,2}$/.test(v)) continue; // skip row labels
 
-        rowArr.forEach((cell, excelColIdx) => {
-          const val = String(cell).trim().toUpperCase();
-          if (val === '' || /^[A-Z]{1,2}$/.test(val)) return;
+          if (seatIdx >= seatNums.length) break;
+          const seatKey = rowLabel + '-' + seatNums[seatIdx];
+          seatIdx++;
 
-          // Find next seat in hall row
-          while (hallCellIdx < hallRow.cells.length) {
-            const hc = hallRow.cells[hallCellIdx];
-            hallCellIdx++;
-            if (hc.t === 'seat' && hc.sn != null) {
-              const seatKey = rowLabel + '-' + hc.sn;
-              if (val === 'X') { blockedCount++; }
-              else {
-                const num = parseInt(val);
-                if (!isNaN(num) && num > 0) {
-                  priceMap[num] = (priceMap[num] || 0) + 1;
-                  seatPriceMap[seatKey] = num;
-                }
-              }
-              break;
+          if (v === 'X') {
+            blockedCount++;
+          } else {
+            const num = parseInt(v);
+            if (!isNaN(num) && num > 0) {
+              priceMap[num] = (priceMap[num] || 0) + 1;
+              seatPriceMap[seatKey] = num;
             }
           }
-        });
-        hallRowIdx++;
+        }
       }
 
       // Store seat price map globally
       window._seatPriceMap = seatPriceMap;
-      console.log('Seat price map built:', Object.keys(seatPriceMap).length, 'seats');
+      console.log('Seat price map built:', Object.keys(seatPriceMap).length, 'seats mapped');
 
       // Build sections from price groups
       const prices = Object.keys(priceMap).map(Number).sort((a, b) => b - a);
