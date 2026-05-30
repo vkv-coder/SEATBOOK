@@ -705,9 +705,9 @@ function handleExcelUpload(input) {
       let blockedCount = 0;
 
       // Load hall layout to cross-reference
-      let layout = hallLayout?.layout_json;
-      if (typeof layout === 'string') layout = JSON.parse(layout);
-      const hallRows = layout?.rows?.filter(r => r.type === 'row') || [];
+      let exLayout = hallLayout?.layout_json;
+      if (typeof exLayout === 'string') exLayout = JSON.parse(exLayout);
+      const hallRows = exLayout?.rows?.filter(r => r.type === 'row') || [];
 
       // Build seat list from hall layout
       const seatList = []; // [{row, sn, colIdx}]
@@ -722,9 +722,9 @@ function handleExcelUpload(input) {
       // Parse the uploaded Excel using hall layout to map seat positions
       // Build seat price map: {"AA-1": 500, "AA-2": 500, ...}
       let seatPriceMap = {};
-      let layout = hallLayout?.layout_json;
-      if (typeof layout === 'string') layout = JSON.parse(layout);
-      const hallRows = layout?.rows?.filter(r => r.type === 'row') || [];
+      let exLayout = hallLayout?.layout_json;
+      if (typeof exLayout === 'string') exLayout = JSON.parse(exLayout);
+      const hallRows = exLayout?.rows?.filter(r => r.type === 'row') || [];
 
       // Excel data rows start at index 3 (0=title, 1=stage, 2=passage)
       // Match excel rows to hall rows by position
