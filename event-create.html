@@ -276,6 +276,29 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div class="form-card">
+      <div class="form-card-title">📅 Booking window</div>
+      <div class="field-row-2">
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Booking opens <span>*</span></div>
+          <input class="input-field" type="date" id="booking-open-date">
+        </div>
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">At time</div>
+          <input class="input-field" type="time" id="booking-open-time">
+        </div>
+      </div>
+      <div class="field-row-2" style="margin-top:10px;">
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Booking closes <span>*</span></div>
+          <input class="input-field" type="date" id="booking-close-date">
+        </div>
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">At time</div>
+          <input class="input-field" type="time" id="booking-close-time">
+        </div>
+      </div>
+    </div>
+    <div class="form-card">
       <div class="form-card-title">🎟️ Event type</div>
       <div class="mode-cards">
         <div class="mode-card selected" id="mode-paid" onclick="selectMode('paid')">
@@ -396,49 +419,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
   <div class="form-body">
     <div class="form-card">
-      <div class="form-card-title">📅 How long should booking stay open?</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:-6px;">
-        Platform fee depends on duration. Booking auto-closes on event date.
-      </div>
-    </div>
-    <div class="form-card">
-      <div class="window-options">
-        <div class="window-opt selected" onclick="selectWindow(this,'1','₹199')">
-          <div class="window-days">1</div><div class="window-label">Day</div><div class="window-price">₹199</div>
-        </div>
-        <div class="window-opt" onclick="selectWindow(this,'3','₹299')">
-          <div class="window-days">3</div><div class="window-label">Days</div><div class="window-price">₹299</div>
-        </div>
-        <div class="window-opt" onclick="selectWindow(this,'7','₹499')">
-          <div class="window-days">7</div><div class="window-label">Days</div><div class="window-price">₹499</div>
-        </div>
-        <div class="window-opt" onclick="selectWindow(this,'30','₹799')">
-          <div class="window-days">30</div><div class="window-label">Days</div><div class="window-price">₹799</div>
-        </div>
-      </div>
-    </div>
-    <div class="form-card">
+      <div class="form-card-title">📅 Booking window summary</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="color:var(--muted);">Booking window</span>
-          <span id="sum-window" style="font-weight:500;">1 day</span>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Booking opens</span>
+          <span id="sum-open" style="font-weight:500;">—</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="color:var(--muted);">Opens</span>
-          <span style="font-weight:500;">Immediately on publish</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
-          <span style="color:var(--muted);">Auto-closes</span>
-          <span style="font-weight:500;">On event date</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:15px;padding:8px 0;">
-          <span style="font-weight:500;">Platform fee</span>
-          <span id="sum-fee" style="font-weight:600;color:var(--accent);">₹199</span>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;">
+          <span style="color:var(--muted);">Booking closes</span>
+          <span id="sum-close" style="font-weight:500;">—</span>
         </div>
       </div>
     </div>
-    <div class="info-box amber">
-      💳 Platform fee is charged before your booking link goes live. Pay via UPI or card.
+    <div class="info-box blue">
+      ℹ️ Booking link will go live as soon as you publish. It will automatically close on the date you set.
     </div>
   </div>
   <div class="bottom-nav">
@@ -488,7 +482,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
   <div class="bottom-nav">
     <button class="btn-secondary" onclick="goStep(3)">← Back</button>
-    <button class="btn-primary accent" id="publish-btn" onclick="publishEvent()">Pay & Publish 🚀</button>
+    <button class="btn-primary accent" id="publish-btn" onclick="publishEvent()">Publish 🚀</button>
   </div>
 </div>
 
@@ -646,9 +640,13 @@ function validateStep1() {
   const name = document.getElementById('ev-name').value.trim();
   const date = document.getElementById('ev-date').value;
   const time = document.getElementById('ev-time').value;
+  const openDate = document.getElementById('booking-open-date').value;
+  const closeDate = document.getElementById('booking-close-date').value;
   if (!name) { alert('Please enter event name.'); return false; }
   if (!date) { alert('Please select event date.'); return false; }
   if (!time) { alert('Please select event time.'); return false; }
+  if (!openDate) { alert('Please select booking open date.'); return false; }
+  if (!closeDate) { alert('Please select booking close date.'); return false; }
   return true;
 }
 
@@ -812,9 +810,14 @@ function buildPreview() {
   const name = document.getElementById('ev-name').value || 'Your Event';
   const date = document.getElementById('ev-date').value;
   const time = document.getElementById('ev-time').value;
+  const openDate = document.getElementById('booking-open-date').value;
+  const closeDate = document.getElementById('booking-close-date').value;
   document.getElementById('prev-name').textContent = name;
   const d = date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) : '—';
   document.getElementById('prev-datetime').textContent = '📅 ' + d + (time ? ' · ' + time : '');
+  // Update step 3 summary
+  document.getElementById('sum-open').textContent = openDate ? new Date(openDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  document.getElementById('sum-close').textContent = closeDate ? new Date(closeDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
 
   const wrap = document.getElementById('prev-sections-wrap');
   wrap.innerHTML = '';
@@ -851,8 +854,13 @@ async function publishEvent() {
     const date = document.getElementById('ev-date').value;
     const time = document.getElementById('ev-time').value;
 
-    const now = new Date();
-    const closeDate = new Date(date + 'T23:59:00');
+    const bookingOpenDate = document.getElementById('booking-open-date').value;
+    const bookingOpenTime = document.getElementById('booking-open-time').value || '00:00';
+    const bookingCloseDate = document.getElementById('booking-close-date').value;
+    const bookingCloseTime = document.getElementById('booking-close-time').value || '23:59';
+
+    const bookingOpen = new Date(bookingOpenDate + 'T' + bookingOpenTime);
+    const bookingClose = new Date(bookingCloseDate + 'T' + bookingCloseTime);
 
     // Insert event
     const { data: ev, error: evErr } = await sb.from('kh_events').insert({
@@ -863,10 +871,10 @@ async function publishEvent() {
       event_date: date,
       event_time: time,
       mode: eventMode,
-      booking_open: now.toISOString(),
-      booking_close: closeDate.toISOString(),
-      status: 'live',
-      created_at: now.toISOString()
+      booking_open: bookingOpen.toISOString(),
+      booking_close: bookingClose.toISOString(),
+      status: 'draft',
+      created_at: new Date().toISOString()
     }).select().single();
 
     if (evErr) throw evErr;
@@ -895,7 +903,7 @@ async function publishEvent() {
 
   } catch(e) {
     alert('Error: ' + (e.message || 'Unknown error'));
-    btn.textContent = 'Pay & Publish 🚀';
+    btn.textContent = 'Publish 🚀';
     btn.disabled = false;
   }
 }
