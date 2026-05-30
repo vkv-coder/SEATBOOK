@@ -85,8 +85,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   color:#c8860a;cursor:not-allowed;opacity:0.75;
 }
 .seat.blocked{
-  background:#b0b0aa!important;
-  color:#666;cursor:not-allowed;opacity:0.7;
+  background:#999994!important;
+  color:#fff;cursor:not-allowed;opacity:1;
+  font-size:3px!important;font-weight:900;
 }
 .seat.dimmed{opacity:0.2;cursor:not-allowed;}
 .seat.aisle{background:transparent!important;border:none!important;cursor:default;pointer-events:none;}
@@ -527,6 +528,7 @@ function buildSeatMap(layout) {
         if (seatPrice === 'X') {
           // Blocked seat — treat as blocked
           el.className = 'seat blocked';
+          el.textContent = '✕';
           seatEls.push({ el, isSeat: false });
           return;
         }
