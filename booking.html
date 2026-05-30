@@ -352,6 +352,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
             <div class="ticket-info-label">Amount paid</div>
             <div class="ticket-amount" id="tc-amount">—</div>
           </div>
+          <div class="ticket-info-row" style="margin-bottom:0;margin-top:8px;">
+            <div class="ticket-info-label">Booked at</div>
+            <div class="ticket-info-val" id="tc-bookedat" style="font-size:12px;">—</div>
+          </div>
         </div>
         <div class="ticket-qr-wrap">
           <div class="ticket-qr-box" id="qr-display"></div>
@@ -919,6 +923,10 @@ async function showSuccess(name, mobile, seatKeys, amount) {
   const hallName = document.getElementById('ev-hall').textContent;
   const eventName = eventData ? eventData.name : 'Event';
 
+  const now = new Date();
+  const bookedAt = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+    + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+
   document.getElementById('tc-event').textContent = eventName;
   document.getElementById('tc-date').textContent = evDate;
   document.getElementById('tc-hall').textContent = hallName;
@@ -926,14 +934,12 @@ async function showSuccess(name, mobile, seatKeys, amount) {
   document.getElementById('tc-seats').textContent = seatKeys.join(', ');
   document.getElementById('tc-amount').textContent = amount > 0 ? '₹' + amount : 'Free';
   document.getElementById('tc-booking-id').textContent = bookingId || '—';
+  document.getElementById('tc-bookedat').textContent = bookedAt;
 
   // Show success screen first
   document.getElementById('success-overlay').classList.add('show');
 
   // Store ticket data for PDF
-  const now = new Date();
-  const bookedAt = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
-    + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
   ticketData = {
     bookingId: bookingId || '',
     eventName,
