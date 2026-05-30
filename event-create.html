@@ -738,17 +738,23 @@ function handleExcelUpload(input) {
       // Row order in Excel matches hall layout row order (including hgaps)
       let hallRowPointer = 0;
       for (let ri = 3; ri < data.length; ri++) {
-        // Skip hgap rows
+        const rowArr = data[ri];
+        const isEmpty = !rowArr || rowArr.every(c => c === '');
+
+        // Skip hgap rows in hall layout
         while (hallRowPointer < allHallRows.length && allHallRows[hallRowPointer].type === 'hgap') {
           hallRowPointer++;
         }
         if (hallRowPointer >= allHallRows.length) break;
 
-        const rowArr = data[ri];
         const hallRow = allHallRows[hallRowPointer];
-        hallRowPointer++;
 
-        if (!rowArr || rowArr.every(c => c === '')) continue;
+        if (isEmpty) {
+          // Empty Excel row = hgap spacer row — don't advance hallRowPointer
+          continue;
+        }
+
+        hallRowPointer++; // only advance when we have actual data
         if (hallRow.type !== 'row') continue;
 
         const rowLabel = hallRow.label;
