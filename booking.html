@@ -313,6 +313,13 @@ async function loadEvent() {
     const { data: ev, error: evErr } = await sb
       .from('kh_events').select('*').eq('id', eventId).single();
     if (evErr) throw evErr;
+    if (ev.status === 'draft') {
+      document.getElementById('loading-screen').style.display = 'none';
+      const es = document.getElementById('error-screen');
+      es.classList.add('show');
+      document.getElementById('err-msg').textContent = 'This event is not yet open for booking. Please check back later.';
+      return;
+    }
     eventData = ev;
 
     document.getElementById('ev-name').textContent = ev.name;
