@@ -707,7 +707,15 @@ function toggleSeat(el) {
 }
 
 function showWarn(msg) {
-  alert(msg);
+  const w = document.getElementById('consec-warn');
+  w.textContent = msg;
+  w.style.display = 'block';
+  w.style.opacity = '1';
+  if (w._hideTimer) clearTimeout(w._hideTimer);
+  w._hideTimer = setTimeout(() => {
+    w.style.opacity = '0';
+    setTimeout(() => { w.style.display = 'none'; }, 300);
+  }, 2500);
 }
 
 function updateBottomBar() {
