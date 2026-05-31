@@ -690,6 +690,7 @@ function toggleSeat(el) {
     const lastEl  = getSeatEl(selectedSeats[selectedSeats.length - 1].seatKey);
     const adjToEnd   = lastEl  && areDomAdjacent(lastEl, el);
     const adjToStart = firstEl && areDomAdjacent(firstEl, el);
+    console.log('adjToEnd:', adjToEnd, 'adjToStart:', adjToStart, 'newSeat:', el.dataset.key, 'lastSeat:', lastEl && lastEl.dataset.key);
     if (!adjToEnd && !adjToStart) { showWarn('Please select adjacent seats only'); return; }
     if (adjToStart) {
       selectedSeats.unshift({ rowLabel:el.dataset.row, seatNum:el.dataset.sn, sectionId:el.dataset.sec, price:parseInt(el.dataset.price), colour:el.dataset.colour, seatKey:key });
@@ -705,16 +706,15 @@ function toggleSeat(el) {
 }
 
 function showWarn(msg) {
-  // Remove any existing toast
   const existing = document.getElementById('toast-warn');
   if (existing) existing.remove();
-  // Create fresh toast each time
   const t = document.createElement('div');
   t.id = 'toast-warn';
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  t.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#cc3333;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:24px;z-index:99999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);letter-spacing:0.2px;';
   document.body.appendChild(t);
-  setTimeout(() => { if(t.parentNode) t.remove(); }, 2500);
+  console.log('TOAST SHOWN:', msg);
+  setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
 }
 
 function updateBottomBar() {
