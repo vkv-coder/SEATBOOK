@@ -219,9 +219,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   background:var(--text);color:#fff;font-size:12px;font-weight:500;
   padding:8px 16px;border-radius:20px;z-index:55;
   display:none;white-space:nowrap;
-  opacity:0;transition:opacity 0.2s ease;
 }
-.consec-warn.visible{opacity:1;}
 
 #qr-hidden{position:absolute;left:-9999px;top:-9999px;width:200px;height:200px;}
 </style>
@@ -710,12 +708,8 @@ function showWarn(msg) {
   const w = document.getElementById('consec-warn');
   w.textContent = msg;
   w.style.display = 'block';
-  w.style.opacity = '1';
   if (w._hideTimer) clearTimeout(w._hideTimer);
-  w._hideTimer = setTimeout(() => {
-    w.style.opacity = '0';
-    setTimeout(() => { w.style.display = 'none'; }, 300);
-  }, 2500);
+  w._hideTimer = setTimeout(() => { w.style.display = 'none'; }, 2500);
 }
 
 function updateBottomBar() {
