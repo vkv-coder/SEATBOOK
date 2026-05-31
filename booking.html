@@ -707,17 +707,7 @@ function toggleSeat(el) {
 }
 
 function showWarn(msg) {
-  const w = document.getElementById('consec-warn');
-  w.textContent = msg;
-  w.style.display = 'block';
-  if (w._hideTimer) clearTimeout(w._hideTimer);
-  // Force reflow then show
-  void w.offsetWidth;
-  w.classList.add('visible');
-  w._hideTimer = setTimeout(() => {
-    w.classList.remove('visible');
-    setTimeout(() => { w.style.display = 'none'; }, 200);
-  }, 2500);
+  alert(msg);
 }
 
 function updateBottomBar() {
