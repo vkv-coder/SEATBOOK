@@ -7,9 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<!-- QR Code generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- jsPDF for ticket PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
@@ -189,6 +187,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   background:var(--s2);padding:10px 18px;
   font-size:10px;color:var(--muted);text-align:center;
   border-top:1px solid var(--border);
+  line-height:1.8;
 }
 
 .download-btn{
@@ -224,13 +223,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 }
 @keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-6px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
 
-/* Hidden QR canvas for PDF generation */
 #qr-hidden{position:absolute;left:-9999px;top:-9999px;width:200px;height:200px;}
 </style>
 </head>
 <body>
 
-<!-- Hidden QR render target for PDF -->
 <div id="qr-hidden"></div>
 
 <!-- TOP BAR -->
@@ -327,7 +324,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="success-title">Booking confirmed!</div>
     <div class="success-sub">Your ticket is downloading. Save it and show the QR code at entry.</div>
 
-    <!-- TICKET CARD (visual) -->
     <div class="ticket-card" id="ticket-card">
       <div class="ticket-header">
         <div class="ticket-brand">Khursilo</div>
@@ -362,8 +358,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
           <div class="ticket-booking-id" id="tc-booking-id">—</div>
         </div>
       </div>
-      <div class="ticket-footer">
-        Show this QR code at the venue entry gate · Valid for one entry only
+      <!-- DYNAMIC FOOTER: updated by JS -->
+      <div class="ticket-footer" id="ticket-footer">
+        Show QR at entry gate · Valid for 1 person<br>
+        Support: vkvcoder.support@gmail.com · khursilo.in
       </div>
     </div>
 
@@ -389,8 +387,6 @@ let activeFilter = 'ALL';
 let holdTimer = null;
 let holdSeconds = 300;
 let bookingId = null;
-
-// Ticket data stored for re-download
 let ticketData = null;
 let qrDataUrl = null;
 
@@ -696,8 +692,14 @@ function toggleSeat(el) {
 
 function showWarn(msg) {
   const w = document.getElementById('consec-warn');
-  w.textContent = msg; w.style.display = 'block'; w.style.animation = 'none';
-  setTimeout(() => { w.style.animation = 'fadeInOut 2.5s ease forwards'; setTimeout(() => w.style.display = 'none', 2500); }, 10);
+  w.textContent = msg;
+  w.style.display = 'none';
+  w.style.animation = 'none';
+  void w.offsetWidth; // force reflow
+  w.style.display = 'block';
+  w.style.animation = 'fadeInOut 2.5s ease forwards';
+  if (w._hideTimer) clearTimeout(w._hideTimer);
+  w._hideTimer = setTimeout(() => { w.style.display = 'none'; }, 2500);
 }
 
 function updateBottomBar() {
@@ -751,7 +753,6 @@ function openForm() {
 
 function closeForm() { document.getElementById('form-overlay').classList.remove('show'); }
 
-// ── QR GENERATION ──
 function generateQR(bookingUUID) {
   return new Promise((resolve) => {
     const container = document.getElementById('qr-hidden');
@@ -764,7 +765,6 @@ function generateQR(bookingUUID) {
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.H
     });
-    // QRCode renders async via image
     setTimeout(() => {
       const img = container.querySelector('img');
       const canvas = container.querySelector('canvas');
@@ -775,7 +775,6 @@ function generateQR(bookingUUID) {
   });
 }
 
-// ── SHOW QR ON TICKET CARD ──
 function renderQROnCard(dataUrl) {
   const box = document.getElementById('qr-display');
   box.innerHTML = '';
@@ -786,14 +785,15 @@ function renderQROnCard(dataUrl) {
   box.appendChild(img);
 }
 
-// ── PDF TICKET DOWNLOAD ──
 function downloadTicketPDF() {
   if (!ticketData || !qrDataUrl) { alert('Ticket data not ready. Please wait.'); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 115] });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 120] });
 
-  const W = 80, H = 115;
+  const W = 80;
+  const seatCount = ticketData.seatKeys.length;
+  const validForText = 'Valid for ' + seatCount + ' person' + (seatCount > 1 ? 's' : '');
 
   // ── DARK HEADER ──
   doc.setFillColor(26, 26, 26);
@@ -824,21 +824,19 @@ function downloadTicketPDF() {
 
   // ── WHITE BODY ──
   doc.setFillColor(255, 255, 255);
-  doc.rect(0, 39, W, H - 39, 'F');
+  doc.rect(0, 39, W, 81, 'F');
 
   // QR top-right
   if (qrDataUrl) {
     doc.addImage(qrDataUrl, 'PNG', W - 34, 42, 28, 28);
   }
-  // Booking ID below QR
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(4.5);
   doc.setFont('helvetica', 'normal');
   const shortId = ticketData.bookingId.slice(0, 20) + '...';
   doc.text(shortId, W - 34, 72, { maxWidth: 28 });
 
-  // Left info rows — fixed Y values
-  // NAME at 46
+  // NAME
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
@@ -848,7 +846,7 @@ function downloadTicketPDF() {
   doc.setFont('helvetica', 'bold');
   doc.text(ticketData.bookerName, 6, 51);
 
-  // SEATS at 59
+  // SEATS
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
@@ -860,7 +858,7 @@ function downloadTicketPDF() {
   const seatLines = doc.splitTextToSize(seatsText, 38);
   doc.text(seatLines, 6, 64);
 
-  // AMOUNT at 72
+  // AMOUNT
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
@@ -870,7 +868,7 @@ function downloadTicketPDF() {
   doc.setFont('helvetica', 'bold');
   doc.text(ticketData.amount > 0 ? 'Rs ' + ticketData.amount : 'Free', 6, 77);
 
-  // BOOKED AT at 85
+  // BOOKED AT
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
@@ -880,30 +878,27 @@ function downloadTicketPDF() {
   doc.setFont('helvetica', 'bold');
   doc.text(ticketData.bookedAt, 6, 90);
 
-  // ── FOOTER at 100 ──
+  // ── FOOTER ──
   doc.setFillColor(240, 238, 234);
-  doc.rect(0, 100, W, 15, 'F');
+  doc.rect(0, 100, W, 20, 'F');
   doc.setTextColor(136, 136, 136);
   doc.setFontSize(5.5);
   doc.setFont('helvetica', 'normal');
-  doc.text('Show QR at entry gate · Valid for one entry only', W / 2, 107, { align: 'center' });
-  doc.text('khursilo.in', W / 2, 112, { align: 'center' });
+  doc.text('Show QR at entry gate · ' + validForText, W / 2, 107, { align: 'center' });
+  doc.text('Support: vkvcoder.support@gmail.com', W / 2, 112, { align: 'center' });
+  doc.text('khursilo.in', W / 2, 117, { align: 'center' });
 
-  // Download
   const filename = 'Khursilo_Ticket_' + ticketData.seatKeys.join('_') + '.pdf';
   doc.save(filename);
 }
 
-// ── PAYMENT SUCCESS ──
 async function handlePaymentSuccess(paymentId, name, mobile, seatKeys, totalAmt) {
-  // 1. Update booking status
   await sb.from('kh_bookings').update({
     status: 'confirmed',
     payment_status: 'paid',
     razorpay_payment_id: paymentId,
   }).eq('id', bookingId);
 
-  // 2. Mark seats as booked on map
   selectedSeats.forEach(s => {
     const el = document.querySelector(`.seat[data-key="${s.seatKey}"]`);
     if (el) { el.classList.remove('selected','available'); el.classList.add('booked'); }
@@ -912,16 +907,15 @@ async function handlePaymentSuccess(paymentId, name, mobile, seatKeys, totalAmt)
   clearInterval(holdTimer);
   document.getElementById('timer-bar').style.display = 'none';
   closeForm();
-
-  // 3. Show success + generate QR + download PDF
   await showSuccess(name, mobile, seatKeys, totalAmt);
 }
 
 async function showSuccess(name, mobile, seatKeys, amount) {
-  // Fill ticket card UI
   const evDate = document.getElementById('ev-date').textContent;
   const hallName = document.getElementById('ev-hall').textContent;
   const eventName = eventData ? eventData.name : 'Event';
+  const seatCount = seatKeys.length;
+  const validForText = 'Valid for ' + seatCount + ' person' + (seatCount > 1 ? 's' : '');
 
   const now = new Date();
   const bookedAt = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
@@ -936,34 +930,27 @@ async function showSuccess(name, mobile, seatKeys, amount) {
   document.getElementById('tc-booking-id').textContent = bookingId || '—';
   document.getElementById('tc-bookedat').textContent = bookedAt;
 
-  // Show success screen first
+  // Update ticket footer dynamically
+  document.getElementById('ticket-footer').innerHTML =
+    'Show QR at entry gate · ' + validForText + '<br>' +
+    'Support: vkvcoder.support@gmail.com · khursilo.in';
+
   document.getElementById('success-overlay').classList.add('show');
 
-  // Store ticket data for PDF
   ticketData = {
     bookingId: bookingId || '',
-    eventName,
-    eventDate: evDate,
-    hallName,
-    bookerName: name,
-    bookerMobile: mobile,
-    seatKeys,
-    amount,
-    bookedAt
+    eventName, eventDate: evDate, hallName,
+    bookerName: name, bookerMobile: mobile,
+    seatKeys, amount, bookedAt
   };
 
-  // Generate QR
   qrDataUrl = await generateQR(bookingId || 'KHURSILO-' + Date.now());
-
-  // Show QR on card
   if (qrDataUrl) renderQROnCard(qrDataUrl);
 
-  // Save QR to Supabase
   if (qrDataUrl && bookingId) {
     await sb.from('kh_bookings').update({ qr_code: qrDataUrl }).eq('id', bookingId);
   }
 
-  // Auto-download PDF
   setTimeout(() => downloadTicketPDF(), 800);
 
   selectedSeats = [];
