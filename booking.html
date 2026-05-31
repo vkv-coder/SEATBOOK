@@ -648,10 +648,10 @@ function buildSeatMap(layout) {
   grid.appendChild(fragment);
 }
 
-// Returns ordered list of clickable seat elements in the same row
+// Returns ordered list of all real seats in the row (including booked/held, excluding aisle/blocked/invisible)
 function getRowSeatEls(rowLabel) {
   return Array.from(document.querySelectorAll('.seat[data-row]'))
-    .filter(s => s.dataset.row === rowLabel && !s.classList.contains('aisle') && !s.classList.contains('blocked') && s.dataset.key);
+    .filter(s => s.dataset.row === rowLabel && s.dataset.key && !s.classList.contains('aisle') && !s.classList.contains('blocked') && s.style.opacity !== '0');
 }
 
 // Check if two seat elements are physically adjacent in DOM (no other real seat between them)
