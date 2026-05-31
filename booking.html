@@ -248,6 +248,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <span id="ev-date">—</span>
     <span id="ev-hall">—</span>
   </div>
+  <div id="ev-organiser" style="display:none;font-size:12px;margin-top:6px;color:var(--muted);"></div>
 </div>
 
 <!-- SECTION TABS -->
@@ -421,8 +422,16 @@ async function loadEvent() {
 
     if (ev.organiser_id) {
       const { data: org } = await sb
-        .from('kh_organisers').select('razorpay_key_id').eq('id', ev.organiser_id).single();
+        .from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile').eq('id', ev.organiser_id).single();
       organiserData = org;
+      if (org && org.contact_1_mobile) {
+        const tel = org.contact_1_mobile.replace(/\D/g,'');
+        document.getElementById('ev-organiser').innerHTML =
+          '📞 <a href="tel:+91' + tel + '" style="color:var(--accent);text-decoration:none;font-weight:600;">' +
+          (org.contact_1_name || 'Organiser') + ' · ' + org.contact_1_mobile +
+          '</a>';
+        document.getElementById('ev-organiser').style.display = 'block';
+      }
     }
 
     const layout = typeof hall.layout_json === 'string'
