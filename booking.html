@@ -219,9 +219,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   background:var(--text);color:#fff;font-size:12px;font-weight:500;
   padding:8px 16px;border-radius:20px;z-index:55;
   display:none;white-space:nowrap;
-  animation:fadeInOut 2.5s ease forwards;
+  opacity:0;transition:opacity 0.2s ease;
 }
-@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(-6px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+.consec-warn.visible{opacity:1;}
 
 #qr-hidden{position:absolute;left:-9999px;top:-9999px;width:200px;height:200px;}
 </style>
@@ -709,16 +709,15 @@ function toggleSeat(el) {
 function showWarn(msg) {
   const w = document.getElementById('consec-warn');
   w.textContent = msg;
-  // Remove and re-insert to force animation restart
-  w.style.display = 'none';
-  w.style.animation = 'none';
-  void w.offsetWidth;
-  w.style.removeProperty('animation');
   w.style.display = 'block';
-  void w.offsetWidth;
-  w.style.animation = 'fadeInOut 2.5s ease forwards';
   if (w._hideTimer) clearTimeout(w._hideTimer);
-  w._hideTimer = setTimeout(() => { w.style.display = 'none'; w.style.animation = 'none'; }, 2600);
+  // Force reflow then show
+  void w.offsetWidth;
+  w.classList.add('visible');
+  w._hideTimer = setTimeout(() => {
+    w.classList.remove('visible');
+    setTimeout(() => { w.style.display = 'none'; }, 200);
+  }, 2500);
 }
 
 function updateBottomBar() {
