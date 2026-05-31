@@ -665,7 +665,8 @@ function areDomAdjacent(elA, elB) {
 }
 
 function getSeatEl(seatKey) {
-  return document.querySelector('.seat[data-key= + seatKey + ]');
+  // Use attribute search to avoid CSS selector escaping issues
+  return document.querySelector('[data-key="' + seatKey + '"]');
 }
 
 function toggleSeat(el) {
