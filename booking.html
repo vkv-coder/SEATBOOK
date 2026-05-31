@@ -514,12 +514,17 @@ function filterSection(secId, btn) {
   activeFilter = secId;
   document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.seat[data-sec]').forEach(el => {
+  document.querySelectorAll('.seat').forEach(el => {
     if (activeFilter === 'ALL') {
       el.classList.remove('dimmed');
     } else {
-      if (el.dataset.sec === String(activeFilter)) el.classList.remove('dimmed');
-      else if (!el.classList.contains('selected')) el.classList.add('dimmed');
+      // blocked/aisle seats always stay as-is
+      if (el.classList.contains('blocked') || el.classList.contains('aisle')) return;
+      if (el.dataset.sec === String(activeFilter)) {
+        el.classList.remove('dimmed');
+      } else if (!el.classList.contains('selected')) {
+        el.classList.add('dimmed');
+      }
     }
   });
 }
@@ -711,7 +716,7 @@ function showWarn(msg) {
   const t = document.createElement('div');
   t.id = 'toast-warn';
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:140px;left:50%;transform:translateX(-50%);width:max-content;max-width:320px;background:#cc3333;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:24px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4);text-align:center;';
+  t.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);width:max-content;max-width:320px;background:#cc3333;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:24px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4);text-align:center;';
   document.documentElement.appendChild(t);
   console.log('TOAST SHOWN:', msg);
   setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
