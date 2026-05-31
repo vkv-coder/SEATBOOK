@@ -77,7 +77,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 .footer { margin-top: auto; padding: 16px 24px 28px; border-top: 1px solid var(--border); text-align: center; }
 .footer-legal { font-size: 10px; color: #bbb; line-height: 1.5; margin-bottom: 10px; }
-.footer-link { font-size: 11px; color: var(--muted); text-decoration: none; }
+.footer-support {
+  display: inline-block;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(200,134,10,0.4);
+  padding-bottom: 1px;
+}
+.footer-support:hover { color: #a06d08; }
 </style>
 </head>
 <body>
@@ -109,7 +119,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 
 <div class="footer">
   <div class="footer-legal">Khursilo is a technology platform only. Payments go directly to event organisers. Not liable for events, refunds or cancellations.</div>
-  <a class="footer-link" href="mailto:vkvcoder.support@gmail.com">Support</a>
+  <a class="footer-support" href="mailto:vkvcoder.support@gmail.com">Click here for support</a>
 </div>
 
 <script>
@@ -122,7 +132,6 @@ async function loadEvents() {
   try {
     const today = new Date().toISOString().split('T')[0];
 
-    // Step 1: fetch events
     const { data: events, error } = await sb
       .from('kh_events')
       .select('id, name, event_date, event_time, hall_id')
@@ -138,7 +147,6 @@ async function loadEvents() {
       return;
     }
 
-    // Step 2: fetch hall names for unique hall_ids
     const hallIds = [...new Set(events.map(e => e.hall_id).filter(Boolean))];
     const hallMap = {};
     if (hallIds.length) {
@@ -146,7 +154,6 @@ async function loadEvents() {
       (halls || []).forEach(h => { hallMap[h.id] = h.name; });
     }
 
-    // Step 3: render
     list.innerHTML = '';
     events.forEach(ev => {
       const d = new Date(ev.event_date + 'T00:00:00');
