@@ -705,11 +705,16 @@ function toggleSeat(el) {
 }
 
 function showWarn(msg) {
-  const w = document.getElementById('consec-warn');
-  w.textContent = msg;
-  w.style.display = 'block';
-  if (w._hideTimer) clearTimeout(w._hideTimer);
-  w._hideTimer = setTimeout(() => { w.style.display = 'none'; }, 2500);
+  // Remove any existing toast
+  const existing = document.getElementById('toast-warn');
+  if (existing) existing.remove();
+  // Create fresh toast each time
+  const t = document.createElement('div');
+  t.id = 'toast-warn';
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  document.body.appendChild(t);
+  setTimeout(() => { if(t.parentNode) t.remove(); }, 2500);
 }
 
 function updateBottomBar() {
