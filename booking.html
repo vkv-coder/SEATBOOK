@@ -716,9 +716,11 @@ function showWarn(msg) {
   const t = document.createElement('div');
   t.id = 'toast-warn';
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);width:max-content;max-width:320px;background:#cc3333;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:24px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4);text-align:center;';
-  document.documentElement.appendChild(t);
-  console.log('TOAST SHOWN:', msg);
+  // Position relative to bottom-bar (always visible above proceed button)
+  const bb = document.querySelector('.bottom-bar');
+  const bbH = bb ? bb.offsetHeight : 90;
+  t.style.cssText = 'position:fixed;bottom:' + (bbH + 12) + 'px;left:50%;transform:translateX(-50%);width:max-content;max-width:300px;background:#cc3333;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:20px;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.35);text-align:center;';
+  document.body.appendChild(t);
   setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
 }
 
