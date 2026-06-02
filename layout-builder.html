@@ -484,9 +484,15 @@ function render(){
   rows.forEach((rowData,ri)=>{
     if(rowData.type==='hpass'){
       const hrow=document.createElement('div');hrow.className='hpass-row';
-      const hlbl=document.createElement('div');hlbl.className='hpass-lbl';hlbl.textContent='✕';hlbl.title='Delete passage';
-      hlbl.onclick=()=>{saveHistory();rows.splice(ri,1);render();renderSecs();};
-      hrow.appendChild(hlbl);
+      // Show labels of rows above and below this gap
+      const prevRow = rows.slice(0,ri).reverse().find(r=>r.type==='row');
+      const nextRow = rows.slice(ri+1).find(r=>r.type==='row');
+      const gapLbl = document.createElement('div');
+      gapLbl.style.cssText='font-size:7px;color:#0891b2;width:14px;text-align:center;flex-shrink:0;cursor:pointer;font-weight:700;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;';
+      if(prevRow) { const t=document.createElement('span');t.textContent=prevRow.label;gapLbl.appendChild(t); }
+      const x=document.createElement('span');x.textContent='↕';x.style.cssText='color:#cc3333;font-size:8px;cursor:pointer;';x.title='Click to delete passage';x.onclick=()=>{saveHistory();rows.splice(ri,1);render();renderSecs();};gapLbl.appendChild(x);
+      if(nextRow) { const t=document.createElement('span');t.textContent=nextRow.label;gapLbl.appendChild(t); }
+      hrow.appendChild(gapLbl);
       for(let i=0;i<70;i++){const c=document.createElement('div');c.className=`hpass-cell h${rowData.height}`;hrow.appendChild(c);}
       grid.appendChild(hrow);return;
     }
