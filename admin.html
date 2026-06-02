@@ -87,6 +87,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .badge.suspended{background:rgba(204,51,51,0.08);color:var(--red);}
 .badge.live{background:rgba(46,158,96,0.1);color:var(--green);}
 .badge.draft{background:rgba(0,0,0,0.06);color:var(--muted);}
+.badge.hold{background:rgba(0,0,0,0.06);color:var(--muted);}
+.badge.closed{background:rgba(204,51,51,0.08);color:var(--red);}
 .badge.ACTIVE{background:rgba(200,134,10,0.1);color:var(--accent);}
 
 /* BUTTONS */
@@ -239,7 +241,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="ev-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
     </div>
     <div class="info-box">
-      ℹ️ Change event status: <strong>Draft</strong> → organiser can edit. <strong>Active</strong> → booking window open but not public. <strong>Live</strong> → visible on homepage, booking enabled.
+      ℹ️ <strong>Hold</strong> — paused, organiser editing. <strong>Active</strong> — booking open, not public. <strong>Live</strong> — on homepage, booking on. <strong>Closed</strong> — event over.
     </div>
   </div>
 
@@ -550,22 +552,28 @@ function openEvStatus(id) {
   currentEvId = id;
   const ev = allEvents.find(e => e.id === id);
   if (!ev) return;
+  // Normalise: treat 'draft' same as 'hold'
+  const curStatus = (ev.status || 'hold').toLowerCase() === 'draft' ? 'hold' : (ev.status || 'hold').toLowerCase();
   document.getElementById('ev-modal-name').textContent = ev.name;
-  document.getElementById('ev-modal-meta').textContent =
-    'Current status: ' + (ev.status || 'draft').toUpperCase();
+  document.getElementById('ev-modal-meta').textContent = 'Current status: ' + curStatus.toUpperCase();
 
-  const statuses = ['draft', 'active', 'live'];
-  const colors = { draft: '', active: 'gold', live: 'green' };
-  const labels = { draft: '📝 Draft — organiser editing', active: '🔓 Active — booking open (not public)', live: '🟢 Live — visible on homepage' };
+  const statuses = ['hold', 'active', 'live', 'closed'];
+  const colors = { hold: '', active: 'gold', live: 'green', closed: 'red' };
+  const labels = {
+    hold:   '⏸ Hold — paused, organiser editing',
+    active: '🔓 Active — booking open (not public)',
+    live:   '🟢 Live — visible on homepage',
+    closed: '🔴 Closed — event over, no booking'
+  };
 
   const btns = document.getElementById('ev-status-btns');
   btns.innerHTML = '';
   statuses.forEach(s => {
-    if (s === (ev.status || 'draft').toLowerCase()) return; // skip current
+    if (s === curStatus) return; // skip current
     const btn = document.createElement('button');
     btn.className = 'mbtn ' + (colors[s] || '');
     btn.textContent = labels[s];
-    btn.onclick = () => setEvStatus(s);
+    btn.onclick = () => setEvStatus(s === 'hold' ? 'draft' : s); // store as 'draft' in DB for hold
     btns.appendChild(btn);
   });
   openModal('modal-ev-status');
