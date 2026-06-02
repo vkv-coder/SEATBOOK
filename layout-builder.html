@@ -129,9 +129,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 <div class="hall-bar">
   <select class="hsel" id="hall-sel" onchange="pickHall()">
-    <option value="">— Select hall —</option>
-    <option value="sayjirao">Sayjirao Nagar Gruha, Vadodara</option>
-    <option value="demo">Demo Hall</option>
+    <option value="">— Loading halls… —</option>
   </select>
   <button class="hbtn" onclick="showModal('modal-quickbuild')">⚡ Build</button>
 </div>
@@ -349,13 +347,32 @@ const sb=window.supabase.createClient(
   'https://jqqnnkzozjskziaizajg.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
 );
-const HALL_IDS={sayjirao:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'};
+// halls loaded dynamically from Supabase
+let hallsMap = {}; // id -> {name, city}
 
 let sections=[],rows=[],fineTool=null,activeSecId=null,pickedColor=COLORS[0],numMode=false;
-let painting=false,hallName='',currentHallKey='';
+let painting=false,hallName='',currentHallId='';
 let history=[];
 let _renumRi=-1,_renumCi=-1;
 let highlightSecId=null;
+
+async function loadHalls() {
+  const sel = document.getElementById('hall-sel');
+  const { data, error } = await sb.from('kh_halls').select('id,name,city').order('name');
+  if (error || !data || !data.length) {
+    sel.innerHTML = '<option value="">— No halls found —</option>';
+    return;
+  }
+  hallsMap = {};
+  sel.innerHTML = '<option value="">— Select hall —</option>';
+  data.forEach(h => {
+    hallsMap[h.id] = { name: h.name, city: h.city || 'Vadodara' };
+    const opt = document.createElement('option');
+    opt.value = h.id;
+    opt.textContent = h.name + (h.city ? ', ' + h.city : '');
+    sel.appendChild(opt);
+  });
+}
 
 function saveHistory(){history.push(JSON.stringify({rows,sections}));if(history.length>40)history.shift();}
 function undoLast(){
@@ -367,21 +384,24 @@ function undoLast(){
 }
 
 async function pickHall(){
-  const v=document.getElementById('hall-sel').value;
-  if(!v)return;
-  currentHallKey=v;
-  const names={sayjirao:'Sayjirao Nagar Gruha, Akota, Vadodara',demo:'Demo Hall'};
-  hallName=names[v]||v;
+  const hallId = document.getElementById('hall-sel').value;
+  if(!hallId) return;
+  currentHallId = hallId;
+  const h = hallsMap[hallId];
+  hallName = h ? (h.name + (h.city ? ', ' + h.city : '')) : hallId;
   document.getElementById('empty-hint').style.display='none';
   document.getElementById('stage-wrap').style.display='block';
-  if(v==='sayjirao'){
-    rows=[];sections=[];render();renderSecs();
-    const {data:hall}=await sb.from('kh_halls').select('layout_json').eq('id',HALL_IDS.sayjirao).single();
-    if(hall&&hall.layout_json&&hall.layout_json.rows?.length>0){
-      const ok=confirm('Existing layout found ('+hall.layout_json.rows.filter(r=>r.type==='row').length+' rows). Load it?');
-      if(ok){rows=hall.layout_json.rows;sections=hall.layout_json.sections||[];activeSecId=sections[0]?.id||null;render();renderSecs();return;}
+  rows=[];sections=[];render();renderSecs();
+  const {data:hall} = await sb.from('kh_halls').select('layout_json').eq('id', hallId).single();
+  if(hall && hall.layout_json && hall.layout_json.rows?.length > 0){
+    const rowCount = hall.layout_json.rows.filter(r=>r.type==='row').length;
+    const ok = confirm('Existing layout found (' + rowCount + ' rows). Load it?');
+    if(ok){
+      rows = hall.layout_json.rows;
+      sections = hall.layout_json.sections || [];
+      activeSecId = sections[0]?.id || null;
+      render();renderSecs();
     }
-    rows=[];sections=[];render();renderSecs();
   }
 }
 
@@ -668,10 +688,9 @@ function showSave(){
 }
 
 async function doSave(){
-  const hallId=HALL_IDS[currentHallKey];
   const data={hall:hallName,sections,rows,savedAt:new Date().toISOString()};
-  if(hallId){
-    const {error}=await sb.from('kh_halls').update({layout_json:data}).eq('id',hallId);
+  if(currentHallId){
+    const {error}=await sb.from('kh_halls').update({layout_json:data}).eq('id',currentHallId);
     if(error){alert('Supabase error: '+error.message);return;}
     closeModal('modal-save');alert('✓ Layout saved to Supabase!');
   } else {
@@ -686,6 +705,7 @@ function closeModal(id){document.getElementById(id).classList.remove('show');if(
 window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('qb-rows').value='AA BB A B C D E F G H I J K L M N O P Q R S T U V W';
   document.getElementById('qb-seats').value='63';
+  loadHalls();
 });
 </script>
 </body>
