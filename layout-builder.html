@@ -62,7 +62,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .stage-box{display:inline-block;background:var(--text);color:#fff;font-size:10px;font-weight:600;letter-spacing:2px;padding:5px 22px;border-radius:4px 4px 0 0;}
 .stage-line{height:4px;background:var(--text);border-radius:2px;}
 
-.grid-area{display:flex;flex-direction:column;gap:0;width:max-content;}
+.grid-area{display:flex;flex-direction:column-reverse;gap:0;width:max-content;}
 .grid-row{display:flex;align-items:center;gap:1px;margin-bottom:0;}
 .row-lbl{font-size:9px;color:var(--muted);width:14px;text-align:center;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;height:12px;flex-shrink:0;}
 .row-lbl:hover{color:var(--red);}
@@ -165,10 +165,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 <div class="canvas-outer">
   <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:12px;" id="empty-hint">Select a hall or click ⚡ Build to start</div>
-  <div class="stage-wrap" id="stage-wrap" style="display:none;">
-    <div class="stage-box">STAGE</div><div class="stage-line"></div>
-  </div>
   <div class="grid-area" id="grid-area"></div>
+  <div class="stage-wrap" id="stage-wrap" style="display:none;margin-top:10px;">
+    <div class="stage-line"></div><div class="stage-box" style="border-radius:0 0 4px 4px;">STAGE</div>
+  </div>
 </div>
 
 <div class="add-row-bar">
