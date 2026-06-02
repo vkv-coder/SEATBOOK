@@ -285,11 +285,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 
 <!-- BOTTOM BAR -->
 <div class="bottom-bar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div style="font-size:12px;color:var(--muted);font-weight:500;">How many seats?</div>
+    <div style="display:flex;align-items:center;gap:0;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;">
+      <button onclick="changeSeatCount(-1)" style="width:36px;height:34px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">−</button>
+      <div id="seat-count-display" style="width:32px;text-align:center;font-size:16px;font-weight:700;color:var(--text);">1</div>
+      <button onclick="changeSeatCount(1)" style="width:36px;height:34px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">+</button>
+    </div>
+  </div>
   <div class="sel-summary">
-    <div class="sel-seats-list" id="sel-seats-list">No seats selected</div>
+    <div class="sel-seats-list" id="sel-seats-list">Tap any seat to select</div>
     <div class="sel-total" id="sel-total"></div>
   </div>
-  <button class="proceed-btn" id="proceed-btn" disabled onclick="openForm()">Select seats to proceed</button>
+  <button class="proceed-btn" id="proceed-btn" disabled onclick="openForm()">Tap a seat to begin</button>
   <div class="timer-bar" id="timer-bar">⏱ Hold expires in <span id="timer-count">5:00</span></div>
 </div>
 
@@ -660,63 +668,115 @@ function buildSeatMap(layout) {
   grid.appendChild(fragment);
 }
 
-// Returns ordered list of all real seats in the row (including booked/held, excluding aisle/blocked/invisible)
-function getRowSeatEls(rowLabel) {
+let wantedSeatCount = 1;
+
+function changeSeatCount(delta) {
+  const newCount = wantedSeatCount + delta;
+  if (newCount < 1 || newCount > 6) return;
+  wantedSeatCount = newCount;
+  document.getElementById('seat-count-display').textContent = newCount;
+  // Clear current selection when count changes
+  clearSelectedSeats();
+}
+
+function clearSelectedSeats() {
+  selectedSeats.forEach(s => {
+    const el = document.querySelector('[data-key="' + s.seatKey + '"]');
+    if (el) {
+      el.classList.remove('selected');
+      el.style.background = el.dataset.colour + '22';
+      el.style.border = '1px solid ' + el.dataset.colour + '99';
+      el.style.color = '#1a1a1a';
+    }
+  });
+  selectedSeats = [];
+  updateBottomBar();
+}
+
+// Get all available seats in a row in DOM order
+function getAvailableSeatsInRow(rowLabel) {
   return Array.from(document.querySelectorAll('.seat[data-row]'))
-    .filter(s => s.dataset.row === rowLabel && s.dataset.key && !s.classList.contains('aisle') && !s.classList.contains('blocked') && s.style.opacity !== '0');
-}
-
-// Check if two seat elements are physically adjacent in DOM (no other real seat between them)
-function areDomAdjacent(elA, elB) {
-  const rowLabel = elA.dataset.row;
-  if (rowLabel !== elB.dataset.row) return false;
-  const rowSeats = getRowSeatEls(rowLabel);
-  const iA = rowSeats.indexOf(elA);
-  const iB = rowSeats.indexOf(elB);
-  return Math.abs(iA - iB) === 1;
-}
-
-function getSeatEl(seatKey) {
-  // Use attribute search to avoid CSS selector escaping issues
-  return document.querySelector('[data-key="' + seatKey + '"]');
+    .filter(s => s.dataset.row === rowLabel
+      && s.dataset.key
+      && !s.classList.contains('aisle')
+      && !s.classList.contains('blocked')
+      && !s.classList.contains('booked')
+      && !s.classList.contains('held')
+      && s.style.opacity !== '0');
 }
 
 function toggleSeat(el) {
-  const key = el.dataset.key;
-  const isSelected = el.classList.contains('selected');
+  const rowLabel = el.dataset.row;
+  const n = wantedSeatCount;
 
-  if (isSelected) {
-    const idx = selectedSeats.findIndex(s => s.seatKey === key);
-    if (idx !== 0 && idx !== selectedSeats.length - 1) { showWarn('Can only deselect from the ends'); return; }
-    el.classList.remove('selected');
-    el.style.background = el.dataset.colour + '22';
-    el.style.border = '1px solid ' + el.dataset.colour + '99';
-    el.style.color = '#1a1a1a';
-    selectedSeats.splice(idx, 1);
-    updateBottomBar();
+  // Get all available seats in this row
+  const rowSeats = getAvailableSeatsInRow(rowLabel);
+  const clickedIdx = rowSeats.indexOf(el);
+  if (clickedIdx === -1) return;
+
+  // Try to select n seats starting from clicked seat going forward
+  let seats = [];
+  if (clickedIdx + n <= rowSeats.length) {
+    seats = rowSeats.slice(clickedIdx, clickedIdx + n);
+    // Check they are physically consecutive (no booked/held gaps)
+    if (!areConsecutiveInRow(seats)) seats = [];
+  }
+
+  // If not enough forward, try centered around clicked
+  if (seats.length < n) {
+    const half = Math.floor(n / 2);
+    const start = Math.max(0, clickedIdx - half);
+    const end = start + n;
+    if (end <= rowSeats.length) {
+      const candidate = rowSeats.slice(start, end);
+      if (areConsecutiveInRow(candidate)) seats = candidate;
+    }
+  }
+
+  // If still not enough, try going backward
+  if (seats.length < n) {
+    const start = Math.max(0, clickedIdx - n + 1);
+    const candidate = rowSeats.slice(start, start + n);
+    if (candidate.length === n && areConsecutiveInRow(candidate)) seats = candidate;
+  }
+
+  if (seats.length < n) {
+    showWarn('Not enough consecutive seats in this row. Try another row.');
     return;
   }
 
-  if (selectedSeats.length >= 6) { showWarn('Maximum 6 seats per booking'); return; }
+  // Clear previous selection
+  clearSelectedSeats();
 
-  if (selectedSeats.length > 0) {
-    const firstEl = getSeatEl(selectedSeats[0].seatKey);
-    const lastEl  = getSeatEl(selectedSeats[selectedSeats.length - 1].seatKey);
-    const adjToEnd   = lastEl  && areDomAdjacent(lastEl, el);
-    const adjToStart = firstEl && areDomAdjacent(firstEl, el);
-    console.log('adjToEnd:', adjToEnd, 'adjToStart:', adjToStart, 'newSeat:', el.dataset.key, 'lastSeat:', lastEl && lastEl.dataset.key);
-    if (!adjToEnd && !adjToStart) { showWarn('Please select adjacent seats only'); return; }
-    if (adjToStart) {
-      selectedSeats.unshift({ rowLabel:el.dataset.row, seatNum:el.dataset.sn, sectionId:el.dataset.sec, price:parseInt(el.dataset.price), colour:el.dataset.colour, seatKey:key });
-    } else {
-      selectedSeats.push({ rowLabel:el.dataset.row, seatNum:el.dataset.sn, sectionId:el.dataset.sec, price:parseInt(el.dataset.price), colour:el.dataset.colour, seatKey:key });
-    }
-  } else {
-    selectedSeats.push({ rowLabel:el.dataset.row, seatNum:el.dataset.sn, sectionId:el.dataset.sec, price:parseInt(el.dataset.price), colour:el.dataset.colour, seatKey:key });
-  }
-
-  el.classList.add('selected');
+  // Select the new seats
+  seats.forEach(s => {
+    s.classList.add('selected');
+    selectedSeats.push({
+      rowLabel: s.dataset.row,
+      seatNum: s.dataset.sn,
+      sectionId: s.dataset.sec,
+      price: parseInt(s.dataset.price),
+      colour: s.dataset.colour,
+      seatKey: s.dataset.key
+    });
+  });
   updateBottomBar();
+}
+
+// Check if seats are physically consecutive in the full row DOM (no booked/held between them)
+function areConsecutiveInRow(seatEls) {
+  if (seatEls.length <= 1) return true;
+  // Get all non-aisle seats in the row (including booked/held for gap detection)
+  const rowLabel = seatEls[0].dataset.row;
+  const allRowSeats = Array.from(document.querySelectorAll('.seat[data-row]'))
+    .filter(s => s.dataset.row === rowLabel && s.dataset.key
+      && !s.classList.contains('aisle') && s.style.opacity !== '0');
+  const indices = seatEls.map(s => allRowSeats.indexOf(s));
+  // Must be sequential with no gaps
+  for (let i = 1; i < indices.length; i++) {
+    if (indices[i] !== indices[i-1] + 1) return false;
+  }
+  return true;
 }
 
 function showWarn(msg) {
@@ -735,12 +795,17 @@ function updateBottomBar() {
   const list = document.getElementById('sel-seats-list');
   const total = document.getElementById('sel-total');
   if (selectedSeats.length === 0) {
-    list.textContent = 'No seats selected'; total.textContent = ''; btn.disabled = true; btn.textContent = 'Select seats to proceed';
+    list.textContent = 'Tap any seat to auto-select ' + wantedSeatCount + ' seat' + (wantedSeatCount > 1 ? 's' : '');
+    total.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Tap a seat to begin';
   } else {
     const seatLabels = selectedSeats.map(s => s.rowLabel + '-' + s.seatNum).join(', ');
     const totalAmt = selectedSeats.reduce((a, s) => a + s.price, 0);
-    list.textContent = seatLabels; total.textContent = totalAmt > 0 ? '₹' + totalAmt : 'Free';
-    btn.disabled = false; btn.textContent = 'Proceed →';
+    list.textContent = seatLabels;
+    total.textContent = totalAmt > 0 ? '₹' + totalAmt : 'Free';
+    btn.disabled = false;
+    btn.textContent = 'Proceed →';
   }
 }
 
