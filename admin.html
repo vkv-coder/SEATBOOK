@@ -151,7 +151,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="topbar-logo">Khursilo.</div>
       <div class="topbar-sub">Admin · Platform management</div>
     </div>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <a href="index.html" style="font-size:11px;color:var(--muted);text-decoration:none;">🏠 Home</a>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
   </div>
 
   <div class="nav-tabs">
@@ -214,7 +217,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button onclick="showTab('organisers',document.querySelectorAll('.nav-tab')[1]);openModal('modal-add-org')" style="padding:12px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;">
           👤 Add organiser
         </button>
-        <button onclick="window.location.href='layout-builder.html'" style="padding:12px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;">
+        <button onclick="window.location.href='layout-builder.html?from=admin'" style="padding:12px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;">
           🏛 Map new hall
         </button>
       </div>
@@ -250,7 +253,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="card">
       <div class="card-hdr">
         <div class="card-title">Mapped halls <span style="color:var(--muted);font-weight:400;" id="hall-count-lbl"></span></div>
-        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map new</button>
+        <button class="card-action" onclick="window.location.href='layout-builder.html?from=admin'">+ Map new</button>
       </div>
       <div id="hall-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
     </div>
@@ -358,6 +361,7 @@ let currentEvId = null;
 function checkPass() {
   const p = document.getElementById('admin-pass').value;
   if (p === PASS) {
+    sessionStorage.setItem('kh_admin', '1');
     showScreen('screen-dash');
     loadAll();
   } else {
@@ -366,7 +370,18 @@ function checkPass() {
     document.getElementById('admin-pass').focus();
   }
 }
-function logout() { showScreen('screen-login'); document.getElementById('admin-pass').value = ''; }
+function logout() {
+  sessionStorage.removeItem('kh_admin');
+  showScreen('screen-login');
+  document.getElementById('admin-pass').value = '';
+}
+// Auto-login if session active
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('kh_admin') === '1') {
+    showScreen('screen-dash');
+    loadAll();
+  }
+});
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -610,7 +625,7 @@ function renderHalls() {
         <div class="hall-name">${hall.name}</div>
         <div class="hall-meta">${hall.city || 'Vadodara'} · ${hall.capacity || '—'} seats</div>
       </div>
-      <button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit layout</button>`;
+      <button class="tbl-btn" onclick="window.location.href='layout-builder.html?from=admin'">Edit layout</button>`;
     list.appendChild(item);
   });
   document.getElementById('hall-count-lbl').textContent = '(' + allHalls.length + ')';
