@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Khursilo — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#f5f5f3;--white:#fff;--s2:#f0eeea;
@@ -40,7 +41,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* NAV */
 .nav-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;}
-.nav-tab{flex:1;padding:10px 8px;font-size:12px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;}
+.nav-tab{flex:1;padding:10px 4px;font-size:11px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;border-bottom:2px solid transparent;transition:all 0.2s;}
 .nav-tab.active{color:var(--text);border-bottom-color:var(--text);}
 
 /* BODY */
@@ -58,7 +59,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .card-title{font-size:13px;font-weight:600;}
 .card-action{font-size:11px;color:var(--accent);background:none;border:1px solid rgba(200,134,10,0.3);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;}
 
-/* ORG ITEMS */
+/* LIST ITEMS */
 .org-list{display:flex;flex-direction:column;}
 .org-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .org-item:last-child{border-bottom:none;}
@@ -66,15 +67,34 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .org-info{flex:1;min-width:0;}
 .org-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .org-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.org-actions{display:flex;gap:5px;flex-shrink:0;}
+.org-actions{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+
+/* EVENT ITEMS */
+.ev-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;}
+.ev-item:last-child{border-bottom:none;}
+.ev-date-box{background:var(--text);color:#fff;border-radius:6px;padding:5px 8px;text-align:center;flex-shrink:0;min-width:36px;}
+.ev-day{font-size:14px;font-weight:700;line-height:1;}
+.ev-mon{font-size:8px;text-transform:uppercase;opacity:0.65;margin-top:1px;}
+.ev-info{flex:1;min-width:0;}
+.ev-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ev-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.ev-actions{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;}
+
+/* BADGE */
 .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;}
 .badge.active{background:rgba(46,158,96,0.1);color:var(--green);}
 .badge.pending{background:rgba(200,134,10,0.1);color:var(--accent);}
 .badge.suspended{background:rgba(204,51,51,0.08);color:var(--red);}
+.badge.live{background:rgba(46,158,96,0.1);color:var(--green);}
+.badge.draft{background:rgba(0,0,0,0.06);color:var(--muted);}
+.badge.ACTIVE{background:rgba(200,134,10,0.1);color:var(--accent);}
+
+/* BUTTONS */
 .tbl-btn{font-size:10px;padding:4px 9px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .tbl-btn.red{color:var(--red);border-color:rgba(204,51,51,0.3);}
 .tbl-btn.green{color:var(--green);border-color:rgba(46,158,96,0.3);}
 .tbl-btn.blue{color:var(--blue);border-color:rgba(43,111,212,0.3);}
+.tbl-btn.gold{color:var(--accent);border-color:rgba(200,134,10,0.3);}
 
 /* HALL ITEMS */
 .hall-item{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
@@ -94,9 +114,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .mbtns{display:flex;gap:8px;margin-top:14px;}
 .mbtn{flex:1;padding:10px;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--text);}
 .mbtn.pri{background:var(--text);color:#fff;border-color:var(--text);}
+.mbtn.green{background:var(--green);color:#fff;border-color:var(--green);}
 
 /* INFO BOX */
 .info-box{background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#1a3a6b;line-height:1.6;}
+
+/* LOADING */
+.loading-row{padding:20px;text-align:center;font-size:13px;color:var(--muted);}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -129,6 +155,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('overview',this)">Overview</button>
     <button class="nav-tab" onclick="showTab('organisers',this)">Organisers</button>
+    <button class="nav-tab" onclick="showTab('events',this)">Events</button>
     <button class="nav-tab" onclick="showTab('halls',this)">Halls</button>
   </div>
 
@@ -136,43 +163,47 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="dash-body" id="tab-overview">
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-n" id="count-orgs">4</div>
+        <div class="stat-n" id="count-orgs">—</div>
         <div class="stat-l">Organisers</div>
       </div>
       <div class="stat-card">
-        <div class="stat-n" id="count-events">5</div>
-        <div class="stat-l">Events created</div>
+        <div class="stat-n" id="count-events">—</div>
+        <div class="stat-l">Events</div>
       </div>
       <div class="stat-card">
-        <div class="stat-n" id="count-halls">4</div>
-        <div class="stat-l">Halls mapped</div>
+        <div class="stat-n" id="count-halls">—</div>
+        <div class="stat-l">Halls</div>
       </div>
     </div>
 
     <div class="card">
       <div class="card-hdr"><div class="card-title">Platform status</div></div>
-      <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:14px;display:flex;flex-direction:column;gap:0;">
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
           <span style="color:var(--muted);">Active organisers</span>
-          <span style="font-weight:500;color:var(--green);" id="ov-active">2</span>
+          <span style="font-weight:500;color:var(--green);" id="ov-active">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
           <span style="color:var(--muted);">Pending approval</span>
-          <span style="font-weight:500;color:var(--accent);" id="ov-pending">1</span>
+          <span style="font-weight:500;color:var(--accent);" id="ov-pending">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
           <span style="color:var(--muted);">Suspended</span>
-          <span style="font-weight:500;color:var(--red);" id="ov-suspended">1</span>
+          <span style="font-weight:500;color:var(--red);" id="ov-suspended">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Live events now</span>
+          <span style="font-weight:500;color:var(--green);" id="ov-live">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;">
-          <span style="color:var(--muted);">Live events right now</span>
-          <span style="font-weight:500;" id="ov-live">3</span>
+          <span style="color:var(--muted);">Total bookings</span>
+          <span style="font-weight:500;" id="ov-bookings">—</span>
         </div>
       </div>
     </div>
 
     <div class="info-box">
-      ℹ️ This panel manages platform access only. Organiser bookings, ticket revenue, and audience data are private to each organiser. Khursilo does not store or view that data.
+      ℹ️ This panel manages platform access only. Organiser bookings, ticket revenue, and audience data are private to each organiser.
     </div>
 
     <div class="card">
@@ -192,10 +223,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="dash-body" id="tab-organisers" style="display:none;">
     <div class="card">
       <div class="card-hdr">
-        <div class="card-title">Organisers <span id="org-count-label" style="color:var(--muted);font-weight:400;">(4)</span></div>
-        <button class="card-action" onclick="openModal('modal-add-org')">+ Add organiser</button>
+        <div class="card-title">Organisers <span id="org-count-label" style="color:var(--muted);font-weight:400;"></span></div>
+        <button class="card-action" onclick="openModal('modal-add-org')">+ Add</button>
       </div>
-      <div class="org-list" id="org-list"></div>
+      <div class="org-list" id="org-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="dash-body" id="tab-events" style="display:none;">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">All events <span id="ev-count-label" style="color:var(--muted);font-weight:400;"></span></div>
+      </div>
+      <div id="ev-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
+    </div>
+    <div class="info-box">
+      ℹ️ Change event status: <strong>Draft</strong> → organiser can edit. <strong>Active</strong> → booking window open but not public. <strong>Live</strong> → visible on homepage, booking enabled.
     </div>
   </div>
 
@@ -203,16 +247,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="dash-body" id="tab-halls" style="display:none;">
     <div class="card">
       <div class="card-hdr">
-        <div class="card-title">Mapped halls <span style="color:var(--muted);font-weight:400;" id="hall-count-lbl">(4)</span></div>
-        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map new hall</button>
+        <div class="card-title">Mapped halls <span style="color:var(--muted);font-weight:400;" id="hall-count-lbl"></span></div>
+        <button class="card-action" onclick="window.location.href='layout-builder.html'">+ Map new</button>
       </div>
-      <div id="hall-list"></div>
+      <div id="hall-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
     </div>
     <div class="info-box">
-      ℹ️ Each hall is mapped once by you. When an organiser creates an event, they select from this list — the layout loads instantly. Click <strong>Edit layout</strong> to modify any hall in the layout builder.
+      ℹ️ Each hall is mapped once. Organisers select from this list when creating an event.
     </div>
   </div>
-
 </div>
 
 <!-- MODAL: Add Organiser -->
@@ -224,16 +267,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <input class="inp" type="text" id="new-org-name" placeholder="e.g. Navrang Drama Group" style="margin:0;">
     </div>
     <div class="mf">
-      <div class="ml">Contact person</div>
+      <div class="ml">Contact person name *</div>
       <input class="inp" type="text" id="new-org-contact" placeholder="Full name" style="margin:0;">
     </div>
     <div class="mf">
       <div class="ml">Mobile number *</div>
-      <input class="inp" type="tel" id="new-org-mobile" placeholder="98765 43210" maxlength="10" style="margin:0;">
+      <input class="inp" type="tel" id="new-org-mobile" placeholder="10-digit mobile" maxlength="10" style="margin:0;">
+    </div>
+    <div class="mf">
+      <div class="ml">Email (for OTP login) *</div>
+      <input class="inp" type="email" id="new-org-email" placeholder="organiser@email.com" style="margin:0;">
     </div>
     <div class="mf" style="margin:0;">
       <div class="ml">Event type</div>
-      <select class="inp" id="new-org-type" style="margin:0;appearance:none;">
+      <select class="inp" id="new-org-type" style="margin:0;">
         <option value="both">Paid ticketing + Free allocation</option>
         <option value="paid">Paid ticketing only</option>
         <option value="free">Free allocation only</option>
@@ -241,7 +288,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-add-org')">Cancel</button>
-      <button class="mbtn pri" onclick="addOrg()">Add & send login link</button>
+      <button class="mbtn pri" onclick="addOrg()">Add organiser</button>
     </div>
   </div>
 </div>
@@ -250,9 +297,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="overlay" id="modal-org-detail">
   <div class="modal">
     <div class="modal-title" id="detail-org-name">Organiser</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+    <div style="display:flex;flex-direction:column;gap:0;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Contact</span><span id="detail-contact" style="font-weight:500;"></span>
+      </div>
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
         <span style="color:var(--muted);">Mobile</span><span id="detail-mobile" style="font-weight:500;"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);">Email</span><span id="detail-email" style="font-weight:500;font-size:11px;"></span>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);">
         <span style="color:var(--muted);">Event type</span><span id="detail-type" style="font-weight:500;"></span>
@@ -266,148 +319,317 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="mbtns">
       <button class="mbtn" onclick="closeModal('modal-org-detail')">Close</button>
-      <button class="mbtn" id="detail-action-btn" style="color:var(--red);border-color:rgba(204,51,51,0.3);" onclick="toggleOrgStatus()">Suspend</button>
+      <button class="mbtn" id="detail-action-btn" onclick="toggleOrgStatus()">Suspend</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Event Status -->
+<div class="overlay" id="modal-ev-status">
+  <div class="modal">
+    <div class="modal-title" id="ev-modal-name">Event</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="ev-modal-meta"></div>
+    <div class="ml" style="margin-bottom:10px;">Change status to:</div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="ev-status-btns"></div>
+    <div class="mbtns" style="margin-top:16px;">
+      <button class="mbtn" onclick="closeModal('modal-ev-status')">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
+const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const PASS = 'khursilo@admin2025';
-let currentOrgIdx = null;
-
-let orgs = [
-  { name:'Vadodara Drama Circle', contact:'Rajesh Mehta', mobile:'98765 43210', type:'Paid + Free', status:'active', events:3 },
-  { name:'Rotary Club Vadodara', contact:'Sunita Shah', mobile:'87654 32109', type:'Free allocation', status:'active', events:1 },
-  { name:'Baroda Arts Circle', contact:'Amit Patel', mobile:'76543 21098', type:'Paid ticketing', status:'pending', events:1 },
-  { name:'DPS School', contact:'Mrs. Trivedi', mobile:'65432 10987', type:'Free allocation', status:'suspended', events:0 },
-];
-
-const halls = [
-  { name:'Sayaji Hall', city:'Vadodara', capacity:850, sections:3 },
-  { name:'Town Hall', city:'Vadodara', capacity:420, sections:2 },
-  { name:'Baroda Club Auditorium', city:'Vadodara', capacity:320, sections:2 },
-  { name:'Nirmala Convent Hall', city:'Vadodara', capacity:280, sections:1 },
-];
-
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
 
-// ── Login ──
-function checkPass(){
-  const p = document.getElementById('admin-pass').value;
-  if(p === PASS){ showScreen('screen-dash'); renderOrgs(); renderHalls(); updateOverview(); }
-  else{ document.getElementById('pass-err').style.display='block'; document.getElementById('admin-pass').value=''; document.getElementById('admin-pass').focus(); }
-}
-function logout(){ showScreen('screen-login'); document.getElementById('admin-pass').value=''; }
-function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+let allOrgs = [];
+let allEvents = [];
+let allHalls = [];
+let currentOrgId = null;
+let currentEvId = null;
 
-// ── Tabs ──
-function showTab(tab,btn){
-  document.querySelectorAll('.dash-body').forEach(t=>t.style.display='none');
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+tab).style.display='flex';
+// ── AUTH ──
+function checkPass() {
+  const p = document.getElementById('admin-pass').value;
+  if (p === PASS) {
+    showScreen('screen-dash');
+    loadAll();
+  } else {
+    document.getElementById('pass-err').style.display = 'block';
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('admin-pass').focus();
+  }
+}
+function logout() { showScreen('screen-login'); document.getElementById('admin-pass').value = ''; }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── TABS ──
+function showTab(tab, btn) {
+  document.querySelectorAll('.dash-body').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'flex';
   btn.classList.add('active');
 }
 
-// ── Overview ──
-function updateOverview(){
-  document.getElementById('count-orgs').textContent = orgs.length;
-  document.getElementById('count-halls').textContent = halls.length;
-  document.getElementById('ov-active').textContent = orgs.filter(o=>o.status==='active').length;
-  document.getElementById('ov-pending').textContent = orgs.filter(o=>o.status==='pending').length;
-  document.getElementById('ov-suspended').textContent = orgs.filter(o=>o.status==='suspended').length;
+// ── LOAD ALL DATA ──
+async function loadAll() {
+  await Promise.all([loadOrgs(), loadEvents(), loadHalls(), loadBookingCount()]);
 }
 
-// ── Organisers ──
-function renderOrgs(){
+// ── ORGANISERS ──
+async function loadOrgs() {
+  const { data, error } = await sb.from('kh_organisers')
+    .select('id,name,contact_1_name,contact_1_mobile,email_1,event_type,status')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  allOrgs = data || [];
+  renderOrgs();
+  updateOverview();
+}
+
+function renderOrgs() {
   const list = document.getElementById('org-list');
+  if (!allOrgs.length) { list.innerHTML = '<div class="loading-row">No organisers yet.</div>'; return; }
+
+  // Count events per organiser
+  const evCounts = {};
+  allEvents.forEach(e => { evCounts[e.organiser_id] = (evCounts[e.organiser_id] || 0) + 1; });
+
   list.innerHTML = '';
-  orgs.forEach((org,i)=>{
-    const initials = org.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    const statusLabel = {active:'Active',pending:'Pending',suspended:'Suspended'}[org.status];
+  allOrgs.forEach((org, i) => {
+    const initials = (org.name || 'O').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const status = (org.status || 'pending').toLowerCase();
+    const statusLabel = { active: 'Active', pending: 'Pending', suspended: 'Suspended' }[status] || status;
+    const evCount = evCounts[org.id] || 0;
     const item = document.createElement('div');
     item.className = 'org-item';
     item.innerHTML = `
       <div class="org-avatar" style="background:${AVATARBG[i%4]};color:${AVATARCOL[i%4]};">${initials}</div>
       <div class="org-info">
-        <div class="org-name">${org.name}</div>
-        <div class="org-meta">${org.mobile} · ${org.type}</div>
+        <div class="org-name">${org.name || '—'}</div>
+        <div class="org-meta">${org.contact_1_mobile || ''} · ${evCount} event${evCount !== 1 ? 's' : ''}</div>
       </div>
       <div class="org-actions">
-        <span class="badge ${org.status}">${statusLabel}</span>
-        <button class="tbl-btn blue" onclick="viewOrg(${i})">View</button>
+        <span class="badge ${status}">${statusLabel}</span>
+        <button class="tbl-btn blue" onclick="viewOrg('${org.id}')">View</button>
       </div>`;
     list.appendChild(item);
   });
-  document.getElementById('org-count-label').textContent = '('+orgs.length+')';
-  updateOverview();
+  document.getElementById('org-count-label').textContent = '(' + allOrgs.length + ')';
 }
 
-function viewOrg(i){
-  currentOrgIdx = i;
-  const org = orgs[i];
-  document.getElementById('detail-org-name').textContent = org.name;
-  document.getElementById('detail-mobile').textContent = org.mobile;
-  document.getElementById('detail-type').textContent = org.type;
-  document.getElementById('detail-events').textContent = org.events + ' event' + (org.events!==1?'s':'');
+function viewOrg(id) {
+  currentOrgId = id;
+  const org = allOrgs.find(o => o.id === id);
+  if (!org) return;
+  const evCount = allEvents.filter(e => e.organiser_id === id).length;
+  const status = (org.status || 'pending').toLowerCase();
+  document.getElementById('detail-org-name').textContent = org.name || '—';
+  document.getElementById('detail-contact').textContent = org.contact_1_name || '—';
+  document.getElementById('detail-mobile').textContent = org.contact_1_mobile || '—';
+  document.getElementById('detail-email').textContent = org.email_1 || '—';
+  document.getElementById('detail-type').textContent = org.event_type || '—';
+  document.getElementById('detail-events').textContent = evCount + ' event' + (evCount !== 1 ? 's' : '');
   const statusEl = document.getElementById('detail-status');
-  statusEl.innerHTML = `<span class="badge ${org.status}">${org.status.charAt(0).toUpperCase()+org.status.slice(1)}</span>`;
+  statusEl.innerHTML = `<span class="badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
   const actionBtn = document.getElementById('detail-action-btn');
-  if(org.status==='active'){
-    actionBtn.textContent='Suspend'; actionBtn.style.color='var(--red)'; actionBtn.style.borderColor='rgba(204,51,51,0.3)';
+  if (status === 'active') {
+    actionBtn.textContent = 'Suspend';
+    actionBtn.style.color = 'var(--red)';
+    actionBtn.style.borderColor = 'rgba(204,51,51,0.3)';
+    actionBtn.style.background = 'var(--s2)';
   } else {
-    actionBtn.textContent='Activate'; actionBtn.style.color='var(--green)'; actionBtn.style.borderColor='rgba(46,158,96,0.3)';
+    actionBtn.textContent = 'Activate';
+    actionBtn.style.color = 'var(--green)';
+    actionBtn.style.borderColor = 'rgba(46,158,96,0.3)';
+    actionBtn.style.background = 'var(--s2)';
   }
   openModal('modal-org-detail');
 }
 
-function toggleOrgStatus(){
-  const org = orgs[currentOrgIdx];
-  org.status = org.status === 'active' ? 'suspended' : 'active';
+async function toggleOrgStatus() {
+  const org = allOrgs.find(o => o.id === currentOrgId);
+  if (!org) return;
+  const newStatus = (org.status || 'pending').toLowerCase() === 'active' ? 'suspended' : 'ACTIVE';
+  const { error } = await sb.from('kh_organisers').update({ status: newStatus }).eq('id', currentOrgId);
+  if (error) { alert('Error: ' + error.message); return; }
   closeModal('modal-org-detail');
-  renderOrgs();
-  const action = org.status === 'active' ? 'activated' : 'suspended';
-  alert(`✓ ${org.name} has been ${action}.`);
+  await loadOrgs();
+  alert('✓ Status updated to ' + newStatus);
 }
 
-function addOrg(){
+async function addOrg() {
   const name = document.getElementById('new-org-name').value.trim();
   const contact = document.getElementById('new-org-contact').value.trim();
   const mobile = document.getElementById('new-org-mobile').value.trim();
-  const type = document.getElementById('new-org-type');
-  const typeText = type.options[type.selectedIndex].text;
-  if(!name||!mobile){alert('Name and mobile are required');return;}
-  orgs.push({name,contact,mobile,type:typeText,status:'pending',events:0});
+  const email = document.getElementById('new-org-email').value.trim();
+  const typeEl = document.getElementById('new-org-type');
+  const type = typeEl.value;
+  if (!name || !mobile || !email) { alert('Name, mobile and email are required'); return; }
+  if (!/^[0-9]{10}$/.test(mobile)) { alert('Enter valid 10-digit mobile'); return; }
+
+  const { error } = await sb.from('kh_organisers').insert({
+    name, contact_1_name: contact, contact_1_mobile: mobile,
+    email_1: email, event_type: type, status: 'ACTIVE'
+  });
+  if (error) { alert('Error: ' + error.message); return; }
   closeModal('modal-add-org');
-  document.getElementById('new-org-name').value='';
-  document.getElementById('new-org-contact').value='';
-  document.getElementById('new-org-mobile').value='';
-  renderOrgs();
-  alert(`✓ ${name} added.\nThey can log in at khursilo.in/organiser-dashboard.html using their mobile number.`);
+  document.getElementById('new-org-name').value = '';
+  document.getElementById('new-org-contact').value = '';
+  document.getElementById('new-org-mobile').value = '';
+  document.getElementById('new-org-email').value = '';
+  await loadOrgs();
+  alert('✓ ' + name + ' added.\nThey can login at khursilo.in/organiser-dashboard.html using their email.');
 }
 
-// ── Halls ──
-function renderHalls(){
-  const list = document.getElementById('hall-list');
+// ── EVENTS ──
+async function loadEvents() {
+  const { data, error } = await sb.from('kh_events')
+    .select('id,name,event_date,event_time,status,organiser_id,hall_id')
+    .order('event_date', { ascending: false });
+  if (error) { console.error(error); return; }
+  allEvents = data || [];
+
+  // Build hall name map
+  const hallMap = {};
+  allHalls.forEach(h => { hallMap[h.id] = h.name; });
+  const orgMap = {};
+  allOrgs.forEach(o => { orgMap[o.id] = o.name; });
+
+  renderEvents(hallMap, orgMap);
+  updateOverview();
+}
+
+function renderEvents(hallMap, orgMap) {
+  const list = document.getElementById('ev-list');
+  if (!allEvents.length) { list.innerHTML = '<div class="loading-row">No events yet.</div>'; return; }
+
+  // Build maps if not passed
+  if (!hallMap) { hallMap = {}; allHalls.forEach(h => { hallMap[h.id] = h.name; }); }
+  if (!orgMap) { orgMap = {}; allOrgs.forEach(o => { orgMap[o.id] = o.name; }); }
+
   list.innerHTML = '';
-  halls.forEach((hall,i)=>{
+  allEvents.forEach(ev => {
+    const d = new Date(ev.event_date + 'T00:00:00');
+    const day = d.getDate();
+    const mon = d.toLocaleDateString('en-IN', { month: 'short' });
+    const status = (ev.status || 'draft').toLowerCase();
+    const hallName = hallMap[ev.hall_id] || '—';
+    const orgName = orgMap[ev.organiser_id] || '—';
+
+    const item = document.createElement('div');
+    item.className = 'ev-item';
+    item.innerHTML = `
+      <div class="ev-date-box">
+        <div class="ev-day">${day}</div>
+        <div class="ev-mon">${mon}</div>
+      </div>
+      <div class="ev-info">
+        <div class="ev-name">${ev.name}</div>
+        <div class="ev-meta">${orgName} · ${hallName}</div>
+      </div>
+      <div class="ev-actions">
+        <span class="badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        <button class="tbl-btn gold" onclick="openEvStatus('${ev.id}')">Set status</button>
+      </div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('ev-count-label').textContent = '(' + allEvents.length + ')';
+  document.getElementById('count-events').textContent = allEvents.length;
+}
+
+function openEvStatus(id) {
+  currentEvId = id;
+  const ev = allEvents.find(e => e.id === id);
+  if (!ev) return;
+  document.getElementById('ev-modal-name').textContent = ev.name;
+  document.getElementById('ev-modal-meta').textContent =
+    'Current status: ' + (ev.status || 'draft').toUpperCase();
+
+  const statuses = ['draft', 'active', 'live'];
+  const colors = { draft: '', active: 'gold', live: 'green' };
+  const labels = { draft: '📝 Draft — organiser editing', active: '🔓 Active — booking open (not public)', live: '🟢 Live — visible on homepage' };
+
+  const btns = document.getElementById('ev-status-btns');
+  btns.innerHTML = '';
+  statuses.forEach(s => {
+    if (s === (ev.status || 'draft').toLowerCase()) return; // skip current
+    const btn = document.createElement('button');
+    btn.className = 'mbtn ' + (colors[s] || '');
+    btn.textContent = labels[s];
+    btn.onclick = () => setEvStatus(s);
+    btns.appendChild(btn);
+  });
+  openModal('modal-ev-status');
+}
+
+async function setEvStatus(newStatus) {
+  const { error } = await sb.from('kh_events').update({ status: newStatus }).eq('id', currentEvId);
+  if (error) { alert('Error: ' + error.message); return; }
+  closeModal('modal-ev-status');
+  await loadEvents();
+  alert('✓ Event set to ' + newStatus.toUpperCase());
+}
+
+// ── HALLS ──
+async function loadHalls() {
+  const { data, error } = await sb.from('kh_halls')
+    .select('id,name,city,capacity')
+    .order('name');
+  if (error) { console.error(error); return; }
+  allHalls = data || [];
+  renderHalls();
+}
+
+function renderHalls() {
+  const list = document.getElementById('hall-list');
+  if (!allHalls.length) { list.innerHTML = '<div class="loading-row">No halls mapped yet.</div>'; return; }
+  list.innerHTML = '';
+  allHalls.forEach(hall => {
     const item = document.createElement('div');
     item.className = 'hall-item';
     item.innerHTML = `
       <div class="hall-icon">🏛</div>
       <div class="hall-info">
         <div class="hall-name">${hall.name}</div>
-        <div class="hall-meta">${hall.city} · ${hall.capacity} seats · ${hall.sections} sections</div>
+        <div class="hall-meta">${hall.city || 'Vadodara'} · ${hall.capacity || '—'} seats</div>
       </div>
       <button class="tbl-btn" onclick="window.location.href='layout-builder.html'">Edit layout</button>`;
     list.appendChild(item);
   });
-  document.getElementById('hall-count-lbl').textContent = '('+halls.length+')';
-  document.getElementById('count-halls').textContent = halls.length;
+  document.getElementById('hall-count-lbl').textContent = '(' + allHalls.length + ')';
+  document.getElementById('count-halls').textContent = allHalls.length;
 }
 
-function openModal(id){ document.getElementById(id).classList.add('show'); }
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+// ── BOOKINGS COUNT ──
+async function loadBookingCount() {
+  const { count, error } = await sb.from('kh_bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'confirmed');
+  if (!error) document.getElementById('ov-bookings').textContent = count || 0;
+}
+
+// ── OVERVIEW ──
+function updateOverview() {
+  document.getElementById('count-orgs').textContent = allOrgs.length || '—';
+  document.getElementById('count-events').textContent = allEvents.length || '—';
+  document.getElementById('ov-active').textContent = allOrgs.filter(o => (o.status||'').toLowerCase() === 'active').length;
+  document.getElementById('ov-pending').textContent = allOrgs.filter(o => (o.status||'').toLowerCase() === 'pending').length;
+  document.getElementById('ov-suspended').textContent = allOrgs.filter(o => (o.status||'').toLowerCase() === 'suspended').length;
+  document.getElementById('ov-live').textContent = allEvents.filter(e => (e.status||'').toLowerCase() === 'live').length;
+}
+
+// ── MODAL ──
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 </script>
 </body>
 </html>
