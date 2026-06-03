@@ -38,7 +38,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .legend{display:flex;gap:12px;padding:8px 14px;background:var(--bg);flex-shrink:0;flex-wrap:wrap;}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
 .leg-sq{width:12px;height:12px;border-radius:2px;}
-.map-wrap{flex:0 0 auto;overflow:auto;padding:10px 6px 10px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;}
+.map-wrap{flex:0 0 auto;overflow-x:auto;overflow-y:visible;padding:10px 0;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y pinch-zoom;width:100%;}
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 20px;border-radius:4px;margin:0 auto;opacity:.7;width:fit-content;}
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
 #hall-grid{display:none;flex-direction:column;align-items:center;}
@@ -537,17 +537,13 @@ function buildSSGMap(){
 
   wrap.appendChild(svg);
 
-  // Make SVG responsive — scale to fit container width
-  setTimeout(()=>{
-    const wrapW=wrap.clientWidth||360;
-    // Use viewBox scaling: set width to container, height proportionally
-    const scale=wrapW/SVG_W;
-    svg.setAttribute('width',wrapW);
-    svg.setAttribute('height',Math.ceil(totalH*scale));
-    // viewBox already set to full size — SVG scales automatically
-    wrap.style.height=(Math.ceil(totalH*scale)+20)+'px';
-    wrap.style.overflowX='visible';
-  },100);
+  // Let SVG scroll horizontally on mobile — don't shrink
+  svg.setAttribute('width', SVG_W);
+  svg.setAttribute('height', totalH);
+  wrap.style.overflowX='auto';
+  wrap.style.overflowY='visible';
+  wrap.style.height=(totalH+20)+'px';
+  wrap.style.paddingBottom='10px';
 }
 
 // SSG seat toggle
