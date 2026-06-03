@@ -397,8 +397,7 @@ function buildSSGMap(){
   const svg=document.createElementNS(ns,'svg');
   svg.setAttribute('width',SVG_W);
   svg.setAttribute('height',totalH);
-  svg.setAttribute('viewBox',`0 0 ${SVG_W} ${totalH}`);
-  svg.style.maxWidth='100%';
+  // No viewBox — full size, horizontal scroll
 
   function el(tag,attrs,p){
     const e=document.createElementNS(ns,tag);
