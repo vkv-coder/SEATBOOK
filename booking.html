@@ -375,9 +375,9 @@ function buildSSGMap(){
     T:[[1,2,3,4,5,6,7,8],[9,10,11,12,13,14,15,16,17,18,19],[20,21,22,23,24,25,26,27,28,29],[30,31,32,33,34,35,36,37,38],[39,40,41,42,43,44,45,46,47,48]],
   };
 
-  const SW=8,SH=6,SG=1,RG=3,RH=SH+RG;
-  const SVG_W=900,CX=SVG_W/2;
-  const UPPER_AISLE=8;
+  const SW=16,SH=12,SG=2,RG=5,RH=SH+RG;
+  const SVG_W=1800,CX=SVG_W/2;
+  const UPPER_AISLE=16;
   const ns='http://www.w3.org/2000/svg';
 
   function bw(b){return b.length*(SW+SG)-SG;}
@@ -385,9 +385,9 @@ function buildSSGMap(){
   function rowW(blocks,aisle){let w=0;blocks.forEach((b,i)=>{if(i>0)w+=aisle;w+=bw(b);});return w;}
 
   const PASS=3*(SW+SG);
-  const J_B_RIGHT=CX-6,A_B_RIGHT=CX-60;
-  const J_C_LEFT=CX+6,A_C_LEFT=CX+60;
-  const U_LEFT=200,U_RIGHT=700;
+  const J_B_RIGHT=CX-12,A_B_RIGHT=CX-120;
+  const J_C_LEFT=CX+12,A_C_LEFT=CX+120;
+  const U_LEFT=400,U_RIGHT=1400;
 
   const UPPER_ROWS=['T','S','R','Q','P','O','N','M','L','K'];
   const LOWER_ROWS=['J','I','H','G','F','E','D','C','B','A'];
@@ -409,7 +409,7 @@ function buildSSGMap(){
     const t=document.createElementNS(ns,'text');
     t.setAttribute('x',x);t.setAttribute('y',y);
     t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');
-    t.setAttribute('font-size','7');t.setAttribute('font-weight','700');
+    t.setAttribute('font-size','14');t.setAttribute('font-weight','700');
     t.setAttribute('fill','#444');t.setAttribute('font-family','DM Sans');
     t.textContent=s;svg.appendChild(t);
   }
@@ -444,7 +444,7 @@ function buildSSGMap(){
     const nt=document.createElementNS(ns,'text');
     nt.setAttribute('x',x+SW/2);nt.setAttribute('y',y+SH/2);
     nt.setAttribute('text-anchor','middle');nt.setAttribute('dominant-baseline','central');
-    nt.setAttribute('font-size','3.5');nt.setAttribute('fill',textColor);
+    nt.setAttribute('font-size','7');nt.setAttribute('fill',textColor);
     nt.setAttribute('font-family','DM Sans');nt.textContent=sn;
     g.appendChild(nt);
 
@@ -490,11 +490,11 @@ function buildSSGMap(){
 
   // Stage
   curY+=4;
-  el('rect',{x:CX-100,y:curY,width:200,height:STAGE_H-2,rx:3,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
+  el('rect',{x:CX-200,y:curY,width:400,height:STAGE_H-2,rx:3,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
   const st=document.createElementNS(ns,'text');
   st.setAttribute('x',CX);st.setAttribute('y',curY+(STAGE_H-2)/2);
   st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');
-  st.setAttribute('font-size','9');st.setAttribute('font-weight','700');
+  st.setAttribute('font-size','18');st.setAttribute('font-weight','700');
   st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');
   st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
   curY+=STAGE_H+GAP_H;
