@@ -391,8 +391,8 @@ function buildSSGMap(){
 
   const UPPER_ROWS=['T','S','R','Q','P','O','N','M','L','K'];
   const LOWER_ROWS=['J','I','H','G','F','E','D','C','B','A'];
-  const TOP_PAD=20,GAP_H=16,STAGE_H=20,BOT_PAD=30;
-  const totalH=TOP_PAD+UPPER_ROWS.length*RH+GAP_H+LOWER_ROWS.length*RH+STAGE_H+14+BOT_PAD;
+  const TOP_PAD=20,GAP_H=32,STAGE_H=40,BOT_PAD=30;
+  const totalH=TOP_PAD+UPPER_ROWS.length*RH+GAP_H+LOWER_ROWS.length*RH+STAGE_H+BOT_PAD;
 
   const svg=document.createElementNS(ns,'svg');
   svg.setAttribute('width',SVG_W);
@@ -466,39 +466,8 @@ function buildSSGMap(){
     block.forEach((sn,i)=>{if(i>0)x+=SG;drawSeat(x,y,rowLabel,sn,color);x+=SW;});
   }
 
-  // Lower rows
+  // Upper rows (balcony) — rendered at TOP
   let curY=TOP_PAD;
-  LOWER_ROWS.forEach((lbl,i)=>{
-    const [b0,b1,b2,b3]=LOWER[lbl];
-    const t=i/9;
-    const bRight=lerp(J_B_RIGHT,A_B_RIGHT,t);
-    const bLeft=bRight-bw(b1);
-    const cLeft=lerp(J_C_LEFT,A_C_LEFT,t);
-    const cRight=cLeft+bw(b2);
-    const aRight=bLeft-PASS;
-    const aLeft=aRight-bw(b0);
-    const dLeft=cRight+PASS;
-    drawBlk(aLeft,curY,b0,lbl,'#2563a8');
-    drawBlk(bLeft,curY,b1,lbl,'#2563a8');
-    drawBlk(cLeft,curY,b2,lbl,'#2563a8');
-    drawBlk(dLeft,curY,b3,lbl,'#2563a8');
-    labelTxt(aLeft-10,curY+SH/2,lbl);
-    labelTxt(dLeft+bw(b3)+10,curY+SH/2,lbl);
-    curY+=RH;
-  });
-
-  // Stage
-  curY+=4;
-  el('rect',{x:CX-200,y:curY,width:400,height:STAGE_H-2,rx:3,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
-  const st=document.createElementNS(ns,'text');
-  st.setAttribute('x',CX);st.setAttribute('y',curY+(STAGE_H-2)/2);
-  st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');
-  st.setAttribute('font-size','18');st.setAttribute('font-weight','700');
-  st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');
-  st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
-  curY+=STAGE_H+GAP_H;
-
-  // Upper rows
   UPPER_ROWS.forEach((lbl,i)=>{
     const blocks=UPPER[lbl];
     if(blocks.length===4){
@@ -533,6 +502,41 @@ function buildSSGMap(){
     }
     curY+=RH;
   });
+
+  // Divider line
+  curY+=4;
+  el('line',{x1:40,y1:curY,x2:SVG_W-40,y2:curY,stroke:'rgba(0,0,0,0.12)','stroke-width':'2','stroke-dasharray':'8,6'},svg);
+  curY+=GAP_H;
+
+  // Lower rows (stalls) — J at top, A at bottom near stage
+  LOWER_ROWS.forEach((lbl,i)=>{
+    const [b0,b1,b2,b3]=LOWER[lbl];
+    const t=i/9;
+    const bRight=lerp(J_B_RIGHT,A_B_RIGHT,t);
+    const bLeft=bRight-bw(b1);
+    const cLeft=lerp(J_C_LEFT,A_C_LEFT,t);
+    const cRight=cLeft+bw(b2);
+    const aRight=bLeft-PASS;
+    const aLeft=aRight-bw(b0);
+    const dLeft=cRight+PASS;
+    drawBlk(aLeft,curY,b0,lbl,'#2563a8');
+    drawBlk(bLeft,curY,b1,lbl,'#2563a8');
+    drawBlk(cLeft,curY,b2,lbl,'#2563a8');
+    drawBlk(dLeft,curY,b3,lbl,'#2563a8');
+    labelTxt(aLeft-20,curY+SH/2,lbl);
+    labelTxt(dLeft+bw(b3)+20,curY+SH/2,lbl);
+    curY+=RH;
+  });
+
+  // Stage at bottom
+  curY+=8;
+  el('rect',{x:CX-200,y:curY,width:400,height:STAGE_H-2,rx:3,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
+  const st=document.createElementNS(ns,'text');
+  st.setAttribute('x',CX);st.setAttribute('y',curY+(STAGE_H-2)/2);
+  st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');
+  st.setAttribute('font-size','18');st.setAttribute('font-weight','700');
+  st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');
+  st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
 
   wrap.appendChild(svg);
 
