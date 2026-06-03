@@ -537,16 +537,16 @@ function buildSSGMap(){
 
   wrap.appendChild(svg);
 
-  // Scale to fit screen
+  // Make SVG responsive — scale to fit container width
   setTimeout(()=>{
     const wrapW=wrap.clientWidth||360;
-    if(SVG_W>wrapW){
-      const scale=wrapW/SVG_W;
-      svg.style.transform='scale('+scale+')';
-      svg.style.transformOrigin='top left';
-      svg.style.width=SVG_W+'px';
-      wrap.style.height=(totalH*scale+20)+'px';
-    }
+    // Use viewBox scaling: set width to container, height proportionally
+    const scale=wrapW/SVG_W;
+    svg.setAttribute('width',wrapW);
+    svg.setAttribute('height',Math.ceil(totalH*scale));
+    // viewBox already set to full size — SVG scales automatically
+    wrap.style.height=(Math.ceil(totalH*scale)+20)+'px';
+    wrap.style.overflowX='visible';
   },100);
 }
 
