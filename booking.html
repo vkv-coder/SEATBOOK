@@ -193,10 +193,11 @@ const SUPABASE_URL='https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const SSG_HALL_ID='e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
+const SAYAJI_HALL_ID='5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
-let isSSG=false,wantedSeatCount=1;
+let isSSG=false,isSayaji=false,wantedSeatCount=1;
 const params=new URLSearchParams(location.search);
 const eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 window.addEventListener('DOMContentLoaded',loadEvent);
@@ -236,8 +237,13 @@ async function loadEvent(){
     await loadSeatStatus();
     buildSectionTabs();
     isSSG=(ev.hall_id===SSG_HALL_ID);
+    isSayaji=(ev.hall_id===SAYAJI_HALL_ID);
     document.getElementById('loading-screen').style.display='none';
     if(isSSG){buildSSGMap();}
+    else if(isSayaji){
+      const layout=typeof hall.layout_json==='string'?JSON.parse(hall.layout_json):hall.layout_json;
+      buildSayajiMap(layout);
+    }
     else{
       const layout=typeof hall.layout_json==='string'?JSON.parse(hall.layout_json):hall.layout_json;
       buildSeatMap(layout);
@@ -396,6 +402,78 @@ function buildSSGMap(){
   wrap.style.height='auto';
   svg.style.display='block';
 }
+
+// ── SAYJIRAO SVG MAP ──
+function buildSayajiMap(layout){
+  const wrap=document.getElementById('ssg-map-wrap');
+  wrap.style.display='block';
+  const rows=layout.rows||[];
+  const SW=8,SH=6,SG=1.2,RG=3,RH=SH+RG,CELL=SW+SG;
+  const ns='http://www.w3.org/2000/svg';
+  let maxCells=0;
+  rows.forEach(r=>{if(r.type==='row')maxCells=Math.max(maxCells,r.cells.length);});
+  const SVG_W=maxCells*CELL+20;
+  const HGAP_H=10,STAGE_H=28,BP=20;
+  let totalH=10;
+  rows.forEach(r=>{if(r.type==='hgap')totalH+=HGAP_H;else if(r.type==='row')totalH+=RH;});
+  totalH+=STAGE_H+BP;
+  const svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('width',SVG_W);svg.setAttribute('height',totalH);
+  function mk(tag,a,p){const e=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e;}
+  function lbl(x,y,s){const t=document.createElementNS(ns,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');t.setAttribute('font-size','7');t.setAttribute('font-weight','700');t.setAttribute('fill','#444');t.setAttribute('font-family','DM Sans');t.textContent=s;svg.appendChild(t);}
+  mk('rect',{width:SVG_W,height:totalH,fill:'#f7f6f4'},svg);
+  window._ssgSeats={};
+  function drawSeat(x,y,rowLabel,sn,color){
+    const key=rowLabel+'-'+sn;
+    const status=seatStatusMap[key]||'available';
+    let sc=color,price=0;
+    if(window._seatPriceMap){
+      const p=window._seatPriceMap[key];
+      if(p==='X'||!p)return;
+      price=p;
+      const sec=sections.find(s=>parseInt(s.price)===p);
+      if(sec)sc=sec.color||sc;
+    }
+    const g=document.createElementNS(ns,'g');
+    let fc='#fff',stc=sc,tc=sc;
+    if(status==='booked'){fc='#d0d0cc';stc='#aaa';tc='#999';}
+    else if(status==='held'){fc='#f0e0c0';stc='#c8860a';tc='#c8860a';}
+    const r=mk('rect',{x,y,width:SW,height:SH,rx:1,fill:fc,stroke:stc,'stroke-width':'0.8'},g);
+    const nt=document.createElementNS(ns,'text');
+    nt.setAttribute('x',x+SW/2);nt.setAttribute('y',y+SH/2);
+    nt.setAttribute('text-anchor','middle');nt.setAttribute('dominant-baseline','central');
+    nt.setAttribute('font-size','3.5');nt.setAttribute('fill',tc);nt.textContent=sn;g.appendChild(nt);
+    g._key=key;g._row=rowLabel;g._sn=String(sn);g._price=price;g._color=sc;g._status=status;g._r=r;g._nt=nt;
+    window._ssgSeats[key]=g;
+    if(status==='available'){g.style.cursor='pointer';g.addEventListener('click',()=>ssgClick(g));}
+    else g.style.cursor='not-allowed';
+    svg.appendChild(g);
+  }
+  const renderRows=[...rows].reverse();
+  let cy=10;
+  renderRows.forEach(row=>{
+    if(row.type==='hgap'){mk('line',{x1:10,y1:cy+HGAP_H/2,x2:SVG_W-10,y2:cy+HGAP_H/2,stroke:'rgba(0,0,0,0.12)','stroke-width':'1','stroke-dasharray':'4,3'},svg);cy+=HGAP_H;return;}
+    if(row.type!=='row')return;
+    const rowLabel=row.label;
+    let cx=10,firstX=null,lastX=null;
+    row.cells.forEach(cell=>{
+      if(cell.t==='seat'){drawSeat(cx,cy,rowLabel,cell.sn,'#2563a8');if(firstX===null)firstX=cx;lastX=cx;}
+      cx+=CELL;
+    });
+    if(firstX!==null){lbl(firstX-8,cy+SH/2,rowLabel);lbl(lastX+SW+6,cy+SH/2,rowLabel);}
+    cy+=RH;
+  });
+  cy+=6;
+  mk('rect',{x:SVG_W/2-80,y:cy,width:160,height:STAGE_H-4,rx:4,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
+  const st=document.createElementNS(ns,'text');
+  st.setAttribute('x',SVG_W/2);st.setAttribute('y',cy+(STAGE_H-4)/2);
+  st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');
+  st.setAttribute('font-size','10');st.setAttribute('font-weight','700');
+  st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');
+  st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
+  wrap.appendChild(svg);
+}
+
 
 // SSG seat click handler
 function ssgClick(g){
