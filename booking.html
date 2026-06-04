@@ -184,7 +184,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       </div>
       <div class="ticket-footer" id="ticket-footer">Show QR at entry gate · Valid for 1 person<br>Support: vkvcoder.support@gmail.com · khursilo.in</div>
     </div>
-    <button class="download-btn" onclick="downloadTicketPDF()">⬇ Download Ticket PDF</button>
+    <button class="download-btn" id="download-btn" onclick="downloadTicketPDF()">⬇ Download Ticket PDF</button>
     <button class="home-btn" onclick="window.location.href='index.html'">← Back to home</button>
   </div>
 </div>
@@ -578,6 +578,8 @@ async function saveFreeBooking(name,mobile,seatKeys,totalAmt){
 
 function downloadTicketPDF(){
   if(!ticketData||!qrDataUrl){alert('Ticket not ready.');return;}
+  const dlBtn=document.getElementById('download-btn');
+  if(dlBtn){dlBtn.textContent='⏳ Downloading…';dlBtn.disabled=true;dlBtn.style.opacity='0.7';}
   const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[80,120]});
   const W=80,sc=ticketData.seatKeys.length,vt='Valid for '+sc+' person'+(sc>1?'s':'');
   doc.setFillColor(26,26,26);doc.rect(0,0,W,38,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('Khursilo',6,8);
@@ -593,6 +595,12 @@ function downloadTicketPDF(){
   doc.setFillColor(240,238,234);doc.rect(0,100,W,20,'F');doc.setTextColor(136,136,136);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
   doc.text('Show QR at entry gate · '+vt,W/2,107,{align:'center'});doc.text('Support: vkvcoder.support@gmail.com',W/2,112,{align:'center'});doc.text('khursilo.in',W/2,117,{align:'center'});
   doc.save('Khursilo_Ticket_'+ticketData.seatKeys.join('_')+'.pdf');
+  if(dlBtn){
+    dlBtn.textContent='✓ Downloaded!';
+    dlBtn.style.background='var(--green)';
+    dlBtn.style.opacity='1';
+    setTimeout(()=>{dlBtn.textContent='⬇ Download Again';dlBtn.disabled=false;dlBtn.style.background='#1a1a1a';},3000);
+  }
 }
 
 function scaleGridMap(){
