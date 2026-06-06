@@ -205,6 +205,40 @@ let currentBooking = null;
 let scanning  = true;
 
 const PIN_KEY = 'khursilo_pin_' + eventId;
+let wakeLock    = null;
+let activeStream = null;
+
+async function acquireWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(_) {}
+  }
+}
+
+// Re-acquire wake lock and check camera when page becomes visible again
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!wakeLock || wakeLock.released) acquireWakeLock();
+  // If camera stream died while screen was off, show restart button
+  if (activeStream) {
+    const track = activeStream.getVideoTracks()[0];
+    if (!track || track.readyState === 'ended') cameraInterrupted();
+  }
+});
+
+function cameraInterrupted() {
+  if (activeStream) { activeStream.getTracks().forEach(t => t.stop()); activeStream = null; }
+  const camStart = document.getElementById('cam-start');
+  if (camStart) {
+    camStart.style.display = 'flex';
+    document.getElementById('scan-frame').style.display = 'none';
+    document.getElementById('scan-hint').textContent = 'Tap the button above to restart camera';
+    const btn = document.querySelector('.cam-start-btn');
+    btn.textContent = 'Tap to Restart Camera';
+    btn.disabled = false;
+    document.getElementById('cam-err').innerHTML = '⚠️ Camera stopped (screen locked). Tap to restart.';
+  }
+}
+
 
 // ── INIT ──────────────────────────────────────────────────
 async function init() {
@@ -359,6 +393,15 @@ async function requestCamera() {
 
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
+
+    // keep screen awake
+    acquireWakeLock();
+
+    // save stream reference + watch for stream dying
+    activeStream = stream;
+    stream.getVideoTracks().forEach(track => {
+      track.onended = () => cameraInterrupted();
+    });
 
     requestAnimationFrame(() => scanFrame(video, canvas, ctx));
 
