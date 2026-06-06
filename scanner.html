@@ -301,36 +301,68 @@ async function requestCamera() {
   errEl.innerHTML = '';
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    errEl.innerHTML = 'Camera not supported in this browser.<br>Try Chrome or Safari.';
-    btn.textContent = 'Tap to Start Camera'; btn.disabled = false;
+    errEl.innerHTML = 'Camera not supported.<br>Open this page in Chrome or Safari.';
+    btn.textContent = 'Try Again'; btn.disabled = false;
     return;
   }
 
+  // 12-second timeout in case getUserMedia hangs silently
+  let done = false;
+  const hangTimer = setTimeout(() => {
+    if (!done) {
+      done = true;
+      btn.textContent = 'Try Again'; btn.disabled = false;
+      errEl.innerHTML = '⏱ Camera took too long.<br>Reload the page and try again, or use Chrome.';
+    }
+  }, 12000);
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
+    // Try back camera first, fall back to any camera
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      });
+    } catch(_) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+
+    if (done) { stream.getTracks().forEach(t => t.stop()); return; }
+    done = true;
+    clearTimeout(hangTimer);
+
     video.srcObject = stream;
-    await video.play();
-    // hide overlay, show scan frame
-    document.getElementById('cam-start').style.display = 'none';
-    document.getElementById('scan-frame').style.display = 'flex';
-    document.getElementById('scan-hint').textContent = 'Point camera at the QR code on the ticket';
-    video.addEventListener('loadedmetadata', () => {
-      canvas.width  = video.videoWidth  || 640;
-      canvas.height = video.videoHeight || 480;
+    video.play().catch(() => {}); // autoplay handles it; ignore play() errors
+
+    // wait for video to have data (loadeddata / canplay), max 3s
+    await new Promise(resolve => {
+      if (video.readyState >= 2) { resolve(); return; }
+      const ev = () => resolve();
+      video.addEventListener('canplay',     ev, { once: true });
+      video.addEventListener('loadeddata',  ev, { once: true });
+      setTimeout(resolve, 3000);
     });
-    canvas.width = 640; canvas.height = 480;
+
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+
+    document.getElementById('cam-start').style.display  = 'none';
+    document.getElementById('scan-frame').style.display = 'flex';
+    document.getElementById('scan-hint').textContent    = 'Point camera at the QR code on the ticket';
+
     requestAnimationFrame(() => scanFrame(video, canvas, ctx));
+
   } catch(e) {
-    btn.textContent = 'Try Again';
-    btn.disabled = false;
+    clearTimeout(hangTimer);
+    if (done) return;
+    done = true;
+    btn.textContent = 'Try Again'; btn.disabled = false;
     if (e.name === 'NotAllowedError') {
-      errEl.innerHTML = '❌ Camera permission was blocked.<br>Go to your browser Settings → Site Settings → Camera → Allow for this site, then reload.';
+      errEl.innerHTML = '❌ Camera permission denied.<br>Tap the lock 🔒 in address bar → Camera → Allow → reload.';
     } else if (e.name === 'NotFoundError') {
       errEl.innerHTML = '❌ No camera found on this device.';
     } else {
-      errEl.innerHTML = '❌ Error: ' + e.message + '<br>Try reloading the page.';
+      errEl.innerHTML = '❌ ' + e.message + '<br>Try reloading.';
     }
   }
 }
