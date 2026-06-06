@@ -165,6 +165,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .field-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
 .field-group { margin-bottom: 12px; }
 
+/* ── SEND SCANNER MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-panel{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:24px 20px 36px;animation:slideUp .25s ease;position:relative;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.modal-close{position:absolute;top:14px;right:18px;background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;}
+.wa-btn{width:100%;padding:14px;background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'DM Sans',sans-serif;margin-top:4px;}
+.wa-btn:active{opacity:0.85;}
+
 /* ── TOAST ── */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a1a; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -303,6 +314,31 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div class="gate-result-detail" id="gate-detail"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- SEND SCANNER MODAL -->
+<div class="modal-overlay" id="scanner-send-modal" onclick="closeSendScanner(event)">
+  <div class="modal-panel">
+    <button class="modal-close" onclick="closeSendScanner()">×</button>
+    <div class="modal-title">📲 Send Scanner to Checker</div>
+    <div class="modal-sub">Enter the gate checker's WhatsApp number. Tapping below opens WhatsApp on your phone with the scanner link ready to send.</div>
+    <div class="field-group">
+      <div class="field-label">Checker's WhatsApp number</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 10px;font-size:14px;color:var(--muted);flex-shrink:0;white-space:nowrap;">+91</div>
+        <input class="input-field" type="tel" id="scanner-phone" placeholder="98765 43210" maxlength="10" inputmode="numeric" style="margin:0;flex:1;">
+      </div>
+      <div id="scanner-phone-err" style="color:var(--red);font-size:12px;margin-top:6px;display:none;"></div>
+    </div>
+    <div style="background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#128c7e;line-height:1.6;margin-bottom:16px;">
+      ℹ️ Checker opens the link in their mobile browser → sets a 4-digit supervisor PIN → camera starts scanning. Multiple checkers can use separate phones at the same time.
+    </div>
+    <button class="wa-btn" onclick="doSendScanner()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.117 1.535 5.845L.057 23.998l6.304-1.654A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 01-4.99-1.368l-.358-.213-3.742.981 1.001-3.65-.234-.375A9.797 9.797 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+      Open WhatsApp to Send
+    </button>
+    <button onclick="closeSendScanner()" style="width:100%;padding:12px;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer;margin-top:8px;">Cancel</button>
   </div>
 </div>
 
@@ -581,7 +617,13 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="toggleBooking('${eid}',this)"><div class="qa-icon">${event.status==='active'?'🔒':'🔓'}</div><div class="qa-label">${event.status==='active'?'Close booking':'Open booking'}</div></button>
     </div>
 
-    <div style="padding:0 16px 16px;">
+    <div style="padding:8px 16px 4px;">
+      <button onclick="openSendScanner('${eid}')" style="width:100%;padding:11px 14px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.25);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#128c7e;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+        📲 Send Scanner Link to Gate Checker
+      </button>
+    </div>
+
+    <div style="padding:8px 16px 16px;">
       <div class="revenue-card">
         <div class="revenue-title">Total revenue (confirmed)</div>
         <div class="revenue-amount">₹${fmt(totalRevenue)}</div>
@@ -860,6 +902,41 @@ async function logout(){
   document.getElementById('card-email').style.display='block';
   document.getElementById('card-otp').style.display='none';
   document.getElementById('inp-email').value='';
+}
+
+// ── SEND SCANNER LINK ──
+let scannerSendEventId = null;
+
+function openSendScanner(eid){
+  scannerSendEventId = eid;
+  document.getElementById('scanner-phone').value = '';
+  document.getElementById('scanner-phone-err').style.display = 'none';
+  document.getElementById('scanner-send-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('scanner-phone').focus(), 300);
+}
+
+function closeSendScanner(e){
+  if(e && e.target !== document.getElementById('scanner-send-modal')) return;
+  document.getElementById('scanner-send-modal').classList.remove('show');
+}
+
+function doSendScanner(){
+  const phone = document.getElementById('scanner-phone').value.replace(/\s/g,'').trim();
+  const errEl = document.getElementById('scanner-phone-err');
+  errEl.style.display = 'none';
+  if(!/^\d{10}$/.test(phone)){
+    errEl.textContent = 'Enter a valid 10-digit mobile number.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const ev = allEvents.find(e=>e.event.id===scannerSendEventId);
+  const evName = ev ? ev.event.name : 'Event';
+  const scannerUrl = 'https://khursilo.in/scanner.html?event=' + scannerSendEventId;
+  const msg = `*Khursilo Gate Scanner — ${evName}*\n\nOpen this link in your phone browser to scan tickets at the gate:\n${scannerUrl}\n\n*Steps:*\n1. Open the link\n2. Set a 4-digit supervisor PIN\n3. Point camera at guest's QR ticket\n\n_Do not share this link publicly._`;
+  const waUrl = 'https://wa.me/91' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+  document.getElementById('scanner-send-modal').classList.remove('show');
+  showToast('WhatsApp opened — press Send to deliver');
 }
 
 // ── UTILS ──
