@@ -135,7 +135,7 @@ async function loadEvents() {
     const { data: events, error } = await sb
       .from('kh_events')
       .select('id, name, event_date, event_time, hall_id')
-      .eq('status', 'live')
+      .in('status', ['live', 'published'])
       .gte('event_date', today)
       .order('event_date', { ascending: true })
       .limit(10);

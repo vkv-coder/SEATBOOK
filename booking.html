@@ -194,6 +194,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const SSG_HALL_ID='e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const SAYAJI_HALL_ID='5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
+const DINDAYAL_HALL_ID='2b5ca724-c8f1-42d5-9730-00229916618b';
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
@@ -237,7 +238,7 @@ async function loadEvent(){
     await loadSeatStatus();
     buildSectionTabs();
     isSSG=(ev.hall_id===SSG_HALL_ID);
-    isSayaji=(ev.hall_id===SAYAJI_HALL_ID);
+    isSayaji=(ev.hall_id===SAYAJI_HALL_ID||ev.hall_id===DINDAYAL_HALL_ID);
     document.getElementById('loading-screen').style.display='none';
     if(isSSG){buildSSGMap();}
     else if(isSayaji){
