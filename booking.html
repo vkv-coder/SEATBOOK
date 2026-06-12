@@ -135,18 +135,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <div class="map-wrap" id="map-wrap">
   <div class="loading-screen" id="loading-screen"><div class="spinner"></div><div class="loading-text">Loading seat map…</div></div>
   <div class="error-screen" id="error-screen"><div class="err-icon">⚠️</div><div class="err-msg" id="err-msg">Could not load event.</div></div>
-  <div id="hall-grid" style="display:none;"><div class="hall-grid" id="seat-grid"></div><div class="stage-bar" style="margin-top:8px;">◆ STAGE ◆</div></div>
+  <div id="hall-grid" style="display:none;"><div class="hall-grid" id="seat-grid"></div><div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0;"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;">SEATS</span><div style="display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;"><button onclick="changeSeatCount(-1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">−</button><div class="seat-count-display" style="width:26px;text-align:center;font-size:13px;font-weight:700;color:var(--text);">1</div><button onclick="changeSeatCount(1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">+</button></div></div><div class="stage-bar" style="margin-top:4px;">◆ STAGE ◆</div></div>
   <div id="ssg-map-wrap"></div>
 </div>
 <div class="bottom-bar">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-    <div style="font-size:12px;color:var(--muted);font-weight:500;">How many seats?</div>
-    <div style="display:flex;align-items:center;gap:0;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;">
-      <button onclick="changeSeatCount(-1)" style="width:36px;height:34px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">−</button>
-      <div id="seat-count-display" style="width:32px;text-align:center;font-size:16px;font-weight:700;color:var(--text);">1</div>
-      <button onclick="changeSeatCount(1)" style="width:36px;height:34px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">+</button>
-    </div>
-  </div>
   <div class="sel-summary">
     <div class="sel-seats-list" id="sel-seats-list">Tap any seat to select</div>
     <div class="sel-total" id="sel-total"></div>
@@ -400,6 +392,7 @@ function buildSSGMap(){
   st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
 
   wrap.appendChild(svg);
+  const _qb1=document.createElement('div');_qb1.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0;';_qb1.innerHTML='<span style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;">SEATS</span><div style="display:flex;align-items:center;background:#f5f4f2;border-radius:4px;border:1px solid #ddd;overflow:hidden;"><button onclick="changeSeatCount(-1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;font-weight:300;">−</button><div class="seat-count-display" style="width:26px;text-align:center;font-size:13px;font-weight:700;">1</div><button onclick="changeSeatCount(1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;font-weight:300;">+</button></div>';wrap.appendChild(_qb1);
   wrap.style.height='auto';
   svg.style.display='block';
 }
@@ -473,6 +466,7 @@ function buildSayajiMap(layout){
   st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');
   st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
   wrap.appendChild(svg);
+  const _qb2=document.createElement('div');_qb2.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0;';_qb2.innerHTML='<span style="font-size:10px;color:#888;font-weight:600;letter-spacing:.5px;">SEATS</span><div style="display:flex;align-items:center;background:#f5f4f2;border-radius:4px;border:1px solid #ddd;overflow:hidden;"><button onclick="changeSeatCount(-1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;font-weight:300;">−</button><div class="seat-count-display" style="width:26px;text-align:center;font-size:13px;font-weight:700;">1</div><button onclick="changeSeatCount(1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;font-weight:300;">+</button></div>';wrap.appendChild(_qb2);
 }
 
 
@@ -505,7 +499,7 @@ function clearSelectedSeats(){
   selectedSeats=[];updateBottomBar();
 }
 
-function changeSeatCount(delta){const n=wantedSeatCount+delta;if(n<1||n>6)return;wantedSeatCount=n;document.getElementById('seat-count-display').textContent=n;clearSelectedSeats();}
+function changeSeatCount(delta){const n=wantedSeatCount+delta;if(n<1||n>6)return;wantedSeatCount=n;document.querySelectorAll('.seat-count-display').forEach(el=>el.textContent=n);clearSelectedSeats();}
 
 function updateBottomBar(){
   const btn=document.getElementById('proceed-btn'),list=document.getElementById('sel-seats-list'),total=document.getElementById('sel-total');
