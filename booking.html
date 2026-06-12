@@ -135,7 +135,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <div class="map-wrap" id="map-wrap">
   <div class="loading-screen" id="loading-screen"><div class="spinner"></div><div class="loading-text">Loading seat map…</div></div>
   <div class="error-screen" id="error-screen"><div class="err-icon">⚠️</div><div class="err-msg" id="err-msg">Could not load event.</div></div>
-  <div id="hall-grid" style="display:none;"><div class="hall-grid" id="seat-grid"></div><div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 0;"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;">SEATS</span><div style="display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;"><button onclick="changeSeatCount(-1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">−</button><div class="seat-count-display" style="width:26px;text-align:center;font-size:13px;font-weight:700;color:var(--text);">1</div><button onclick="changeSeatCount(1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">+</button></div></div><div class="stage-bar" style="margin-top:4px;">◆ STAGE ◆</div></div>
+  <div id="hall-grid" style="display:none;"><div class="hall-grid" id="seat-grid"></div><div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:3px 0 2px;"><span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;">SEATS</span><div style="display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;"><button onclick="changeSeatCount(-1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">−</button><div class="seat-count-display" style="width:26px;text-align:center;font-size:13px;font-weight:700;color:var(--text);">1</div><button onclick="changeSeatCount(1)" style="width:30px;height:26px;border:none;background:none;font-size:18px;cursor:pointer;color:var(--text);font-weight:300;">+</button></div></div><div class="stage-bar" style="margin-top:2px;">◆ STAGE ◆</div></div>
   <div id="ssg-map-wrap"></div>
 </div>
 <div class="bottom-bar">
@@ -601,7 +601,7 @@ function downloadTicketPDF(){
 function scaleGridMap(){
   setTimeout(()=>{
     const hg=document.getElementById('hall-grid'),wrap=document.getElementById('map-wrap'),sb2=document.querySelector('.stage-bar');
-    if(hg&&wrap){const sg=document.getElementById('seat-grid'),gw=sg.scrollWidth;if(sb2)sb2.style.width=sg.scrollWidth+'px';const ww=wrap.clientWidth-4;if(gw>ww){const sc=ww/gw;hg.style.transform='scale('+sc+')';hg.style.transformOrigin='top left';hg.style.width=gw+'px';wrap.style.width=(gw*sc)+'px';const sh=Math.ceil(hg.scrollHeight*sc);hg.style.marginBottom='-'+(hg.scrollHeight-sh)+'px';wrap.style.height=(sh+20)+'px';}else{wrap.style.height=(hg.scrollHeight+20)+'px';}}
+    if(hg&&wrap){const sg=document.getElementById('seat-grid'),gw=sg.scrollWidth;if(sb2)sb2.style.width=sg.scrollWidth+'px';const ww=wrap.clientWidth-4;const sc=Math.min(ww/gw,2.5);hg.style.transform='scale('+sc+')';hg.style.transformOrigin='top left';hg.style.width=gw+'px';wrap.style.width=(gw*sc)+'px';const sh=Math.ceil(hg.scrollHeight*sc);hg.style.marginBottom='-'+(hg.scrollHeight-sh)+'px';wrap.style.height=(sh+20)+'px';}
   },300);
 }
 
