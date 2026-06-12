@@ -619,7 +619,7 @@ function buildSeatMap(layout){
     if(row.type!=='row')return;
     const rw=document.createElement('div');rw.className='row-wrap';const sd=document.createElement('div');sd.className='row-seats';
     const cells=row.cells||[];let lc=0;const seatEls=[];
-    function mkLbl(){const l=document.createElement('div');l.style.cssText='font-size:5px;font-weight:700;color:var(--muted);width:6px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';l.textContent=row.label||'';return l;}
+    function mkLbl(){const l=document.createElement('div');l.style.cssText='font-size:6px;font-weight:700;color:var(--muted);width:9px;min-width:9px;text-align:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;pointer-events:none;line-height:1;';l.textContent=row.label||'';return l;}
     cells.forEach(cell=>{
       const el=document.createElement('div');const t=cell.t||'';
       if(t==='label'){lc++;return;}
@@ -633,7 +633,8 @@ function buildSeatMap(layout){
       if(status==='available')el.addEventListener('click',()=>gridToggleSeat(el));seatEls.push({el,isSeat:true});
     });
     let fi=-1,li=-1;seatEls.forEach((item,i)=>{if(item.isSeat){if(fi===-1)fi=i;li=i;}});
-    if(lc>0&&fi!==-1){seatEls.splice(fi,0,{el:mkLbl(),isSeat:false});li++;}if(lc>1&&li!==-1){seatEls.splice(li+1,0,{el:mkLbl(),isSeat:false});}
+    if(row.label&&fi!==-1){seatEls.splice(fi,0,{el:mkLbl(),isSeat:false});li++;}
+    if(row.label&&li!==-1){seatEls.splice(li+1,0,{el:mkLbl(),isSeat:false});}
     seatEls.forEach(item=>sd.appendChild(item.el));rw.appendChild(sd);frag.appendChild(rw);
   });
   grid.appendChild(frag);
