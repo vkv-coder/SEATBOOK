@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add CC Mehta Auditorium</title>
+<style>body{font-family:Arial,sans-serif;padding:24px;max-width:600px;} button{padding:12px 28px;font-size:16px;background:#2563a8;color:#fff;border:none;border-radius:8px;cursor:pointer;} #s{margin-top:20px;font-size:14px;line-height:1.8;}</style>
+</head>
+<body>
+<h2>Add CC Mehta Auditorium — Vadodara</h2>
+<p style="color:#666;font-size:13px;">524 seats · Stalls (A–F) + Balcony (G–R) · Arc/Funnel layout</p>
+<button onclick="go()">Create Hall &amp; Save Layout in Supabase</button>
+<div id="s"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient(
+  'https://jqqnnkzozjskziaizajg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+);
+
+const BAL = 's_balcony';
+const STL = 's_stalls';
+
+function block(count, startSn, secId) {
+  return Array.from({length: count}, (_, i) => ({t:'seat', sn: startSn + i, secId}));
+}
+
+function gap() {
+  return {t:'vgap', gapW:2};
+}
+
+function stallRow(label, sA, sB, sC) {
+  return {type:'row', label, cells:[
+    ...block(sA, 1, STL),          gap(),
+    ...block(sB, sA+1, STL),       gap(),
+    ...block(sC, sA+sB+1, STL)
+  ]};
+}
+
+function balRow(label, sD, sE, sF, sG) {
+  return {type:'row', label, cells:[
+    ...block(sD, 1, BAL),              gap(),
+    ...block(sE, sD+1, BAL),           gap(),
+    ...block(sF, sD+sE+1, BAL),        gap(),
+    ...block(sG, sD+sE+sF+1, BAL)
+  ]};
+}
+
+const sections = [
+  {id: STL, name:'Stalls',   color:'#2563a8', price:''},
+  {id: BAL, name:'Balcony',  color:'#4338ca', price:''}
+];
+
+// Rows are ordered stage-first (A = closest to stage).
+// booking.html reverses this array before rendering, so A ends up
+// at the bottom (nearest the STAGE label) and R at the top.
+const rows = [
+  // ── STALLS (A–F, A is front row nearest stage) ──────────────────
+  stallRow('A',  5, 10,  6),   // 21 seats
+  stallRow('B',  6, 13,  6),   // 25 seats
+  stallRow('C',  6, 14,  6),   // 26 seats
+  stallRow('D',  6, 14,  6),   // 26 seats
+  stallRow('E',  6, 15,  6),   // 27 seats
+  stallRow('F',  4, 17,  4),   // 25 seats  (offsets in SVG preview — same seat count)
+
+  // ── PASSAGE ─────────────────────────────────────────────────────
+  {type:'hgap', label:'', cells:[]},
+
+  // ── BALCONY (G–R, G is front of balcony, R is back row) ─────────
+  balRow('G',  6,  8,  8,  6),  // 28 seats
+  balRow('H',  6,  8,  8,  6),  // 28 seats
+  balRow('I',  6,  8,  8,  6),  // 28 seats
+  balRow('J',  6,  9,  9,  6),  // 30 seats
+  balRow('K',  6,  9,  9,  6),  // 30 seats
+  balRow('L',  6, 10,  9,  6),  // 31 seats
+  balRow('M',  6, 10, 10,  6),  // 32 seats
+  balRow('N',  6, 11, 10,  6),  // 33 seats
+  balRow('O',  6, 11, 11,  6),  // 34 seats
+  balRow('P',  6, 11, 11,  6),  // 34 seats
+  balRow('Q',  6, 11, 11,  6),  // 34 seats
+  // Row R: 2 blocks only (12 left + 20 right = 32 seats)
+  {type:'row', label:'R', cells:[
+    ...block(12,  1, BAL), gap(),
+    ...block(20, 13, BAL)
+  ]}
+];
+
+// Verify seat count before sending
+const stalls = [21,25,26,26,27,25].reduce((a,b)=>a+b,0);   // 150
+const balcony = [28,28,28,30,30,31,32,33,34,34,34,32].reduce((a,b)=>a+b,0); // 374
+// Total = 524
+
+const layout = {
+  hall: 'CC Mehta Auditorium, Vadodara',
+  sections,
+  rows,
+  savedAt: new Date().toISOString()
+};
+
+async function go() {
+  const s = document.getElementById('s');
+  s.textContent = 'Step 1: Creating hall record…';
+
+  // Create the hall row (name + city)
+  const {data: hall, error: e1} = await sb
+    .from('kh_halls')
+    .insert({name: 'CC Mehta Auditorium', city: 'Vadodara'})
+    .select()
+    .single();
+
+  if (e1) {
+    s.innerHTML = '<span style="color:red">Error creating hall: ' + e1.message + '</span>';
+    return;
+  }
+
+  s.textContent = 'Step 2: Saving layout (' + (stalls+balcony) + ' seats)…';
+
+  const {error: e2} = await sb
+    .from('kh_halls')
+    .update({layout_json: layout})
+    .eq('id', hall.id);
+
+  if (e2) {
+    s.innerHTML = '<span style="color:red">Error saving layout: ' + e2.message + '</span>';
+    return;
+  }
+
+  s.innerHTML = `
+    <span style="color:green;font-size:16px;font-weight:bold;">✅ CC Mehta Auditorium saved!</span><br><br>
+    <strong>Hall ID:</strong> <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">${hall.id}</code><br>
+    <strong>Seats:</strong> ${stalls} Stalls (A–F) + ${balcony} Balcony (G–R) = ${stalls+balcony} total<br>
+    <strong>Sections:</strong> Stalls (#2563a8) · Balcony (#4338ca)<br><br>
+    <em>Copy the Hall ID above — use it when creating events for this venue.</em>
+  `;
+}
+</script>
+</body>
+</html>
