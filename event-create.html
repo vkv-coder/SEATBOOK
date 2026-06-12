@@ -317,6 +317,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
           </div>
           <div class="mode-desc">No payment. Audience just picks and reserves their seat.</div>
         </div>
+        <div class="mode-card" id="mode-open" onclick="selectMode('open')">
+          <div class="mode-card-header">
+            <div class="mode-icon">🚪</div>
+            <div class="mode-title">Free · Open Entry</div>
+            <div class="mode-check"></div>
+          </div>
+          <div class="mode-desc">No seat selection. First come first basis. Audience just registers their name &amp; mobile.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -630,7 +638,7 @@ function startCreateEvent() {
 }
 
 function goStep(n) {
-  if (n === 2) { if (!validateStep1()) return; showStep2(); }
+  if (n === 2) { if (!validateStep1()) return; if(eventMode==='open'){updateWindowSummary();showScreen('s3');return;} showStep2(); }
   else if (n === 3) { if (!validateStep2()) return; updateWindowSummary(); }
   else if (n === 4) { buildPreview(); }
   if (n <= 4) showScreen('s' + n);
@@ -676,10 +684,12 @@ function showStep2() {
 // ── MODE ──
 function selectMode(mode) {
   eventMode = mode;
-  document.getElementById('mode-paid').classList.toggle('selected', mode === 'paid');
-  document.getElementById('mode-free').classList.toggle('selected', mode === 'free');
-  document.getElementById('mode-paid').querySelector('.mode-check').textContent = mode === 'paid' ? '✓' : '';
-  document.getElementById('mode-free').querySelector('.mode-check').textContent = mode === 'free' ? '✓' : '';
+  ['paid','free','open'].forEach(m=>{
+    const el=document.getElementById('mode-'+m);
+    if(!el)return;
+    el.classList.toggle('selected', mode===m);
+    el.querySelector('.mode-check').textContent = mode===m ? '✓' : '';
+  });
 }
 
 // ── EXCEL DOWNLOAD ──
@@ -891,6 +901,8 @@ function buildPreview() {
     });
   } else if (eventMode === 'free') {
     wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🎁 All seats available free</div>';
+  } else if (eventMode === 'open') {
+    wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🚪 Free · Open Entry · First Come First Basis — no seat map shown to audience</div>';
   }
 }
 
