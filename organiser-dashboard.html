@@ -626,6 +626,11 @@ function buildEventCard(event, bookings){
         📲 Send Scanner Link to Gate Checker
       </button>
     </div>
+    <div style="padding:4px 16px 16px;">
+      <button onclick="cancelEvent('${eid}')" style="width:100%;padding:11px 14px;background:rgba(204,51,51,0.07);border:1px solid rgba(204,51,51,0.25);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+        🚫 Cancel Event
+      </button>
+    </div>
 
     <div style="padding:8px 16px 16px;">
       <div class="revenue-card">
@@ -829,6 +834,22 @@ async function toggleBooking(eid, btn){
   ev.event.status = newStatus;
   showToast('Booking '+newStatus);
   // Refresh dashboard
+  loadDashboard();
+}
+
+// ── CANCEL EVENT ──
+async function cancelEvent(eid){
+  const ev = allEvents.find(e=>e.event.id===eid);
+  if(!ev) return;
+  if(ev.event.status==='closed'){
+    showToast('Event is already closed.');
+    return;
+  }
+  if(!confirm(`Cancel "${ev.event.name}"?\n\nThis will close bookings and remove the event from the homepage. This cannot be undone.`)) return;
+  const {error} = await sb.from('kh_events').update({status:'closed'}).eq('id',eid);
+  if(error){ showToast('Error: '+error.message); return; }
+  ev.event.status = 'closed';
+  showToast('Event cancelled — removed from homepage.');
   loadDashboard();
 }
 
