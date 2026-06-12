@@ -581,7 +581,8 @@ async function confirmBooking(){
   const btn=document.querySelector('.confirm-btn');btn.textContent='Processing…';btn.disabled=true;
   try{
     const totalAmt=selectedSeats.reduce((a,s)=>a+s.price,0),seatKeys=selectedSeats.map(s=>s.seatKey);
-    if(totalAmt===0||eventData.mode==='free'){await saveFreeBooking(name,mobile,seatKeys,totalAmt);return;}
+    if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,seatKeys,totalAmt);return;}
+    if(totalAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
     const rzpKey=organiserData&&organiserData.razorpay_key_id;
     if(!rzpKey){alert('Payment gateway not configured.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
     const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()}).select().single();
