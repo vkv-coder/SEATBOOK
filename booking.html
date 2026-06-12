@@ -183,15 +183,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="success-title">Booking confirmed!</div>
     <div class="success-sub">Your ticket is downloading. Save it and show the QR code at entry.</div>
     <div class="ticket-card" id="ticket-card">
-      <div class="ticket-header"><div class="ticket-brand" style="display:flex;align-items:center;gap:6px;">
-  <svg width="20" height="19" viewBox="0 0 80 78" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;">
-    <path d="M8,78 L8,36 A32,32 0 0,1 72,36 L72,78" fill="none" stroke="#c8860a" stroke-width="4" stroke-linecap="round"/>
-    <rect x="26" y="9" width="28" height="28" rx="6" fill="#c8860a"/>
-    <rect x="22" y="35" width="36" height="15" rx="4" fill="#c8860a"/>
-    <rect x="14" y="27" width="12" height="22" rx="4" fill="#c8860a"/>
-    <rect x="54" y="27" width="12" height="22" rx="4" fill="#c8860a"/>
-  </svg>
-  <span>khursilo.in</span>
+      <div class="ticket-header"><div class="ticket-brand">
+  <img src="logo.png" alt="Khursilo" style="width:54px;height:54px;object-fit:contain;border-radius:6px;display:block;">
 </div><div class="ticket-event" id="tc-event">—</div><div class="ticket-meta"><span id="tc-date">—</span><span id="tc-hall">—</span></div></div>
       <hr class="ticket-divider">
       <div class="ticket-body">
@@ -203,7 +196,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
         </div>
         <div class="ticket-qr-wrap"><div class="ticket-qr-box" id="qr-display"></div><div class="ticket-booking-id" id="tc-booking-id">—</div></div>
       </div>
-      <div class="ticket-footer" id="ticket-footer">Show QR at entry gate · Valid for 1 person<br>Support: vkvcoder.support@gmail.com · khursilo.in</div>
+      <div class="ticket-footer" id="ticket-footer">Show QR at entry gate · Valid for 1 person<br>khursilo.in</div>
     </div>
     <button class="download-btn" id="download-btn" onclick="downloadTicketPDF()">⬇ Download Ticket PDF</button>
     <button class="home-btn" onclick="window.location.href='/index.html'">← Back to home</button>
@@ -238,7 +231,7 @@ async function loadEvent(){
     hallLayout=hall;
     document.getElementById('ev-hall').textContent=hall.name;
     if(ev.organiser_id){
-      const{data:org}=await sb.from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile').eq('id',ev.organiser_id).single();
+      const{data:org}=await sb.from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile,email_1').eq('id',ev.organiser_id).single();
       organiserData=org;
       if(org&&org.contact_1_mobile){
         const tel=org.contact_1_mobile.replace(/\D/g,'');
@@ -570,7 +563,8 @@ async function showSuccess(name,mobile,seatKeys,amount){
   document.getElementById('tc-event').textContent=eventName;document.getElementById('tc-date').textContent=evDate;document.getElementById('tc-hall').textContent=hallName;
   document.getElementById('tc-name').textContent=name;document.getElementById('tc-seats').textContent=seatKeys.join(', ');
   document.getElementById('tc-amount').textContent=amount>0?'₹'+amount:'Free';document.getElementById('tc-booking-id').textContent=bookingId||'—';document.getElementById('tc-bookedat').textContent=bookedAt;
-  document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · Valid for '+seatCount+' person'+(seatCount>1?'s':'')+'<br>Support: vkvcoder.support@gmail.com · khursilo.in';
+  const orgEmail=organiserData&&organiserData.email_1?organiserData.email_1:'';
+  document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · Valid for '+seatCount+' person'+(seatCount>1?'s':'')+(orgEmail?'<br>Support: '+orgEmail:'')+'<br>khursilo.in';
   document.getElementById('success-overlay').classList.add('show');
   ticketData={bookingId:bookingId||'',eventName,eventDate:evDate,hallName,bookerName:name,bookerMobile:mobile,seatKeys,amount,bookedAt};
   qrDataUrl=await generateQR(bookingId||'KHURSILO-'+Date.now());if(qrDataUrl)renderQROnCard(qrDataUrl);
@@ -623,7 +617,10 @@ function downloadTicketPDF(){
   doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');doc.text('AMOUNT',6,72);doc.setTextColor(200,134,10);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(ticketData.amount>0?'Rs '+ticketData.amount:'Free',6,77);
   doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');doc.text('BOOKED AT',6,85);doc.setTextColor(26,26,26);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(ticketData.bookedAt,6,90);
   doc.setFillColor(240,238,234);doc.rect(0,100,W,20,'F');doc.setTextColor(136,136,136);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
-  doc.text('Show QR at entry gate · '+vt,W/2,107,{align:'center'});doc.text('Support: vkvcoder.support@gmail.com',W/2,112,{align:'center'});doc.text('khursilo.in',W/2,117,{align:'center'});
+  const pdfEmail=organiserData&&organiserData.email_1?organiserData.email_1:null;
+  doc.text('Show QR at entry gate · '+vt,W/2,107,{align:'center'});
+  if(pdfEmail){doc.text('Support: '+pdfEmail,W/2,112,{align:'center'});doc.text('khursilo.in',W/2,117,{align:'center'});}
+  else{doc.text('khursilo.in',W/2,112,{align:'center'});}
   doc.save('Khursilo_Ticket_'+ticketData.seatKeys.join('_')+'.pdf');
   if(dlBtn){
     dlBtn.textContent='✓ Downloaded!';
@@ -683,7 +680,8 @@ async function bookOpenEntry(){
     bookingId=data.id;
     const label=openQty>1?`Open Entry · ${openQty} persons`:'Open Entry';
     await showSuccess(name,mobile,[label],0);
-    document.getElementById('ticket-footer').innerHTML=`Show QR at entry gate · Valid for ${openQty} person${openQty>1?'s':''}<br>Support: vkvcoder.support@gmail.com · khursilo.in`;
+    const oe=organiserData&&organiserData.email_1?organiserData.email_1:'';
+    document.getElementById('ticket-footer').innerHTML=`Show QR at entry gate · Valid for ${openQty} person${openQty>1?'s':''}${oe?'<br>Support: '+oe:''}<br>khursilo.in`;
   }catch(e){alert('Error: '+(e.message||'Unknown'));btn.textContent='Book Now →';btn.disabled=false;}
 }
 
