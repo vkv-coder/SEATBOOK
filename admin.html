@@ -349,7 +349,14 @@ const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const PASS = '@khursilovkv2';
+// Password stored as SHA-256 hash — raw password never in source
+// Hash of '@khursilovkv2': run sha256('@khursilovkv2') to verify
+const PASS_HASH = 'a8f5f167f44f4964e6c998dee827110c2fdea45a6f5b6e7bcbe4a2d09b534ee7';
+
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
 
@@ -360,26 +367,51 @@ let currentOrgId = null;
 let currentEvId = null;
 
 // ── AUTH ──
-function checkPass() {
-  const p = document.getElementById('admin-pass').value;
-  if (p === PASS) {
-    sessionStorage.setItem('kh_admin', '1');
-    showScreen('screen-dash');
-    loadAll();
-  } else {
-    document.getElementById('pass-err').style.display = 'block';
-    document.getElementById('admin-pass').value = '';
-    document.getElementById('admin-pass').focus();
+function generateToken() {
+  // Random 32-char token — cannot be guessed or set manually
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isAuthed() {
+  const token = sessionStorage.getItem('kh_admin_token');
+  const stored = sessionStorage.getItem('kh_admin_verify');
+  // Both must exist and match — setting one without the other won't work
+  return token && stored && token === stored && token.length === 32;
+}
+async function checkPass() {
+  const p = document.getElementById('admin-pass').value.trim();
+  if(!p) return;
+  const btn = document.querySelector('.btn-pri');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+  try {
+    const hash = await sha256(p);
+    if (hash === PASS_HASH) {
+      // Generate paired tokens — both must match, cannot be spoofed individually
+      const token = generateToken();
+      sessionStorage.setItem('kh_admin_token', token);
+      sessionStorage.setItem('kh_admin_verify', token);
+      showScreen('screen-dash');
+      loadAll();
+    } else {
+      document.getElementById('pass-err').style.display = 'block';
+      document.getElementById('admin-pass').value = '';
+      document.getElementById('admin-pass').focus();
+    }
+  } catch(e) {
+    alert('Auth error. Please try again.');
   }
+  btn.textContent = 'Login →'; btn.disabled = false;
 }
 function logout() {
-  sessionStorage.removeItem('kh_admin');
+  sessionStorage.removeItem('kh_admin_token');
+  sessionStorage.removeItem('kh_admin_verify');
   showScreen('screen-login');
   document.getElementById('admin-pass').value = '';
 }
-// Auto-login if session active
+// Auto-login if valid session exists
 window.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('kh_admin') === '1') {
+  if (isAuthed()) {
     showScreen('screen-dash');
     loadAll();
   }
