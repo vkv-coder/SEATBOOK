@@ -120,6 +120,36 @@ canvas{display:none;}
   <div class="error-msg" id="error-msg">Could not load event.</div>
 </div>
 
+<!-- SCREEN: OTP LOGIN -->
+<div class="screen" id="screen-otp">
+  <div style="max-width:360px;margin:40px auto;padding:24px 20px;background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.08);text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;">🔐</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Organiser Login</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px;">Enter your registered email to receive a login OTP</div>
+    <div id="otp-step-email">
+      <input type="email" id="otp-email" placeholder="your@email.com"
+        style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;box-sizing:border-box;"
+        onkeydown="if(event.key==='Enter')sendOtp()">
+      <button onclick="sendOtp()"
+        style="width:100%;background:#1a1a1a;color:#fff;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;"
+        id="otp-send-btn">Send OTP →</button>
+      <div id="otp-email-err" style="color:#cc3333;font-size:12px;margin-top:8px;display:none;"></div>
+    </div>
+    <div id="otp-step-verify" style="display:none;">
+      <div style="font-size:13px;color:#888;margin-bottom:16px;">Enter the 6-digit OTP sent to <strong id="otp-email-shown"></strong></div>
+      <input type="number" id="otp-code" placeholder="6-digit OTP"
+        style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:8px;font-size:18px;text-align:center;margin-bottom:12px;box-sizing:border-box;letter-spacing:4px;"
+        maxlength="6" onkeydown="if(event.key==='Enter')verifyOtp()">
+      <button onclick="verifyOtp()"
+        style="width:100%;background:#2e9e60;color:#fff;border:none;padding:13px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;"
+        id="otp-verify-btn">Verify OTP →</button>
+      <div id="otp-verify-err" style="color:#cc3333;font-size:12px;margin-top:8px;display:none;"></div>
+      <button onclick="document.getElementById('otp-step-email').style.display='block';document.getElementById('otp-step-verify').style.display='none';"
+        style="background:none;border:none;color:#888;font-size:12px;margin-top:10px;cursor:pointer;">← Use different email</button>
+    </div>
+  </div>
+</div>
+
 <!-- SCREEN: PIN SETUP -->
 <div class="screen" id="screen-pin">
   <div class="setup-title" id="pin-title">Set Supervisor PIN</div>
@@ -241,28 +271,98 @@ function cameraInterrupted() {
 
 
 // ── INIT ──────────────────────────────────────────────────
-async function init() {
-  if (!eventId) { showError('No event ID in URL.<br>Use the link provided by Khursilo.'); return; }
+// ── OTP AUTH ──────────────────────────────────────────────
+let _otpEmail = '';
+let _otpOrgId = null;
+let _scannerAuthed = false;
 
-  const { data: ev, error } = await sb.from('kh_events')
-    .select('id, name, event_date, hall_id')
-    .eq('id', eventId).single();
-
-  if (error || !ev) { showError('Event not found or not accessible.'); return; }
-  eventData = ev;
-  document.getElementById('ev-name').textContent = ev.name;
-
-  document.getElementById('loading-screen').classList.remove('active');
-
-  const savedPin = localStorage.getItem(PIN_KEY);
-  if (savedPin) {
-    startScanner();
-  } else {
-    showScreen('screen-pin');
+async function sendOtp() {
+  const email = document.getElementById('otp-email').value.trim().toLowerCase();
+  if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    const err = document.getElementById('otp-email-err');
+    err.textContent = 'Please enter a valid email address.';
+    err.style.display = 'block'; return;
   }
+  const btn = document.getElementById('otp-send-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  document.getElementById('otp-email-err').style.display = 'none';
+  try {
+    // Check organiser exists with this email
+    const {data: org, error} = await sb.from('kh_organisers')
+      .select('id,contact_1_name,status').eq('email_1', email).single();
+    if (error || !org) {
+      document.getElementById('otp-email-err').textContent = 'Email not registered as organiser.';
+      document.getElementById('otp-email-err').style.display = 'block';
+      btn.textContent = 'Send OTP →'; btn.disabled = false; return;
+    }
+    if (org.status === 'suspended') {
+      document.getElementById('otp-email-err').textContent = 'This organiser account is suspended.';
+      document.getElementById('otp-email-err').style.display = 'block';
+      btn.textContent = 'Send OTP →'; btn.disabled = false; return;
+    }
+    // Send OTP via Supabase Auth
+    const {error: otpErr} = await sb.auth.signInWithOtp({email, options:{shouldCreateUser: false}});
+    if (otpErr) throw otpErr;
+    _otpEmail = email;
+    _otpOrgId = org.id;
+    document.getElementById('otp-email-shown').textContent = email;
+    document.getElementById('otp-step-email').style.display = 'none';
+    document.getElementById('otp-step-verify').style.display = 'block';
+  } catch(e) {
+    document.getElementById('otp-email-err').textContent = 'Error: ' + (e.message || 'Could not send OTP.');
+    document.getElementById('otp-email-err').style.display = 'block';
+  }
+  btn.textContent = 'Send OTP →'; btn.disabled = false;
 }
 
-// ── SCREENS ───────────────────────────────────────────────
+async function verifyOtp() {
+  const code = document.getElementById('otp-code').value.trim();
+  if (!code || code.length < 6) {
+    document.getElementById('otp-verify-err').textContent = 'Enter the 6-digit OTP.';
+    document.getElementById('otp-verify-err').style.display = 'block'; return;
+  }
+  const btn = document.getElementById('otp-verify-btn');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+  document.getElementById('otp-verify-err').style.display = 'none';
+  try {
+    const {data, error} = await sb.auth.verifyOtp({email: _otpEmail, token: code, type: 'email'});
+    if (error) throw error;
+    // Verify this organiser owns the event
+    const {data: ev} = await sb.from('kh_events').select('organiser_id').eq('id', eventId).single();
+    if (!ev || ev.organiser_id !== _otpOrgId) {
+      await sb.auth.signOut();
+      document.getElementById('otp-verify-err').textContent = 'You are not the organiser of this event.';
+      document.getElementById('otp-verify-err').style.display = 'block';
+      btn.textContent = 'Verify OTP →'; btn.disabled = false; return;
+    }
+    _scannerAuthed = true;
+    // Proceed to PIN / scan screen
+    await initAfterAuth();
+  } catch(e) {
+    document.getElementById('otp-verify-err').textContent = 'Invalid OTP. Please try again.';
+    document.getElementById('otp-verify-err').style.display = 'block';
+  }
+  btn.textContent = 'Verify OTP →'; btn.disabled = false;
+}
+
+async function initAfterAuth() {
+  // Called after successful OTP — continue with event load + PIN
+  const {data: ev, error} = await sb.from('kh_events').select('*').eq('id', eventId).single();
+  if (error || !ev) { showError('Could not load event.'); return; }
+  document.getElementById('ev-name').textContent = ev.name || 'Event';
+  const savedPin = localStorage.getItem(PIN_KEY);
+  if (savedPin) { startScanner(); }
+  else { showScreen('screen-pin'); }
+}
+
+async function init() {
+  if (!eventId) { showError('No event ID in URL.<br>Use the link provided by Khursilo.'); return; }
+  // Show OTP login screen first — organiser must authenticate
+  document.getElementById('loading-screen').classList.remove('active');
+  showScreen('screen-otp');
+}
+
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
