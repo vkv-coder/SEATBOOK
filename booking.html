@@ -209,6 +209,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const SSG_HALL_ID='e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const SAYAJI_HALL_ID='5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
 const DINDAYAL_HALL_ID='2b5ca724-c8f1-42d5-9730-00229916618b';
+// CC Mehta uses generic buildSeatMap() — no special renderer needed
+// Hall ID is set after running add-ccmehta-hall.html; hpass rows handled in buildSeatMap
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
@@ -651,7 +653,7 @@ function buildSeatMap(layout){
   const grid=document.getElementById('seat-grid');grid.innerHTML='';
   const rows=(layout.rows||[]).slice().reverse();const frag=document.createDocumentFragment();
   rows.forEach(row=>{
-    if(row.type==='hgap'){const d=document.createElement('div');d.style.height='10px';d.style.width='100%';d.style.background='transparent';frag.appendChild(d);return;}
+    if(row.type==='hgap'||row.type==='hpass'){const d=document.createElement('div');d.style.height='10px';d.style.width='100%';d.style.background='transparent';frag.appendChild(d);return;}
     if(row.type!=='row')return;
     const rw=document.createElement('div');rw.className='row-wrap';const sd=document.createElement('div');sd.className='row-seats';
     const cells=row.cells||[];let lc=0;const seatEls=[];

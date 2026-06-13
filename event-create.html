@@ -939,7 +939,7 @@ async function publishEvent() {
       mode: eventMode,
       booking_open: bookingOpen.toISOString(),
       booking_close: bookingClose.toISOString(),
-      status: 'draft',
+      status: 'live',
       seat_price_map: window._seatPriceMap || {},
       created_at: new Date().toISOString()
     }).select().single();

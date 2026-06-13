@@ -386,6 +386,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // SHA-256 of '@khursilovkv2' — password never stored in plaintext
 const PASS_HASH = '3f8e37676bb4417db93b73fdef85f9c28b3f98a38e0e3ff3340be531a65c9530';
+const SSG_HALL_ID = 'e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const _TK = 'kh_adm_tk', _TX = 'kh_adm_tx';
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
@@ -774,10 +775,15 @@ function renderXlPreview() {
   if (!ws || !ws['!ref']) { return; }
 
   const range = XLSX.utils.decode_range(ws['!ref']);
-  const seatColorMap = {}; // seatNumber → argb
+  const seatColorMap = {}; // "A-5" (rowLabel-seatNum) → argb
 
   for (let r = range.s.r; r <= range.e.r; r++) {
-    for (let c = range.s.c; c <= range.e.c; c++) {
+    // Row label is always in column A (index 0) — single uppercase letter
+    const lblAddr = XLSX.utils.encode_cell({ r, c: 0 });
+    const lblCell = ws[lblAddr];
+    const rowLabel = (lblCell && lblCell.t === 's') ? String(lblCell.v).trim() : '';
+
+    for (let c = range.s.c + 1; c <= range.e.c; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
       const cell = ws[addr];
       if (!cell || cell.t !== 'n') continue; // only numeric cells
@@ -789,16 +795,17 @@ function renderXlPreview() {
         argb = cell.s.fgColor.argb || (cell.s.fgColor.rgb ? 'FF' + cell.s.fgColor.rgb : null);
       }
       if (argb && !isDefaultColor(argb)) {
-        seatColorMap[v] = argb.toUpperCase();
+        const key = rowLabel ? rowLabel + '-' + v : String(v);
+        seatColorMap[key] = argb.toUpperCase();
       }
     }
   }
 
-  // Group seats by color
-  const colorGroups = {}; // argb → [seatNumbers]
-  for (const [sn, argb] of Object.entries(seatColorMap)) {
+  // Group seats by color; keys are now full seat keys ("A-5") or plain numbers for legacy
+  const colorGroups = {}; // argb → [seatKeys]
+  for (const [key, argb] of Object.entries(seatColorMap)) {
     if (!colorGroups[argb]) colorGroups[argb] = [];
-    colorGroups[argb].push(Number(sn));
+    colorGroups[argb].push(key);
   }
 
   const colors = Object.keys(colorGroups);
@@ -811,8 +818,8 @@ function renderXlPreview() {
   }
   document.getElementById('xl-err').style.display = 'none';
 
-  // Sort groups by first seat number (approximate row order)
-  colors.sort((a, b) => Math.min(...colorGroups[a]) - Math.min(...colorGroups[b]));
+  // Sort groups by their first seat key alphabetically (approximates row order)
+  colors.sort((a, b) => String(colorGroups[a][0]).localeCompare(String(colorGroups[b][0])));
 
   // Store for import
   xlParsedSheets[sheetName] = { seatColorMap, colorGroups };
@@ -823,7 +830,6 @@ function renderXlPreview() {
   colors.forEach((argb, i) => {
     const seats = colorGroups[argb];
     const hex = xlArgbToHex(argb);
-    const minS = Math.min(...seats), maxS = Math.max(...seats);
 
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
@@ -893,35 +899,58 @@ async function importExcelLayout() {
     return;
   }
 
-  // Build argb → secId map
+  // Build argb → section lookup
   const argbToSecId = {};
-  newSections.forEach(s => { argbToSecId[s.argb] = s.id; });
+  const argbToPrice = {};
+  newSections.forEach(s => {
+    argbToSecId[s.argb] = s.id;
+    if (s.price) argbToPrice[s.argb] = Number(s.price);
+  });
 
-  // Update seat cells in layout_json.rows
-  const layout = hallData.layout_json;
+  // Fetch full hall layout
+  const layout = hallData.layout_json || { rows: [], sections: [] };
   layout.sections = newSections.map(({ id, name, color, price }) => ({ id, name, color, price }));
-  for (const row of layout.rows) {
-    for (const cell of (row.cells || [])) {
-      if (cell.t === 'seat' && cell.sn != null) {
-        const argb = seatColorMap[cell.sn];
-        cell.secId = argb ? (argbToSecId[argb] || null) : null;
+
+  if (hall.id === SSG_HALL_ID) {
+    // SSG uses hardcoded layout in booking.html — store seat_price_map template
+    // so admin can apply it when creating SSG events
+    const priceTemplate = {};
+    for (const [seatKey, argb] of Object.entries(seatColorMap)) {
+      const price = argbToPrice[argb];
+      if (price) priceTemplate[seatKey] = price;
+    }
+    layout.ssg_price_template = priceTemplate;
+    const tCount = Object.keys(priceTemplate).length;
+    const { error: saveErr } = await sb.from('kh_halls')
+      .update({ layout_json: layout }).eq('id', hall.id);
+    document.getElementById('xl-saving').style.display = 'none';
+    if (saveErr) {
+      document.getElementById('xl-err').style.display = 'block';
+      document.getElementById('xl-err').textContent = 'Save error: ' + saveErr.message;
+      return;
+    }
+    alert(`✓ SSG price template saved!\n${newSections.length} sections · ${tCount} seats priced.\nApply this template when creating an SSG event.`);
+  } else {
+    // Layout-json halls: update cell.secId for each seat using full "RowLabel-SeatNum" key
+    for (const row of (layout.rows || [])) {
+      for (const cell of (row.cells || [])) {
+        if (cell.t === 'seat' && cell.sn != null) {
+          const key = (row.label || '') + '-' + cell.sn;
+          const argb = seatColorMap[key];
+          cell.secId = argb ? (argbToSecId[argb] || null) : null;
+        }
       }
     }
+    const { error: saveErr } = await sb.from('kh_halls')
+      .update({ layout_json: layout }).eq('id', hall.id);
+    document.getElementById('xl-saving').style.display = 'none';
+    if (saveErr) {
+      document.getElementById('xl-err').style.display = 'block';
+      document.getElementById('xl-err').textContent = 'Save error: ' + saveErr.message;
+      return;
+    }
+    alert(`✓ Sections saved for "${hall.name}"!\n${newSections.length} sections · ${Object.keys(seatColorMap).length} seats assigned.`);
   }
-
-  // Save back to Supabase
-  const { error: saveErr } = await sb.from('kh_halls')
-    .update({ layout_json: layout }).eq('id', hall.id);
-
-  document.getElementById('xl-saving').style.display = 'none';
-
-  if (saveErr) {
-    document.getElementById('xl-err').style.display = 'block';
-    document.getElementById('xl-err').textContent = 'Save error: ' + saveErr.message;
-    return;
-  }
-
-  alert(`✓ Sections saved for "${hall.name}"!\n${newSections.length} sections · ${Object.keys(seatColorMap).length} seats assigned.`);
   document.getElementById('xl-preview').style.display = 'none';
   document.getElementById('xl-hall-select').style.display = 'none';
   document.getElementById('xl-filename').textContent = '';
