@@ -561,7 +561,7 @@ async function showSuccess(name,mobile,seatKeys,amount){
   const seatCount=seatKeys.length,now=new Date();
   const bookedAt=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
   document.getElementById('tc-event').textContent=eventName;document.getElementById('tc-date').textContent=evDate;document.getElementById('tc-hall').textContent=hallName;
-  document.getElementById('tc-name').textContent=name;document.getElementById('tc-seats').textContent=seatKeys.join(', ');
+  document.getElementById('tc-name').textContent=name.replace(/[<>"'&]/g,'');document.getElementById('tc-seats').textContent=seatKeys.join(', ');
   document.getElementById('tc-amount').textContent=amount>0?'₹'+amount:'Free';document.getElementById('tc-booking-id').textContent=bookingId||'—';document.getElementById('tc-bookedat').textContent=bookedAt;
   const orgEmail=organiserData&&organiserData.email_1?organiserData.email_1:'';
   document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · Valid for '+seatCount+' person'+(seatCount>1?'s':'')+(orgEmail?'<br>Support: '+orgEmail:'')+'<br>khursilo.in';
@@ -573,12 +573,24 @@ async function showSuccess(name,mobile,seatKeys,amount){
 }
 
 async function confirmBooking(){
-  const name=document.getElementById('inp-name').value.trim(),mobile=document.getElementById('inp-mobile').value.trim();
+  const name=document.getElementById('inp-name').value.trim().replace(/[<>"'&]/g,''),mobile=document.getElementById('inp-mobile').value.trim();
   if(!name){alert('Please enter your name');return;}if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.querySelector('.confirm-btn');btn.textContent='Processing…';btn.disabled=true;
   try{
-    const totalAmt=selectedSeats.reduce((a,s)=>a+s.price,0),seatKeys=selectedSeats.map(s=>s.seatKey);
-    if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,seatKeys,totalAmt);return;}
+    const seatKeys=selectedSeats.map(s=>s.seatKey);
+    // Re-verify amount from Supabase — do NOT trust client-side price
+    const {data:evCheck,error:evErr}=await sb.from('kh_events').select('seat_price_map,mode').eq('id',eventId).single();
+    if(evErr||!evCheck){alert('Could not verify pricing. Please refresh and try again.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
+    let totalAmt=0;
+    if(evCheck.mode==='free'||evCheck.mode==='open'){
+      await saveFreeBooking(name,mobile,seatKeys,0);return;
+    }
+    if(evCheck.seat_price_map){
+      seatKeys.forEach(k=>{
+        const p=evCheck.seat_price_map[k];
+        if(typeof p==='number') totalAmt+=p;
+      });
+    }
     if(totalAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
     const rzpKey=organiserData&&organiserData.razorpay_key_id;
     if(!rzpKey){alert('Payment gateway not configured.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
