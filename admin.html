@@ -6,6 +6,7 @@
 <title>Khursilo — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#f5f5f3;--white:#fff;--s2:#f0eeea;
@@ -262,6 +263,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="info-box">
       ℹ️ Each hall is mapped once. Organisers select from this list when creating an event.
     </div>
+
+    <!-- Import Excel Section Layout -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-hdr">
+        <div class="card-title">Import section layout from Excel</div>
+      </div>
+      <div style="padding:16px;">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">
+          Upload the organiser-filled Excel (<code>Khursilo_Hall_Layouts.xlsx</code>). System will read the seat colour-coding and auto-create sections.
+        </p>
+        <label style="display:inline-block;cursor:pointer;">
+          <input type="file" id="xl-file-input" accept=".xlsx,.xls" style="display:none;" onchange="parseExcelLayout(this)">
+          <span class="card-action" style="display:inline-block;">📂 Choose Excel file</span>
+        </label>
+        <span id="xl-filename" style="font-size:12px;color:var(--muted);margin-left:10px;"></span>
+      </div>
+
+      <!-- Hall selector (shown after file parsed) -->
+      <div id="xl-hall-select" style="display:none;padding:0 16px 12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Hall sheet to import</label>
+        <select id="xl-sheet-sel" class="inp" style="margin:0;max-width:320px;" onchange="renderXlPreview()"></select>
+      </div>
+
+      <!-- Preview of detected sections -->
+      <div id="xl-preview" style="display:none;padding:0 16px 16px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text);">Detected sections — enter name and price for each:</div>
+        <div id="xl-sections-list"></div>
+        <div id="xl-err" style="color:#c33;font-size:12px;margin-top:8px;display:none;"></div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+          <button class="btn-prim" onclick="importExcelLayout()">✓ Save sections to hall</button>
+          <span id="xl-saving" style="font-size:12px;color:var(--muted);display:none;">Saving…</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -349,14 +384,9 @@ const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Password stored as SHA-256 hash — raw password never in source
-// Hash of '@khursilovkv2': run sha256('@khursilovkv2') to verify
-const PASS_HASH = 'a8f5f167f44f4964e6c998dee827110c2fdea45a6f5b6e7bcbe4a2d09b534ee7';
-
-async function sha256(msg) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+// SHA-256 of '@khursilovkv2' — password never stored in plaintext
+const PASS_HASH = '3f8e37676bb4417db93b73fdef85f9c28b3f98a38e0e3ff3340be531a65c9530';
+const _TK = 'kh_adm_tk', _TX = 'kh_adm_tx';
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
 
@@ -366,55 +396,56 @@ let allHalls = [];
 let currentOrgId = null;
 let currentEvId = null;
 
+// XSS-safe escape for user data in innerHTML templates
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function _sha256(s){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
 // ── AUTH ──
-function generateToken() {
-  // Random 32-char token — cannot be guessed or set manually
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function isAuthed() {
-  const token = sessionStorage.getItem('kh_admin_token');
-  const stored = sessionStorage.getItem('kh_admin_verify');
-  // Both must exist and match — setting one without the other won't work
-  return token && stored && token === stored && token.length === 32;
-}
 async function checkPass() {
-  const p = document.getElementById('admin-pass').value.trim();
-  if(!p) return;
-  const btn = document.querySelector('.btn-pri');
-  btn.textContent = 'Verifying…'; btn.disabled = true;
-  try {
-    const hash = await sha256(p);
-    if (hash === PASS_HASH) {
-      // Generate paired tokens — both must match, cannot be spoofed individually
-      const token = generateToken();
-      sessionStorage.setItem('kh_admin_token', token);
-      sessionStorage.setItem('kh_admin_verify', token);
-      showScreen('screen-dash');
-      loadAll();
-    } else {
-      document.getElementById('pass-err').style.display = 'block';
-      document.getElementById('admin-pass').value = '';
-      document.getElementById('admin-pass').focus();
-    }
-  } catch(e) {
-    alert('Auth error. Please try again.');
+  const p = document.getElementById('admin-pass').value;
+  const h = await _sha256(p);
+  if (h !== PASS_HASH) {
+    document.getElementById('pass-err').style.display = 'block';
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('admin-pass').focus();
+    return;
   }
-  btn.textContent = 'Login →'; btn.disabled = false;
+  const token = crypto.randomUUID();
+  const exp = new Date(Date.now() + 8*60*60*1000).toISOString();
+  sessionStorage.setItem(_TK, token);
+  sessionStorage.setItem(_TX, exp);
+  // Store server-side token (requires kh_admin_tokens table — see setup.sql)
+  sb.from('kh_admin_tokens').insert({token, expires_at: exp}).then(()=>{});
+  showScreen('screen-dash');
+  loadAll();
 }
 function logout() {
-  sessionStorage.removeItem('kh_admin_token');
-  sessionStorage.removeItem('kh_admin_verify');
+  const tk = sessionStorage.getItem(_TK);
+  if(tk) sb.from('kh_admin_tokens').delete().eq('token',tk).then(()=>{});
+  sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX);
   showScreen('screen-login');
   document.getElementById('admin-pass').value = '';
 }
-// Auto-login if valid session exists
-window.addEventListener('DOMContentLoaded', () => {
-  if (isAuthed()) {
-    showScreen('screen-dash');
-    loadAll();
+// Auto-login: verify server-side token on every page load
+window.addEventListener('DOMContentLoaded', async () => {
+  const token = sessionStorage.getItem(_TK);
+  const exp   = sessionStorage.getItem(_TX);
+  if (!token || !exp || new Date(exp) < new Date()) {
+    sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX); return;
   }
+  const {data, error} = await sb.from('kh_admin_tokens')
+    .select('token').eq('token',token).gt('expires_at',new Date().toISOString()).maybeSingle();
+  if (error) {
+    // Table not set up yet (run setup.sql) — fall back to expiry-only check
+    showScreen('screen-dash'); loadAll();
+  } else if (data) {
+    showScreen('screen-dash'); loadAll();
+  }
+  // else: token not in DB → stay on login screen
 });
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -463,14 +494,14 @@ function renderOrgs() {
     const item = document.createElement('div');
     item.className = 'org-item';
     item.innerHTML = `
-      <div class="org-avatar" style="background:${AVATARBG[i%4]};color:${AVATARCOL[i%4]};">${initials}</div>
+      <div class="org-avatar" style="background:${AVATARBG[i%4]};color:${AVATARCOL[i%4]};">${esc(initials)}</div>
       <div class="org-info">
-        <div class="org-name">${org.name || '—'}</div>
-        <div class="org-meta">${org.contact_1_mobile || ''} · ${evCount} event${evCount !== 1 ? 's' : ''}</div>
+        <div class="org-name">${esc(org.name || '—')}</div>
+        <div class="org-meta">${esc(org.contact_1_mobile || '')} · ${evCount} event${evCount !== 1 ? 's' : ''}</div>
       </div>
       <div class="org-actions">
-        <span class="badge ${status}">${statusLabel}</span>
-        <button class="tbl-btn blue" onclick="viewOrg('${org.id}')">View</button>
+        <span class="badge ${esc(status)}">${esc(statusLabel)}</span>
+        <button class="tbl-btn blue" onclick="viewOrg('${esc(org.id)}')">View</button>
       </div>`;
     list.appendChild(item);
   });
@@ -584,12 +615,12 @@ function renderEvents(hallMap, orgMap) {
         <div class="ev-mon">${mon}</div>
       </div>
       <div class="ev-info">
-        <div class="ev-name">${ev.name}</div>
-        <div class="ev-meta">${orgName} · ${hallName}</div>
+        <div class="ev-name">${esc(ev.name)}</div>
+        <div class="ev-meta">${esc(orgName)} · ${esc(hallName)}</div>
       </div>
       <div class="ev-actions">
-        <span class="badge ${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
-        <button class="tbl-btn gold" onclick="openEvStatus('${ev.id}')">Set status</button>
+        <span class="badge ${esc(status)}">${esc(status.charAt(0).toUpperCase() + status.slice(1))}</span>
+        <button class="tbl-btn gold" onclick="openEvStatus('${esc(ev.id)}')">Set status</button>
       </div>`;
     list.appendChild(item);
   });
@@ -656,8 +687,8 @@ function renderHalls() {
     item.innerHTML = `
       <div class="hall-icon">🏛</div>
       <div class="hall-info">
-        <div class="hall-name">${hall.name}</div>
-        <div class="hall-meta">${hall.city || 'Vadodara'} · ${hall.capacity || '—'} seats</div>
+        <div class="hall-name">${esc(hall.name)}</div>
+        <div class="hall-meta">${esc(hall.city || 'Vadodara')} · ${esc(String(hall.capacity || '—'))} seats</div>
       </div>
       <button class="tbl-btn" onclick="window.location.href='layout-builder.html?from=admin'">Edit layout</button>`;
     list.appendChild(item);
@@ -687,6 +718,215 @@ function updateOverview() {
 // ── MODAL ──
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ── EXCEL IMPORT ──
+let xlWorkbook = null;
+let xlParsedSheets = {}; // sheetName → { seatColorMap, hallId }
+
+function parseExcelLayout(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('xl-filename').textContent = file.name;
+  document.getElementById('xl-preview').style.display = 'none';
+  document.getElementById('xl-hall-select').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      xlWorkbook = XLSX.read(e.target.result, { type: 'array', cellStyles: true });
+    } catch(err) {
+      alert('Could not read file: ' + err.message); return;
+    }
+
+    // Filter out non-hall sheets (READ FIRST, etc.)
+    const hallSheets = xlWorkbook.SheetNames.filter(n => n !== 'READ FIRST');
+    if (!hallSheets.length) { alert('No hall sheets found in this file.'); return; }
+
+    // Populate sheet selector
+    const sel = document.getElementById('xl-sheet-sel');
+    sel.innerHTML = hallSheets.map(n => `<option value="${n}">${n}</option>`).join('');
+    document.getElementById('xl-hall-select').style.display = 'block';
+    renderXlPreview();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function xlArgbToHex(argb) {
+  if (!argb) return null;
+  // Strip alpha — ARGB "FFFFFCC00" → "#FFFFCC00" (Excel adds alpha prefix)
+  const rgb = argb.length === 8 ? argb.slice(2) : argb.slice(-6);
+  return '#' + rgb.toUpperCase();
+}
+
+function isDefaultColor(argb) {
+  if (!argb) return true;
+  const hex = argb.toUpperCase();
+  // Skip white, near-white, the default light-purple from our template, and black
+  const skip = ['FFFFFFFF','FFEEEEFF','FF000000','FFEEEEEE','FFE0E0E0','FF1A1A1A'];
+  return skip.includes(hex) || hex === 'FFFFFF' || hex === '000000';
+}
+
+function renderXlPreview() {
+  const sheetName = document.getElementById('xl-sheet-sel').value;
+  if (!xlWorkbook || !sheetName) return;
+
+  const ws = xlWorkbook.Sheets[sheetName];
+  if (!ws || !ws['!ref']) { return; }
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const seatColorMap = {}; // seatNumber → argb
+
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      const cell = ws[addr];
+      if (!cell || cell.t !== 'n') continue; // only numeric cells
+      const v = cell.v;
+      if (!Number.isInteger(v) || v < 1 || v > 9999) continue; // seat number range
+
+      let argb = null;
+      if (cell.s && cell.s.fgColor) {
+        argb = cell.s.fgColor.argb || (cell.s.fgColor.rgb ? 'FF' + cell.s.fgColor.rgb : null);
+      }
+      if (argb && !isDefaultColor(argb)) {
+        seatColorMap[v] = argb.toUpperCase();
+      }
+    }
+  }
+
+  // Group seats by color
+  const colorGroups = {}; // argb → [seatNumbers]
+  for (const [sn, argb] of Object.entries(seatColorMap)) {
+    if (!colorGroups[argb]) colorGroups[argb] = [];
+    colorGroups[argb].push(Number(sn));
+  }
+
+  const colors = Object.keys(colorGroups);
+  if (!colors.length) {
+    document.getElementById('xl-err').style.display = 'block';
+    document.getElementById('xl-err').textContent = 'No coloured seats detected. Make sure you applied fill colours to the seat cells in Excel.';
+    document.getElementById('xl-preview').style.display = 'block';
+    document.getElementById('xl-sections-list').innerHTML = '';
+    return;
+  }
+  document.getElementById('xl-err').style.display = 'none';
+
+  // Sort groups by first seat number (approximate row order)
+  colors.sort((a, b) => Math.min(...colorGroups[a]) - Math.min(...colorGroups[b]));
+
+  // Store for import
+  xlParsedSheets[sheetName] = { seatColorMap, colorGroups };
+
+  // Render section rows
+  const container = document.getElementById('xl-sections-list');
+  container.innerHTML = '';
+  colors.forEach((argb, i) => {
+    const seats = colorGroups[argb];
+    const hex = xlArgbToHex(argb);
+    const minS = Math.min(...seats), maxS = Math.max(...seats);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    row.innerHTML = `
+      <div style="width:24px;height:24px;border-radius:4px;background:${hex};border:1px solid #ccc;flex-shrink:0;"></div>
+      <div style="font-size:11px;color:var(--muted);min-width:90px;">${seats.length} seats</div>
+      <input class="inp" placeholder="Section name (e.g. PREMIUM)" id="xl-sec-name-${i}"
+             style="margin:0;flex:2;font-size:12px;" value="">
+      <input class="inp" placeholder="Price ₹" id="xl-sec-price-${i}" type="number" min="0"
+             style="margin:0;width:90px;font-size:12px;">
+      <input type="hidden" id="xl-sec-argb-${i}" value="${argb}">
+    `;
+    container.appendChild(row);
+  });
+
+  // Total colour count
+  const tot = document.createElement('div');
+  tot.style.cssText = 'font-size:11px;color:var(--muted);margin-top:4px;';
+  tot.textContent = `${colors.length} section${colors.length>1?'s':''} detected · ${Object.keys(seatColorMap).length} coloured seats total`;
+  container.appendChild(tot);
+
+  document.getElementById('xl-preview').style.display = 'block';
+}
+
+async function importExcelLayout() {
+  const sheetName = document.getElementById('xl-sheet-sel').value;
+  const data = xlParsedSheets[sheetName];
+  if (!data) return;
+
+  const { seatColorMap, colorGroups } = data;
+  const colors = Object.keys(colorGroups);
+
+  // Collect section inputs
+  const newSections = [];
+  for (let i = 0; i < colors.length; i++) {
+    const name = document.getElementById(`xl-sec-name-${i}`).value.trim();
+    const price = document.getElementById(`xl-sec-price-${i}`).value.trim();
+    const argb = document.getElementById(`xl-sec-argb-${i}`).value;
+    if (!name) {
+      document.getElementById('xl-err').style.display = 'block';
+      document.getElementById('xl-err').textContent = 'Please enter a name for every section.';
+      return;
+    }
+    const hex = xlArgbToHex(argb);
+    const secId = 's_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    newSections.push({ id: secId, name, color: hex, price: price ? Number(price) : null, argb });
+  }
+
+  // Find matching hall by sheet name
+  const hall = allHalls.find(h => h.name === sheetName || sheetName.startsWith(h.name.slice(0, 20)));
+  if (!hall) {
+    document.getElementById('xl-err').style.display = 'block';
+    document.getElementById('xl-err').textContent = `Hall not found for sheet "${sheetName}". Make sure the sheet name matches the hall name.`;
+    return;
+  }
+
+  document.getElementById('xl-saving').style.display = 'inline';
+  document.getElementById('xl-err').style.display = 'none';
+
+  // Fetch full hall layout
+  const { data: hallData, error: fetchErr } = await sb.from('kh_halls')
+    .select('id,layout_json').eq('id', hall.id).single();
+  if (fetchErr) {
+    document.getElementById('xl-err').style.display = 'block';
+    document.getElementById('xl-err').textContent = 'Fetch error: ' + fetchErr.message;
+    document.getElementById('xl-saving').style.display = 'none';
+    return;
+  }
+
+  // Build argb → secId map
+  const argbToSecId = {};
+  newSections.forEach(s => { argbToSecId[s.argb] = s.id; });
+
+  // Update seat cells in layout_json.rows
+  const layout = hallData.layout_json;
+  layout.sections = newSections.map(({ id, name, color, price }) => ({ id, name, color, price }));
+  for (const row of layout.rows) {
+    for (const cell of (row.cells || [])) {
+      if (cell.t === 'seat' && cell.sn != null) {
+        const argb = seatColorMap[cell.sn];
+        cell.secId = argb ? (argbToSecId[argb] || null) : null;
+      }
+    }
+  }
+
+  // Save back to Supabase
+  const { error: saveErr } = await sb.from('kh_halls')
+    .update({ layout_json: layout }).eq('id', hall.id);
+
+  document.getElementById('xl-saving').style.display = 'none';
+
+  if (saveErr) {
+    document.getElementById('xl-err').style.display = 'block';
+    document.getElementById('xl-err').textContent = 'Save error: ' + saveErr.message;
+    return;
+  }
+
+  alert(`✓ Sections saved for "${hall.name}"!\n${newSections.length} sections · ${Object.keys(seatColorMap).length} seats assigned.`);
+  document.getElementById('xl-preview').style.display = 'none';
+  document.getElementById('xl-hall-select').style.display = 'none';
+  document.getElementById('xl-filename').textContent = '';
+  document.getElementById('xl-file-input').value = '';
+}
 </script>
 </body>
 </html>

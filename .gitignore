@@ -1,0 +1,3 @@
+node_modules/
+package-lock.json
+_gen_hall_*.mjs
