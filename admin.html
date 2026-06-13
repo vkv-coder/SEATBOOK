@@ -622,6 +622,7 @@ function renderEvents(hallMap, orgMap) {
       <div class="ev-actions">
         <span class="badge ${esc(status)}">${esc(status.charAt(0).toUpperCase() + status.slice(1))}</span>
         <button class="tbl-btn gold" onclick="openEvStatus('${esc(ev.id)}')">Set status</button>
+        ${ev.hall_id === SSG_HALL_ID ? `<button class="tbl-btn blue" style="margin-top:4px;" onclick="applySSGTemplate('${esc(ev.id)}','${esc(ev.name)}')">💰 Apply SSG pricing</button>` : ''}
       </div>`;
     list.appendChild(item);
   });
@@ -666,6 +667,21 @@ async function setEvStatus(newStatus) {
   closeModal('modal-ev-status');
   await loadEvents();
   alert('✓ Event set to ' + newStatus.toUpperCase());
+}
+
+async function applySSGTemplate(evId, evName) {
+  if (!confirm('Apply SSG price template to "' + evName + '"?\nThis overwrites the current seat pricing for this event.')) return;
+  const { data: hall, error: hallErr } = await sb.from('kh_halls')
+    .select('layout_json').eq('id', SSG_HALL_ID).single();
+  if (hallErr || !hall) { alert('Could not load SSG hall: ' + (hallErr?.message || 'not found')); return; }
+  const tmpl = hall.layout_json?.ssg_price_template;
+  if (!tmpl || !Object.keys(tmpl).length) {
+    alert('No SSG price template found.\nUpload the filled Excel first via the Halls tab → Excel import.'); return;
+  }
+  const { error: saveErr } = await sb.from('kh_events')
+    .update({ seat_price_map: tmpl }).eq('id', evId);
+  if (saveErr) { alert('Error: ' + saveErr.message); return; }
+  alert('✓ SSG pricing applied to "' + evName + '"!\n' + Object.keys(tmpl).length + ' seats priced.\nRefresh booking page to see effect.');
 }
 
 // ── HALLS ──
