@@ -4,6 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Khursilo — Book your seat</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Theme colour — browser chrome turns dark -->
+<meta name="theme-color" content="#1a1a1a">
+
+<!-- iOS PWA support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Khursilo">
+<link rel="apple-touch-icon" href="/logo.png">
+
+<!-- SEO / sharing -->
+<meta name="description" content="Book seats for dramas, concerts and events in Vadodara. Instant ticket, QR entry.">
+<meta property="og:title" content="Khursilo — Book Your Seat">
+<meta property="og:description" content="Book seats for dramas, concerts and events in Vadodara.">
+<meta property="og:image" content="https://khursilo.in/logo.png">
+<meta property="og:url" content="https://khursilo.in">
+<meta property="og:type" content="website">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -192,6 +212,15 @@ async function loadEvents() {
 }
 
 loadEvents();
+
+// ── PWA Service Worker registration ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
