@@ -233,6 +233,7 @@ let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
 let isSSG=false,isSayaji=false,wantedSeatCount=1;
 let eventTotalDays=1;
+let realtimeChannel=null; // Supabase Realtime channel
 const params=new URLSearchParams(location.search);
 const eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 window.addEventListener('DOMContentLoaded',loadEvent);
@@ -410,6 +411,8 @@ async function loadEvent(){
       document.getElementById('hall-grid').style.display='flex';
       scaleGridMap();
     }
+    // ── Start Realtime subscription for live seat updates ──
+    startRealtimeSync();
   }catch(e){console.error(e);showError('Could not load event. '+(e.message||''));}
 }
 
@@ -547,16 +550,138 @@ function updateBottomBar(){
 
 function showWarn(msg){const ex=document.getElementById('toast-warn');if(ex)ex.remove();const t=document.createElement('div');t.id='toast-warn';t.textContent=msg;t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#cc3333;color:#fff;font-size:13px;font-weight:600;padding:12px 22px;border-radius:20px;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.35);text-align:center;';document.body.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3000);}
 
-function startHoldTimer(){holdSeconds=300;const tb=document.getElementById('timer-bar'),tc=document.getElementById('timer-count');tb.style.display='block';if(holdTimer)clearInterval(holdTimer);holdTimer=setInterval(()=>{holdSeconds--;const m=Math.floor(holdSeconds/60),s=holdSeconds%60;tc.textContent=m+':'+String(s).padStart(2,'0');if(holdSeconds<=0){clearInterval(holdTimer);tb.textContent='⏱ Hold expired. Please re-select.';clearSelectedSeats();closeForm();}},1000);}
+// ── REALTIME SYNC — live seat updates ──────────────────────────
+function startRealtimeSync(){
+  if(realtimeChannel) sb.removeChannel(realtimeChannel);
+  realtimeChannel = sb.channel('booking-updates-'+eventId)
+    .on('postgres_changes',{
+      event: '*', schema: 'public', table: 'kh_bookings',
+      filter: 'event_id=eq.'+eventId
+    }, payload => {
+      const rec = payload.new || payload.old;
+      if(!rec||!rec.seat_keys) return;
+      const keys = rec.seat_keys;
+      if(payload.eventType==='DELETE'||(payload.new&&payload.new.status==='cancelled')){
+        // Seats released — mark available
+        keys.forEach(k=>{ seatStatusMap[k]=null; updateSeatVisual(k,'available'); });
+      } else if(payload.new){
+        const st = payload.new.status;
+        if(st==='held'||st==='pending_payment'){
+          keys.forEach(k=>{ seatStatusMap[k]='held'; updateSeatVisual(k,'held'); });
+        } else if(st==='confirmed'){
+          keys.forEach(k=>{ seatStatusMap[k]='booked'; updateSeatVisual(k,'booked'); });
+        }
+      }
+    })
+    .subscribe();
+}
 
-function openForm(){
+// Update a single seat visually based on new status
+function updateSeatVisual(key, status){
+  // SVG seats (SSG / Sayjirao)
+  if(window._ssgSeats && window._ssgSeats[key]){
+    const g = window._ssgSeats[key];
+    // Don't update if this seat is currently selected by THIS user
+    if(selectedSeats.find(s=>s.seatKey===key)) return;
+    if(status==='available'){
+      g._r.setAttribute('fill','#fff');
+      g._r.setAttribute('stroke',g._color);
+      g._nt.setAttribute('fill',g._color);
+      g._status='available';
+      g.style.cursor='pointer';
+    } else if(status==='held'){
+      g._r.setAttribute('fill','#f0e0c0');
+      g._r.setAttribute('stroke','#c8860a');
+      g._nt.setAttribute('fill','#c8860a');
+      g._status='held';
+      g.style.cursor='not-allowed';
+    } else if(status==='booked'){
+      g._r.setAttribute('fill','#d0d0cc');
+      g._r.setAttribute('stroke','#aaa');
+      g._nt.setAttribute('fill','#999');
+      g._status='booked';
+      g.style.cursor='not-allowed';
+    }
+  }
+  // Grid seats
+  const el = document.querySelector('[data-key="'+key+'"]');
+  if(el){
+    if(selectedSeats.find(s=>s.seatKey===key)) return;
+    el.classList.remove('available','held','booked','selected');
+    if(status==='available'){
+      el.classList.add('available');
+      el.style.background=el.dataset.colour+'22';
+      el.style.border='1px solid '+el.dataset.colour+'99';
+    } else if(status==='held'){
+      el.classList.add('held');
+      el.style.background='';el.style.border='';
+    } else if(status==='booked'){
+      el.classList.add('booked');
+      el.style.background='';el.style.border='';
+    }
+  }
+}
+
+// ── RELEASE DB HOLD ────────────────────────────────────────────
+async function releaseHold(){
+  if(!bookingId) return;
+  try{
+    await sb.from('kh_bookings').delete().eq('id',bookingId).eq('status','held');
+    bookingId=null;
+  }catch(e){ console.warn('Release hold error:',e.message); }
+}
+
+function startHoldTimer(){
+  holdSeconds=300;
+  const tb=document.getElementById('timer-bar'),tc=document.getElementById('timer-count');
+  tb.style.display='block';
+  if(holdTimer)clearInterval(holdTimer);
+  holdTimer=setInterval(()=>{
+    holdSeconds--;
+    const m=Math.floor(holdSeconds/60),s=holdSeconds%60;
+    tc.textContent=m+':'+String(s).padStart(2,'0');
+    if(holdSeconds<=0){
+      clearInterval(holdTimer);
+      tb.textContent='⏱ Hold expired. Please re-select.';
+      releaseHold(); // ── release DB hold on expire
+      clearSelectedSeats();
+      closeForm();
+    }
+  },1000);
+}
+
+async function openForm(){
   if(selectedSeats.length===0)return;
   const labels=selectedSeats.map(s=>s.rowLabel+'-'+s.seatNum).join(', ');
   const amt=selectedSeats.reduce((a,s)=>a+s.price,0);
+  const seatKeys=selectedSeats.map(s=>s.seatKey);
   document.getElementById('fp-seats-text').innerHTML=`<b>${labels}</b><br><span style="color:var(--muted);font-size:11px;">₹${amt}</span>`;
-  document.getElementById('form-overlay').classList.add('show');startHoldTimer();
+
+  // ── Insert DB hold immediately ──
+  try{
+    const{data:hold,error:hErr}=await sb.from('kh_bookings').insert({
+      event_id:eventId,
+      seat_keys:seatKeys,
+      seat_count:selectedSeats.length,
+      amount:amt,
+      status:'held',
+      payment_status:'pending',
+      booker_name:'',
+      booker_mobile:'',
+      created_at:new Date().toISOString()
+    }).select().single();
+    if(!hErr && hold) bookingId=hold.id;
+  }catch(e){ console.warn('Hold insert error:',e.message); }
+
+  document.getElementById('form-overlay').classList.add('show');
+  startHoldTimer();
 }
-function closeForm(){document.getElementById('form-overlay').classList.remove('show');}
+
+function closeForm(){
+  document.getElementById('form-overlay').classList.remove('show');
+  clearInterval(holdTimer);
+  releaseHold(); // ── release DB hold on manual cancel
+}
 
 function generateQR(id){return new Promise(r=>{const c=document.getElementById('qr-hidden');c.innerHTML='';new QRCode(c,{text:id,width:200,height:200,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});setTimeout(()=>{const img=c.querySelector('img'),can=c.querySelector('canvas');r(can?can.toDataURL('image/png'):img?img.src:null);},300);});}
 function renderQROnCard(du){const box=document.getElementById('qr-display');box.innerHTML='';const img=document.createElement('img');img.src=du;img.style.width='80px';img.style.height='80px';box.appendChild(img);}
@@ -636,8 +761,24 @@ async function confirmBooking(){
     }catch(_){}
     const rzpKey=organiserData&&organiserData.razorpay_key_id;
     if(!rzpKey){alert('Payment gateway not configured.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
-    const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()}).select().single();
-    if(error)throw error;bookingId=booking.id;
+    // ── Update held record with booker details (don't insert new) ──
+    if(bookingId){
+      const{error:updErr}=await sb.from('kh_bookings').update({
+        booker_name:name, booker_mobile:mobile, booker_email:email||null,
+        amount:totalAmt, payment_status:'pending', status:'pending_payment'
+      }).eq('id',bookingId).eq('status','held');
+      if(updErr){ console.warn('Hold update error:',updErr.message); bookingId=null; }
+    }
+    // ── Fallback: insert fresh if hold was lost ──
+    if(!bookingId){
+      const{data:booking,error}=await sb.from('kh_bookings').insert({
+        event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+        seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,
+        payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()
+      }).select().single();
+      if(error)throw error;
+      bookingId=booking.id;
+    }
     const rzp=new Razorpay({key:rzpKey,amount:totalAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}});
     rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
     rzp.open();
@@ -647,8 +788,26 @@ async function confirmBooking(){
 
 async function saveFreeBooking(name,mobile,email,seatKeys,totalAmt){
   try{
-    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
-    if(error)throw error;bookingId=data.id;
+    let savedId=bookingId;
+    if(savedId){
+      // Update held record to confirmed
+      const{error:updErr}=await sb.from('kh_bookings').update({
+        booker_name:name,booker_mobile:mobile,booker_email:email||null,
+        amount:totalAmt,payment_status:'free',status:'confirmed'
+      }).eq('id',savedId).eq('status','held');
+      if(updErr){ console.warn('Free hold update error:',updErr.message); savedId=null; }
+    }
+    if(!savedId){
+      // Fallback insert
+      const{data,error}=await sb.from('kh_bookings').insert({
+        event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+        seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,
+        payment_status:'free',status:'confirmed',created_at:new Date().toISOString()
+      }).select().single();
+      if(error)throw error;
+      savedId=data.id;
+    }
+    bookingId=savedId;
     selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
     clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,totalAmt);
   }catch(e){alert('Error: '+(e.message||'Unknown'));document.querySelector('.confirm-btn').textContent='Confirm & Pay →';document.querySelector('.confirm-btn').disabled=false;}
