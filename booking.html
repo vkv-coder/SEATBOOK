@@ -245,25 +245,24 @@ async function sendConfirmationEmail(emailAddr, bookingData) {
   if (!emailAddr || !emailAddr.includes('@')) return;
   if (!GAS_EMAIL_URL || GAS_EMAIL_URL.includes('YOUR_GAS')) return;
   try {
-    // Use no-cors mode for GAS web app (avoids CORS block from GitHub Pages)
-    // GAS receives the POST but response is opaque — that's fine, fire and forget
-    const form = new FormData();
-    form.append('payload', JSON.stringify({
-      to: emailAddr,
-      bookerName: bookingData.bookerName,
-      eventName: bookingData.eventName,
-      eventDate: bookingData.eventDate,
-      hallName: bookingData.hallName,
-      seats: bookingData.seatKeys.join(', '),
-      amount: bookingData.amount > 0 ? '₹' + bookingData.amount : 'Free',
-      bookingId: bookingData.bookingId,
-      bookedAt: bookingData.bookedAt,
-      totalDays: bookingData.totalDays || 1,
+    // Use GET with URL params — most reliable way to call GAS from browser
+    const params = new URLSearchParams({
+      to:              emailAddr,
+      bookerName:      bookingData.bookerName      || '',
+      eventName:       bookingData.eventName       || '',
+      eventDate:       bookingData.eventDate       || '',
+      hallName:        bookingData.hallName        || '',
+      seats:           (bookingData.seatKeys||[]).join(', '),
+      amount:          bookingData.amount > 0 ? '₹' + bookingData.amount : 'Free',
+      bookingId:       bookingData.bookingId       || '',
+      bookedAt:        bookingData.bookedAt        || '',
+      totalDays:       String(bookingData.totalDays || 1),
       organiserName:   bookingData.organiserName   || '',
       organiserEmail:  bookingData.organiserEmail  || '',
       organiserMobile: bookingData.organiserMobile || '',
-    }));
-    await fetch(GAS_EMAIL_URL, { method: 'POST', mode: 'no-cors', body: form });
+    });
+    // Use image trick — creates a GET request that bypasses CORS entirely
+    new Image().src = GAS_EMAIL_URL + '?' + params.toString();
   } catch(e) { console.warn('Email send failed (non-critical):', e.message); }
 }
 
