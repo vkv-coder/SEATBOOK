@@ -112,9 +112,28 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   padding-bottom: 1px;
 }
 .footer-support:hover { color: #a06d08; }
+/* PWA Install Banner */
+.install-banner{display:none;background:#1a1a1a;color:#fff;padding:10px 16px;align-items:center;gap:10px;position:sticky;top:0;z-index:100;width:100%;}
+.install-banner.show{display:flex;}
+.install-banner-icon{font-size:20px;flex-shrink:0;}
+.install-banner-text{flex:1;font-size:13px;font-weight:500;line-height:1.3;}
+.install-banner-sub{font-size:11px;opacity:0.65;margin-top:1px;}
+.install-banner-btn{background:#c8860a;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;}
+.install-banner-close{background:none;border:none;color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;}
 </style>
 </head>
 <body>
+
+<!-- PWA Install Banner — shows only if app not installed -->
+<div class="install-banner" id="install-banner">
+  <div class="install-banner-icon">📱</div>
+  <div class="install-banner-text">
+    Install Khursilo
+    <div class="install-banner-sub">Add to home screen for quick access</div>
+  </div>
+  <button class="install-banner-btn" onclick="installPWA()">Install</button>
+  <button class="install-banner-close" onclick="dismissInstall()">✕</button>
+</div>
 
 <div class="topbar" style="background:#fff;padding:24px 24px 16px;display:flex;justify-content:center;border-bottom:none;">
   <img src="logo.png?v=6" alt="Khursilo" style="width:240px;height:240px;object-fit:contain;border-radius:18px;display:block;">
@@ -212,6 +231,41 @@ async function loadEvents() {
 }
 
 loadEvents();
+
+// ── PWA Install Banner ──
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner only if not dismissed before
+  if (!localStorage.getItem('kh_install_dismissed')) {
+    document.getElementById('install-banner').classList.add('show');
+  }
+});
+
+// Hide banner if already installed
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').classList.remove('show');
+  deferredPrompt = null;
+  localStorage.setItem('kh_install_dismissed', '1');
+});
+
+async function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('install-banner').classList.remove('show');
+    localStorage.setItem('kh_install_dismissed', '1');
+  }
+  deferredPrompt = null;
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('kh_install_dismissed', '1');
+}
 
 // ── PWA Service Worker registration ──
 if ('serviceWorker' in navigator) {
