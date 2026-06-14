@@ -689,6 +689,7 @@ async function openForm(){
   document.getElementById('fp-seats-text').innerHTML=`<b>${labels}</b><br><span style="color:var(--muted);font-size:11px;">₹${amt}</span>`;
 
   // ── Insert DB hold immediately ──
+  console.log('Inserting hold for seats:', seatKeys);
   try{
     const{data:hold,error:hErr}=await sb.from('kh_bookings').insert({
       event_id:eventId,
@@ -701,7 +702,8 @@ async function openForm(){
       booker_mobile:'',
       created_at:new Date().toISOString()
     }).select().single();
-    if(!hErr && hold) bookingId=hold.id;
+    if(hErr){ console.error('Hold insert error:', hErr.message); }
+    else if(hold){ bookingId=hold.id; console.log('Hold created:', hold.id); }
   }catch(e){ console.warn('Hold insert error:',e.message); }
 
   document.getElementById('form-overlay').classList.add('show');
@@ -912,7 +914,20 @@ function downloadTicketPDF(){
 function scaleGridMap(){
   setTimeout(()=>{
     const hg=document.getElementById('hall-grid'),wrap=document.getElementById('map-wrap'),sb2=document.querySelector('.stage-bar');
-    if(hg&&wrap){const sg=document.getElementById('seat-grid'),gw=sg.scrollWidth;if(sb2)sb2.style.width=sg.scrollWidth+'px';const ww=wrap.clientWidth-4;const sc=Math.min(ww/gw,2.5);hg.style.transform='scale('+sc+')';hg.style.transformOrigin='top left';hg.style.width=gw+'px';wrap.style.width=(gw*sc)+'px';const sh=Math.ceil(hg.scrollHeight*sc);hg.style.marginBottom='-'+(hg.scrollHeight-sh)+'px';wrap.style.height=(sh+20)+'px';}
+    if(hg&&wrap){
+      const sg=document.getElementById('seat-grid'),gw=sg.scrollWidth;
+      if(sb2)sb2.style.width=sg.scrollWidth+'px';
+      const ww=wrap.clientWidth-4;
+      const sc=Math.min(ww/gw,2.5);
+      hg.style.transform='scale('+sc+')';
+      hg.style.transformOrigin='top center';
+      hg.style.width=gw+'px';
+      // Set wrap height to scaled content height + padding for bottom bar
+      const scaledH=Math.ceil(hg.scrollHeight*sc);
+      wrap.style.minHeight=(scaledH+220)+'px';
+      wrap.style.height='auto';
+      wrap.style.width='100%';
+    }
   },300);
 }
 
