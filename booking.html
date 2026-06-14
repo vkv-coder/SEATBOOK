@@ -27,7 +27,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .legend{display:flex;gap:12px;padding:8px 14px;background:var(--bg);flex-shrink:0;}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
 .leg-sq{width:12px;height:12px;border-radius:2px;}
-.map-wrap{overflow-x:auto;overflow-y:visible;padding:10px 0 180px;width:100%;-webkit-overflow-scrolling:touch;}
+.map-wrap{overflow-x:auto;overflow-y:visible;padding:10px 0 200px;width:100%;-webkit-overflow-scrolling:touch;}
 .stage-bar{background:var(--text);color:var(--white);text-align:center;font-size:10px;letter-spacing:2px;padding:5px 20px;border-radius:4px;margin:0 auto;opacity:.7;width:fit-content;}
 .hall-grid{display:flex;flex-direction:column;gap:var(--seat-gap);align-items:center;}
 #hall-grid{display:none;flex-direction:column;align-items:center;}
@@ -642,9 +642,18 @@ function updateSeatVisual(key, status){
 // ── RELEASE DB HOLD ────────────────────────────────────────────
 async function releaseHold(){
   if(!bookingId) return;
+  const idToRelease=bookingId;
+  bookingId=null;
   try{
-    await sb.from('kh_bookings').delete().eq('id',bookingId).eq('status','held');
-    bookingId=null;
+    // Update to cancelled first — Realtime fires and Tab 2 sees seat_keys to release
+    await sb.from('kh_bookings')
+      .update({status:'cancelled'})
+      .eq('id',idToRelease)
+      .in('status',['held','pending_payment']);
+    // Delete after 3 seconds (cleanup)
+    setTimeout(async()=>{
+      await sb.from('kh_bookings').delete().eq('id',idToRelease);
+    },3000);
   }catch(e){ console.warn('Release hold error:',e.message); }
 }
 
