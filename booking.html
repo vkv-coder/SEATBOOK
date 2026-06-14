@@ -553,27 +553,37 @@ function showWarn(msg){const ex=document.getElementById('toast-warn');if(ex)ex.r
 // ── REALTIME SYNC — live seat updates ──────────────────────────
 function startRealtimeSync(){
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
-  realtimeChannel = sb.channel('booking-updates-'+eventId)
-    .on('postgres_changes',{
-      event: '*', schema: 'public', table: 'kh_bookings',
-      filter: 'event_id=eq.'+eventId
-    }, payload => {
-      const rec = payload.new || payload.old;
-      if(!rec||!rec.seat_keys) return;
-      const keys = rec.seat_keys;
-      if(payload.eventType==='DELETE'||(payload.new&&payload.new.status==='cancelled')){
-        // Seats released — mark available
+  realtimeChannel = sb.channel('seats:'+eventId, {
+    config: { broadcast: { self: false } }
+  })
+  .on('postgres_changes',{
+    event: '*',
+    schema: 'public',
+    table: 'kh_bookings',
+    filter: 'event_id=eq.'+eventId
+  }, payload => {
+    console.log('Realtime update:', payload.eventType, payload.new?.status);
+    const rec     = payload.new  || {};
+    const oldRec  = payload.old  || {};
+    const keys    = rec.seat_keys || oldRec.seat_keys || [];
+    if(!keys.length) return;
+
+    if(payload.eventType==='DELETE'){
+      keys.forEach(k=>{ seatStatusMap[k]=null; updateSeatVisual(k,'available'); });
+    } else {
+      const st = rec.status || '';
+      if(st==='held'||st==='pending_payment'){
+        keys.forEach(k=>{ seatStatusMap[k]='held'; updateSeatVisual(k,'held'); });
+      } else if(st==='confirmed'){
+        keys.forEach(k=>{ seatStatusMap[k]='booked'; updateSeatVisual(k,'booked'); });
+      } else if(st==='cancelled'){
         keys.forEach(k=>{ seatStatusMap[k]=null; updateSeatVisual(k,'available'); });
-      } else if(payload.new){
-        const st = payload.new.status;
-        if(st==='held'||st==='pending_payment'){
-          keys.forEach(k=>{ seatStatusMap[k]='held'; updateSeatVisual(k,'held'); });
-        } else if(st==='confirmed'){
-          keys.forEach(k=>{ seatStatusMap[k]='booked'; updateSeatVisual(k,'booked'); });
-        }
       }
-    })
-    .subscribe();
+    }
+  })
+  .subscribe((status)=>{
+    console.log('Realtime status:', status);
+  });
 }
 
 // Update a single seat visually based on new status
@@ -633,19 +643,21 @@ async function releaseHold(){
 
 function startHoldTimer(){
   holdSeconds=300;
-  const tb=document.getElementById('timer-bar'),tc=document.getElementById('timer-count');
+  const tb=document.getElementById('timer-bar');
+  tb.innerHTML='⏱ Hold expires in <span id="timer-count">5:00</span>';
   tb.style.display='block';
   if(holdTimer)clearInterval(holdTimer);
   holdTimer=setInterval(()=>{
     holdSeconds--;
     const m=Math.floor(holdSeconds/60),s=holdSeconds%60;
-    tc.textContent=m+':'+String(s).padStart(2,'0');
+    const tc=document.getElementById('timer-count');
+    if(tc)tc.textContent=m+':'+String(s).padStart(2,'0');
     if(holdSeconds<=0){
       clearInterval(holdTimer);
       tb.textContent='⏱ Hold expired. Please re-select.';
-      releaseHold(); // ── release DB hold on expire
+      releaseHold();
       clearSelectedSeats();
-      closeForm();
+      document.getElementById('form-overlay').classList.remove('show');
     }
   },1000);
 }
@@ -680,7 +692,10 @@ async function openForm(){
 function closeForm(){
   document.getElementById('form-overlay').classList.remove('show');
   clearInterval(holdTimer);
-  releaseHold(); // ── release DB hold on manual cancel
+  document.getElementById('timer-bar').style.display='none';
+  document.getElementById('timer-bar').textContent='';
+  releaseHold(); // release DB hold
+  clearSelectedSeats(); // reset seat visuals to available
 }
 
 function generateQR(id){return new Promise(r=>{const c=document.getElementById('qr-hidden');c.innerHTML='';new QRCode(c,{text:id,width:200,height:200,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});setTimeout(()=>{const img=c.querySelector('img'),can=c.querySelector('canvas');r(can?can.toDataURL('image/png'):img?img.src:null);},300);});}
