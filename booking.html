@@ -913,22 +913,28 @@ function downloadTicketPDF(){
 
 function scaleGridMap(){
   setTimeout(()=>{
-    const hg=document.getElementById('hall-grid'),wrap=document.getElementById('map-wrap'),sb2=document.querySelector('.stage-bar');
-    if(hg&&wrap){
-      const sg=document.getElementById('seat-grid'),gw=sg.scrollWidth;
-      if(sb2)sb2.style.width=sg.scrollWidth+'px';
-      const ww=wrap.clientWidth-4;
-      const sc=Math.min(ww/gw,2.5);
-      hg.style.transform='scale('+sc+')';
-      hg.style.transformOrigin='top center';
-      hg.style.width=gw+'px';
-      // Set wrap height to scaled content height + padding for bottom bar
-      const scaledH=Math.ceil(hg.scrollHeight*sc);
-      wrap.style.minHeight=(scaledH+220)+'px';
-      wrap.style.height='auto';
-      wrap.style.width='100%';
-    }
-  },300);
+    const hg=document.getElementById('hall-grid');
+    const wrap=document.getElementById('map-wrap');
+    const sb2=document.querySelector('.stage-bar');
+    if(!hg||!wrap)return;
+    const sg=document.getElementById('seat-grid');
+    const gw=sg.scrollWidth;
+    if(sb2)sb2.style.width=gw+'px';
+    const ww=wrap.clientWidth-4;
+    const sc=Math.min(ww/gw,2.5);
+    hg.style.transform='scale('+sc+')';
+    hg.style.transformOrigin='top center';
+    hg.style.width=gw+'px';
+    hg.style.marginLeft='auto';
+    hg.style.marginRight='auto';
+    // Calculate actual rendered height after scale
+    const naturalH=hg.scrollHeight;
+    const scaledH=Math.ceil(naturalH*sc);
+    // Set map-wrap height = scaled content + 220px for bottom bar clearance
+    wrap.style.height=(scaledH+220)+'px';
+    wrap.style.width='100%';
+    wrap.style.overflow='visible';
+  },400);
 }
 
 function buildSeatMap(layout){
