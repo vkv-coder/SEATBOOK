@@ -91,7 +91,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .pricing-seats { font-size: 11px; color: var(--muted); }
 .pricing-price { font-size: 13px; font-weight: 600; color: var(--accent); }
 
-/* HALL SELECT */
+/* CANCELLATION POLICY */
+.policy-row { display: grid; grid-template-columns: 1fr 80px 36px; gap: 8px; align-items: center; margin-bottom: 8px; }
+.policy-row input { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--rsm); padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; width: 100%; }
+.policy-row input:focus { border-color: var(--accent); background: var(--white); }
+.policy-del { width: 36px; height: 36px; border: 1px solid rgba(204,51,51,0.3); border-radius: var(--rsm); background: none; color: var(--red); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.policy-add-btn { width: 100%; padding: 9px; border: 1.5px dashed var(--border2); border-radius: var(--rsm); background: none; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; margin-top: 4px; }
+.policy-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.policy-header { display: grid; grid-template-columns: 1fr 80px 36px; gap: 8px; margin-bottom: 6px; }
+.policy-header span { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 .hall-list { display: flex; flex-direction: column; gap: 8px; }
 .hall-item { border: 1.5px solid var(--border2); border-radius: var(--rsm); padding: 12px 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
 .hall-item.selected { border-color: var(--accent); background: var(--accent-dim); }
@@ -364,6 +372,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
 
+    <!-- Cancellation Policy -->
+    <div class="form-card" id="cancellation-card">
+      <div class="form-card-title">↩️ Cancellation & refund policy</div>
+      <div class="info-box blue" style="margin-bottom:12px;font-size:11px;">
+        Set your refund rules. Audience will see this before booking. Refunds are processed manually via your Razorpay dashboard.
+      </div>
+      <div class="policy-header">
+        <span>Days before event</span>
+        <span>Refund %</span>
+        <span></span>
+      </div>
+      <div id="policy-rows"></div>
+      <button class="policy-add-btn" onclick="addPolicyRow()">+ Add refund rule</button>
+      <div style="margin-top:10px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;">
+          <input type="checkbox" id="no-refund-check" onchange="toggleNoRefund(this)" style="width:16px;height:16px;accent-color:var(--red);">
+          No refunds on any cancellation
+        </label>
+      </div>
+    </div>
+
     <!-- Booking window -->
     <div class="form-card">
       <div class="form-card-title">🗓️ Booking window</div>
@@ -567,9 +596,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <!-- ══ SUCCESS ══ -->
 <div class="screen" id="screen-success">
   <div class="success-wrap">
-    <div class="success-icon">🚀</div>
-    <div class="success-title">Event is live!</div>
-    <div class="success-sub">Your booking link is active.<br>Share it with your audience now.</div>
+    <div class="success-icon">📋</div>
+    <div class="success-title">Submitted for approval!</div>
+    <div class="success-sub">Your event is saved and booking link is ready.<br>Admin will review and publish it to the homepage.<br><br><strong style="color:var(--accent);">Share the booking link now</strong> — it already works for direct bookings even before homepage approval.</div>
     <div class="link-box" style="width:100%;">
       <div class="link-url" id="success-link">—</div>
       <button class="link-copy" onclick="copyLink()">Copy</button>
@@ -601,7 +630,59 @@ let createdEventId = null;
 
 const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
 
-// ── AUTO LOGIN ──
+// ── CANCELLATION POLICY ──
+const DEFAULT_POLICY = [
+  { days: 7, refund: 100 },
+  { days: 3, refund: 75 },
+  { days: 1, refund: 50 },
+  { days: 0, refund: 0 },
+];
+let policyRows = [];
+let noRefund = false;
+
+function initPolicy() {
+  policyRows = DEFAULT_POLICY.map(r => ({ ...r }));
+  renderPolicyRows();
+}
+
+function renderPolicyRows() {
+  const container = document.getElementById('policy-rows');
+  container.innerHTML = '';
+  policyRows.forEach((row, i) => {
+    const div = document.createElement('div');
+    div.className = 'policy-row';
+    div.innerHTML = `
+      <input type="number" min="0" max="365" placeholder="e.g. 7" value="${row.days}" oninput="policyRows[${i}].days=parseInt(this.value)||0" ${noRefund?'disabled':''}>
+      <input type="number" min="0" max="100" placeholder="%" value="${row.refund}" oninput="policyRows[${i}].refund=parseInt(this.value)||0" ${noRefund?'disabled':''}>
+      <button class="policy-del" onclick="removePolicyRow(${i})" ${noRefund?'disabled':''}>✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function addPolicyRow() {
+  if (noRefund) return;
+  policyRows.push({ days: 0, refund: 0 });
+  renderPolicyRows();
+}
+
+function removePolicyRow(i) {
+  policyRows.splice(i, 1);
+  renderPolicyRows();
+}
+
+function toggleNoRefund(cb) {
+  noRefund = cb.checked;
+  renderPolicyRows();
+}
+
+function getCancellationPolicy() {
+  if (noRefund) return { no_refund: true, rules: [] };
+  return { no_refund: false, rules: policyRows.filter(r => r.days >= 0 && r.refund >= 0) };
+}
+
+// ── ORIGINAL JS BELOW (with policy init added to startCreateEvent) ──
+
 window.addEventListener('load', async () => {
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
@@ -709,6 +790,7 @@ function startCreateEvent() {
   selectCategory('hall');
   selectDuration('single');
   selectMode('paid');
+  initPolicy();
   renderHallList();
   showScreen('s1');
 }
@@ -1040,8 +1122,9 @@ async function publishEvent() {
       mode: eventMode,
       booking_open: bookingOpen.toISOString(),
       booking_close: bookingClose.toISOString(),
-      status: 'live',
+      status: 'active',
       seat_price_map: window._seatPriceMap || {},
+      cancellation_policy: getCancellationPolicy(),
       created_at: new Date().toISOString()
     };
 
