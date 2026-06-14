@@ -922,18 +922,19 @@ function scaleGridMap(){
     if(sb2)sb2.style.width=gw+'px';
     const ww=wrap.clientWidth-4;
     const sc=Math.min(ww/gw,2.5);
+    const naturalH=hg.scrollHeight;
+    const scaledH=Math.ceil(naturalH*sc);
+    const scaledW=Math.ceil(gw*sc);
     hg.style.transform='scale('+sc+')';
     hg.style.transformOrigin='top left';
     hg.style.width=gw+'px';
-    // Set wrap width to scaled width so horizontal scroll works
-    const scaledW=Math.ceil(gw*sc);
-    const naturalH=hg.scrollHeight;
-    const scaledH=Math.ceil(naturalH*sc);
-    wrap.style.width=Math.max(scaledW, ww)+'px';
+    // Centre horizontally using left margin when content fits screen
+    const leftMargin=Math.max(0,Math.floor((ww-scaledW)/2));
+    hg.style.marginLeft=leftMargin+'px';
+    hg.style.marginBottom='-'+(naturalH-scaledH)+'px';
+    wrap.style.width='100%';
     wrap.style.height=(scaledH+220)+'px';
     wrap.style.overflow='visible';
-    // Compensate for negative space left by scale transform
-    hg.style.marginBottom='-'+(naturalH-scaledH)+'px';
   },400);
 }
 
