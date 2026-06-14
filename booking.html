@@ -155,7 +155,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <div style="text-align:left;max-width:340px;margin:0 auto;">
     <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Your name</label><input id="open-name" type="text" placeholder="Full name" autocomplete="name" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
-    <div style="margin-bottom:20px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Mobile number</label><input id="open-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" autocomplete="tel" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
+    <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Mobile number</label><input id="open-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" autocomplete="tel" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
+    <div style="margin-bottom:20px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Email <span style="font-weight:400;color:#bbb;font-size:11px;">(optional — for booking confirmation)</span></label><input id="open-email" type="email" placeholder="your@email.com" autocomplete="email" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
     <button id="open-book-btn" onclick="bookOpenEntry()" style="width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--rsm);font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Book Now →</button>
   </div>
 </div>
@@ -183,6 +184,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="fp-seats" id="fp-seats-detail"><strong>Selected seats</strong><span id="fp-seats-text">—</span></div>
     <div class="field"><label>Your name</label><input type="text" id="inp-name" placeholder="Full name" autocomplete="name"></div>
     <div class="field"><label>Mobile number</label><input type="tel" id="inp-mobile" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" autocomplete="tel"><div class="hint">Your ticket PDF will auto-download after payment</div></div>
+    <div class="field"><label>Email <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted2);font-size:10px;">(optional — for booking confirmation)</span></label><input type="email" id="inp-email" placeholder="your@email.com" autocomplete="email"></div>
     <button class="confirm-btn" onclick="confirmBooking()">Confirm & Pay →</button>
     <button class="cancel-btn" onclick="closeForm()">Cancel</button>
   </div>
@@ -235,6 +237,57 @@ const params=new URLSearchParams(location.search);
 const eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 window.addEventListener('DOMContentLoaded',loadEvent);
 
+// ── GOOGLE APPS SCRIPT EMAIL WEB APP URL ──
+// Paste your deployed GAS web app URL here after deploying gas-email.gs
+const GAS_EMAIL_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+
+async function sendConfirmationEmail(emailAddr, bookingData) {
+  if (!emailAddr || !emailAddr.includes('@')) return;
+  if (!GAS_EMAIL_URL || GAS_EMAIL_URL.includes('YOUR_GAS')) return;
+  try {
+    await fetch(GAS_EMAIL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: emailAddr,
+        bookerName: bookingData.bookerName,
+        eventName: bookingData.eventName,
+        eventDate: bookingData.eventDate,
+        hallName: bookingData.hallName,
+        seats: bookingData.seatKeys.join(', '),
+        amount: bookingData.amount > 0 ? '₹' + bookingData.amount : 'Free',
+        bookingId: bookingData.bookingId,
+        bookedAt: bookingData.bookedAt,
+        totalDays: bookingData.totalDays || 1,
+      })
+    });
+  } catch(e) { console.warn('Email send failed (non-critical):', e.message); }
+}
+
+function showCancellationPolicy(policy) {
+  if (!policy) return;
+  const eventCard = document.getElementById('event-info');
+  if (!eventCard) return;
+  let html = '';
+  if (policy.no_refund) {
+    html = '<div style="margin-top:8px;padding:8px 10px;background:#fce8e8;border-radius:6px;font-size:11px;color:#cc3333;border:1px solid rgba(204,51,51,0.2);">⚠️ No refunds on cancellation</div>';
+  } else if (policy.rules && policy.rules.length > 0) {
+    const sorted = [...policy.rules].sort((a, b) => b.days - a.days);
+    const rows = sorted.map(r => {
+      const label = r.days === 0 ? 'Day of event' : r.days + '+ days before';
+      return `<span style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
+        <span>${label}</span><span style="font-weight:600;color:${r.refund > 0 ? 'var(--green)' : 'var(--red)'};">${r.refund}% refund</span>
+      </span>`;
+    }).join('');
+    html = `<div style="margin-top:8px;background:var(--s2);border-radius:6px;padding:8px 10px;border:1px solid var(--border2);">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Cancellation policy</div>
+      <div style="font-size:11px;color:var(--text);">${rows}</div>
+    </div>`;
+  }
+  if (html) eventCard.insertAdjacentHTML('beforeend', html);
+}
+
+// ── AUTO LOGIN ──
 // XSS-safe escape (from live version)
 const _e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -289,6 +342,9 @@ async function loadEvent(){
         document.getElementById('ev-organiser').style.display='block';
       }
     }
+
+    // ── Show cancellation policy (NEW) ──
+    if (ev.cancellation_policy) showCancellationPolicy(ev.cancellation_policy);
 
     // ── Open ground or open entry (NEW: handle event_type) ──
     const isOpenGround=(ev.event_type==='open_ground');
@@ -505,13 +561,13 @@ function buildDayBoxes(totalDays){
   }
 }
 
-async function handlePaymentSuccess(payId,name,mobile,seatKeys,amt){
+async function handlePaymentSuccess(payId,name,mobile,email,seatKeys,amt){
   await sb.from('kh_bookings').update({status:'confirmed',payment_status:'paid',razorpay_payment_id:payId}).eq('id',bookingId);
   selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';s.svgG.style.cursor='not-allowed';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
-  clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,seatKeys,amt);
+  clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,amt);
 }
 
-async function showSuccess(name,mobile,seatKeys,amount){
+async function showSuccess(name,mobile,email,seatKeys,amount){
   const evDate=document.getElementById('ev-date').textContent,hallName=document.getElementById('ev-hall').textContent,eventName=eventData?eventData.name:'Event';
   const seatCount=seatKeys.length,now=new Date();
   const bookedAt=now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
@@ -535,16 +591,19 @@ async function showSuccess(name,mobile,seatKeys,amount){
   ticketData={bookingId:bookingId||'',eventName,eventDate:evDate,hallName,bookerName:name,bookerMobile:mobile,seatKeys,amount,bookedAt,totalDays:eventTotalDays,isOpen};
   qrDataUrl=await generateQR(bookingId||'KHURSILO-'+Date.now());if(qrDataUrl)renderQROnCard(qrDataUrl);
   if(qrDataUrl&&bookingId)await sb.from('kh_bookings').update({qr_code:qrDataUrl}).eq('id',bookingId);
+  // Send confirmation email if provided (non-blocking)
+  if(email){sendConfirmationEmail(email,{bookerName:name,eventName,eventDate:evDate,hallName,seatKeys,amount,bookingId:bookingId||'',bookedAt,totalDays:eventTotalDays});}
   setTimeout(()=>downloadTicketPDF(),800);selectedSeats=[];updateBottomBar();
 }
 
 async function confirmBooking(){
   const name=document.getElementById('inp-name').value.trim(),mobile=document.getElementById('inp-mobile').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
   if(!name){alert('Please enter your name');return;}if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.querySelector('.confirm-btn');btn.textContent='Processing…';btn.disabled=true;
   try{
     const clientAmt=selectedSeats.reduce((a,s)=>a+s.price,0),seatKeys=selectedSeats.map(s=>s.seatKey);
-    if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,seatKeys,clientAmt);return;}
+    if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,email,seatKeys,clientAmt);return;}
     if(clientAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
     // ── Server-side amount verify (SECURITY — from live version) ──
     let totalAmt=clientAmt;
@@ -557,21 +616,21 @@ async function confirmBooking(){
     }catch(_){}
     const rzpKey=organiserData&&organiserData.razorpay_key_id;
     if(!rzpKey){alert('Payment gateway not configured.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
-    const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()}).select().single();
+    const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()}).select().single();
     if(error)throw error;bookingId=booking.id;
-    const rzp=new Razorpay({key:rzpKey,amount:totalAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,seatKeys,totalAmt);}});
+    const rzp=new Razorpay({key:rzpKey,amount:totalAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}});
     rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
     rzp.open();
-    let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,seatKeys,totalAmt);}},3000);
+    let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}},3000);
   }catch(e){alert('Error: '+(e.message||'Unknown'));btn.textContent='Confirm & Pay →';btn.disabled=false;}
 }
 
-async function saveFreeBooking(name,mobile,seatKeys,totalAmt){
+async function saveFreeBooking(name,mobile,email,seatKeys,totalAmt){
   try{
-    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
+    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
     if(error)throw error;bookingId=data.id;
     selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
-    clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,seatKeys,totalAmt);
+    clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,totalAmt);
   }catch(e){alert('Error: '+(e.message||'Unknown'));document.querySelector('.confirm-btn').textContent='Confirm & Pay →';document.querySelector('.confirm-btn').disabled=false;}
 }
 
@@ -679,15 +738,16 @@ function openQtyChange(delta){const n=openQty+delta;if(n<1||n>10)return;openQty=
 async function bookOpenEntry(){
   const name=document.getElementById('open-name').value.trim();
   const mobile=document.getElementById('open-mobile').value.trim();
+  const email=document.getElementById('open-email').value.trim();
   if(!name){alert('Please enter your name');return;}
   if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.getElementById('open-book-btn');btn.textContent='Booking…';btn.disabled=true;
   try{
-    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
+    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
     if(error)throw error;
     bookingId=data.id;
     const label=openQty>1?`Open Entry · ${openQty} persons`:'Open Entry';
-    await showSuccess(name,mobile,[label],0);
+    await showSuccess(name,mobile,email,[label],0);
     const oe=organiserData&&organiserData.email_1?organiserData.email_1:'';
     const vt='Valid for '+openQty+' person'+(openQty>1?'s':'')+(eventTotalDays>1?' · All '+eventTotalDays+' days':'');
     document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · '+vt+(oe?'<br>Support: '+oe:'')+'<br>khursilo.in';
