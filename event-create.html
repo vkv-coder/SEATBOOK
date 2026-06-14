@@ -22,16 +22,12 @@
 body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; }
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
-
-/* TOPBAR */
 .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
 .back-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text); padding: 0; line-height: 1; }
 .topbar-title { font-size: 15px; font-weight: 500; }
 .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 20px; }
 .topbar-step { margin-left: auto; font-size: 12px; color: var(--muted); }
 .logout-btn { margin-left:auto; font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-
-/* STEP PROGRESS */
 .step-progress { background: var(--white); padding: 12px 20px; border-bottom: 1px solid var(--border); }
 .step-track { display: flex; align-items: center; }
 .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; border: 2px solid var(--border2); color: var(--muted); background: var(--white); transition: all 0.3s; }
@@ -42,8 +38,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .step-labels { display: flex; justify-content: space-between; margin-top: 6px; }
 .step-label { font-size: 9px; color: var(--muted); text-align: center; width: 28px; }
 .step-label.active { color: var(--text); font-weight: 500; }
-
-/* FORM */
 .form-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 100px; }
 .form-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; }
 .form-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
@@ -58,6 +52,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .hall-chip { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--rsm); padding: 11px 14px; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
 .hall-chip-icon { font-size: 16px; }
+
+/* TYPE TOGGLE */
+.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--border2); border-radius: var(--rsm); overflow: hidden; margin-bottom: 14px; }
+.type-btn { padding: 10px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--white); color: var(--muted); border: none; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.type-btn.active { background: var(--text); color: #fff; }
+.type-btn:first-child { border-right: 1px solid var(--border2); }
+
+/* DAY TOGGLE */
+.day-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--border2); border-radius: var(--rsm); overflow: hidden; margin-bottom: 14px; }
+.day-btn { padding: 10px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; background: var(--white); color: var(--muted); border: none; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.day-btn.active { background: var(--accent); color: #fff; }
+.day-btn:first-child { border-right: 1px solid var(--border2); }
 
 /* MODE */
 .mode-cards { display: flex; flex-direction: column; gap: 8px; }
@@ -79,22 +85,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .excel-zone-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .download-btn { width: 100%; padding: 12px; background: var(--text); color: #fff; border: none; border-radius: var(--rsm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
 .download-btn:active { opacity: 0.8; }
-
-/* PRICING PREVIEW */
 .pricing-section-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface2); border-radius: var(--rsm); margin-bottom: 6px; }
 .pricing-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 .pricing-name { font-size: 13px; font-weight: 500; flex: 1; }
 .pricing-seats { font-size: 11px; color: var(--muted); }
 .pricing-price { font-size: 13px; font-weight: 600; color: var(--accent); }
 
-/* WINDOW */
-.window-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.window-opt { border: 1.5px solid var(--border2); border-radius: var(--rsm); padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
-.window-opt.selected { border-color: var(--accent); background: var(--accent-dim); }
-.window-days { font-size: 20px; font-weight: 600; color: var(--text); }
-.window-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.window-price { font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 4px; }
-.window-opt.selected .window-days { color: var(--accent); }
+/* HALL SELECT */
+.hall-list { display: flex; flex-direction: column; gap: 8px; }
+.hall-item { border: 1.5px solid var(--border2); border-radius: var(--rsm); padding: 12px 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+.hall-item.selected { border-color: var(--accent); background: var(--accent-dim); }
+.hall-item-icon { font-size: 20px; }
+.hall-item-name { font-size: 13px; font-weight: 500; flex: 1; }
+.hall-item-seats { font-size: 11px; color: var(--muted); }
+.hall-item-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.hall-item.selected .hall-item-check { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* BOTTOM NAV */
 .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--white); border-top: 1px solid var(--border); padding: 14px 20px 28px; display: flex; gap: 10px; z-index: 20; }
@@ -104,7 +109,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .btn-primary.accent { background: var(--accent); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* HOME SCREEN */
+/* HOME */
 .home-wrap { flex: 1; display: flex; flex-direction: column; padding: 24px 20px; gap: 14px; }
 .home-hero { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); border-radius: var(--radius); padding: 20px; color: #fff; }
 .home-hero-name { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 4px; }
@@ -140,12 +145,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .link-box { background: var(--surface2); border-radius: var(--rsm); padding: 12px 14px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border2); margin-bottom: 12px; }
 .link-url { font-size: 12px; color: var(--blue); flex: 1; word-break: break-all; }
 .link-copy { background: var(--text); color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
-
-/* SPINNER */
 .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* INFO BOX */
 .info-box { border-radius: var(--rsm); padding: 10px 12px; font-size: 12px; line-height: 1.5; }
 .info-box.blue { background: var(--blue-dim); color: #1a4a8a; border: 1px solid rgba(43,111,212,0.2); }
 .info-box.green { background: var(--green-dim); color: #1a5c3a; border: 1px solid rgba(46,158,96,0.2); }
@@ -191,7 +192,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   <div class="home-wrap">
     <div class="home-hero">
       <div class="home-hero-name" id="home-org-name">Welcome</div>
-      <div class="home-hero-sub" id="home-hall-name">Sayajirao Nagar Gruha</div>
+      <div class="home-hero-sub" id="home-hall-name">Khursilo Organiser</div>
     </div>
     <div class="home-card" onclick="showScreen('screen-dashboard')">
       <div class="home-card-icon" style="background:#f0eeea;">📊</div>
@@ -205,14 +206,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="home-card-icon" style="background:#fff3e0;">➕</div>
       <div class="home-card-text">
         <div class="home-card-title">Create Event</div>
-        <div class="home-card-sub">Set up a new event for your hall</div>
+        <div class="home-card-sub">Set up a new event</div>
       </div>
       <div class="home-card-arrow">→</div>
     </div>
   </div>
 </div>
 
-<!-- ══ DASHBOARD (placeholder — links to organiser-dashboard.html) ══ -->
+<!-- ══ DASHBOARD ══ -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar">
     <button class="back-btn" onclick="showScreen('screen-home')">←</button>
@@ -221,13 +222,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;">
     <div>
       <div style="font-size:40px;margin-bottom:12px;">📊</div>
-      <div style="font-size:14px;color:var(--muted);">Dashboard coming soon.<br>Use organiser-dashboard.html for now.</div>
       <button onclick="window.location.href='organiser-dashboard.html'" style="margin-top:16px;padding:10px 20px;background:var(--text);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Open Dashboard →</button>
     </div>
   </div>
 </div>
 
-<!-- ══ STEP 1: EVENT DETAILS ══ -->
+<!-- ══ STEP 1: EVENT TYPE + DETAILS ══ -->
 <div class="screen" id="s1">
   <div class="topbar">
     <button class="back-btn" onclick="showScreen('screen-home')">←</button>
@@ -249,6 +249,19 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     </div>
   </div>
   <div class="form-body">
+
+    <!-- Event Category -->
+    <div class="form-card">
+      <div class="form-card-title">🎪 Event category</div>
+      <div class="type-toggle">
+        <button class="type-btn active" id="cat-hall-btn" onclick="selectCategory('hall')">🏛️ Hall / Venue</button>
+        <button class="type-btn" id="cat-open-btn" onclick="selectCategory('open_ground')">🌳 Open Ground</button>
+      </div>
+      <div id="cat-hall-desc" style="font-size:11px;color:var(--muted);line-height:1.5;">With seat map. Select existing hall or any venue with seat layout.</div>
+      <div id="cat-open-desc" style="display:none;font-size:11px;color:var(--muted);line-height:1.5;">No seat map. Open ground, maidan, or any open venue. Ticket issued for entry only.</div>
+    </div>
+
+    <!-- Event Details -->
     <div class="form-card">
       <div class="form-card-title">🎭 Event details</div>
       <div class="field-group">
@@ -259,29 +272,104 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div class="field-label">Description</div>
         <textarea class="input-field" rows="2" id="ev-desc" placeholder="Short description for your audience" style="resize:none;"></textarea>
       </div>
-      <div class="field-row-2">
-        <div class="field-group" style="margin:0;">
-          <div class="field-label">Date <span>*</span></div>
-          <input class="input-field" type="date" id="ev-date">
-        </div>
-        <div class="field-group" style="margin:0;">
-          <div class="field-label">Time <span>*</span></div>
-          <input class="input-field" type="time" id="ev-time">
+      <div class="field-group">
+        <div class="field-label">Venue / Location <span>*</span></div>
+        <input class="input-field" type="text" id="ev-venue" placeholder="e.g. Race Course Maidan, Vadodara">
+      </div>
+    </div>
+
+    <!-- Duration: Single or Multi-day -->
+    <div class="form-card">
+      <div class="form-card-title">📅 Event duration</div>
+      <div class="day-toggle">
+        <button class="day-btn active" id="dur-single-btn" onclick="selectDuration('single')">Single Day</button>
+        <button class="day-btn" id="dur-multi-btn" onclick="selectDuration('multi')">Multi-Day</button>
+      </div>
+
+      <!-- Single day -->
+      <div id="dur-single-fields">
+        <div class="field-row-2">
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">Date <span>*</span></div>
+            <input class="input-field" type="date" id="ev-date">
+          </div>
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">Time <span>*</span></div>
+            <input class="input-field" type="time" id="ev-time">
+          </div>
         </div>
       </div>
-      <div class="field-group" style="margin:0;">
-        <div class="field-label">Venue</div>
-        <div class="hall-chip">
-          <span class="hall-chip-icon">🏛️</span>
-          <span id="hall-display">Sayajirao Nagar Gruha, Akota, Vadodara</span>
+
+      <!-- Multi day -->
+      <div id="dur-multi-fields" style="display:none;">
+        <div class="field-row-2">
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">From date <span>*</span></div>
+            <input class="input-field" type="date" id="ev-from-date" onchange="calcDays()">
+          </div>
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">To date <span>*</span></div>
+            <input class="input-field" type="date" id="ev-to-date" onchange="calcDays()">
+          </div>
+        </div>
+        <div class="field-row-2" style="margin-top:10px;">
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">Daily start time</div>
+            <input class="input-field" type="time" id="ev-daily-time">
+          </div>
+          <div class="field-group" style="margin:0;">
+            <div class="field-label">Total days</div>
+            <div class="input-field" style="background:var(--accent-dim);border-color:var(--accent);color:var(--accent);font-weight:700;" id="ev-days-display">—</div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Hall selection (only for hall type) -->
+    <div class="form-card" id="hall-select-card">
+      <div class="form-card-title">🏛️ Select hall</div>
+      <div class="hall-list" id="hall-list">
+        <div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">Loading halls…</div>
+      </div>
+    </div>
+
+    <!-- Ticket mode -->
     <div class="form-card">
-      <div class="form-card-title">📅 Booking window</div>
+      <div class="form-card-title">🎟️ Ticket type</div>
+      <div class="mode-cards">
+        <div class="mode-card selected" id="mode-paid" onclick="selectMode('paid')">
+          <div class="mode-card-header">
+            <div class="mode-icon">💳</div>
+            <div class="mode-title">Paid ticketing</div>
+            <div class="mode-check">✓</div>
+          </div>
+          <div class="mode-desc">Audience pays per seat/entry. Revenue goes directly to your Razorpay.</div>
+        </div>
+        <div class="mode-card" id="mode-free" onclick="selectMode('free')">
+          <div class="mode-card-header">
+            <div class="mode-icon">🎁</div>
+            <div class="mode-title">Free / Seat allocation</div>
+            <div class="mode-check"></div>
+          </div>
+          <div class="mode-desc">No payment. Audience reserves their seat/entry for free.</div>
+        </div>
+        <div class="mode-card" id="mode-open" onclick="selectMode('open')">
+          <div class="mode-card-header">
+            <div class="mode-icon">🚪</div>
+            <div class="mode-title">Free · Open Entry</div>
+            <div class="mode-check"></div>
+          </div>
+          <div class="mode-desc">No seat selection. First come first basis. Name & mobile only.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking window -->
+    <div class="form-card">
+      <div class="form-card-title">🗓️ Booking window</div>
       <div class="field-row-2">
         <div class="field-group" style="margin:0;">
-          <div class="field-label">Booking opens <span>*</span></div>
+          <div class="field-label">Opens <span>*</span></div>
           <input class="input-field" type="date" id="booking-open-date">
         </div>
         <div class="field-group" style="margin:0;">
@@ -291,7 +379,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
       <div class="field-row-2" style="margin-top:10px;">
         <div class="field-group" style="margin:0;">
-          <div class="field-label">Booking closes <span>*</span></div>
+          <div class="field-label">Closes <span>*</span></div>
           <input class="input-field" type="date" id="booking-close-date">
         </div>
         <div class="field-group" style="margin:0;">
@@ -300,42 +388,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         </div>
       </div>
     </div>
-    <div class="form-card">
-      <div class="form-card-title">🎟️ Event type</div>
-      <div class="mode-cards">
-        <div class="mode-card selected" id="mode-paid" onclick="selectMode('paid')">
-          <div class="mode-card-header">
-            <div class="mode-icon">💳</div>
-            <div class="mode-title">Paid ticketing</div>
-            <div class="mode-check">✓</div>
-          </div>
-          <div class="mode-desc">Audience pays per seat. Revenue goes directly to your Razorpay.</div>
-        </div>
-        <div class="mode-card" id="mode-free" onclick="selectMode('free')">
-          <div class="mode-card-header">
-            <div class="mode-icon">🎁</div>
-            <div class="mode-title">Free / Seat allocation</div>
-            <div class="mode-check"></div>
-          </div>
-          <div class="mode-desc">No payment. Audience just picks and reserves their seat.</div>
-        </div>
-        <div class="mode-card" id="mode-open" onclick="selectMode('open')">
-          <div class="mode-card-header">
-            <div class="mode-icon">🚪</div>
-            <div class="mode-title">Free · Open Entry</div>
-            <div class="mode-check"></div>
-          </div>
-          <div class="mode-desc">No seat selection. First come first basis. Audience just registers their name &amp; mobile.</div>
-        </div>
-      </div>
-    </div>
+
   </div>
   <div class="bottom-nav">
-    <button class="btn-primary" onclick="goStep(2)">Next — Seat pricing →</button>
+    <button class="btn-primary" onclick="goStep(2)">Next →</button>
   </div>
 </div>
 
-<!-- ══ STEP 2: SEAT PRICING (Excel) ══ -->
+<!-- ══ STEP 2: SEAT PRICING (hall only) ══ -->
 <div class="screen" id="s2">
   <div class="topbar">
     <button class="back-btn" onclick="goStep(1)">←</button>
@@ -357,56 +417,49 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     </div>
   </div>
   <div class="form-body">
-    <div class="form-card">
+    <div class="form-card" id="excel-download-card">
       <div class="form-card-title">📥 Step 1 — Download seat template</div>
       <div class="info-box blue" style="margin-bottom:12px;">
-        The template has all seat numbers pre-filled. You just fill in the <strong>price</strong> for each seat cell (e.g. <strong>500</strong>) or type <strong>X</strong> to block a seat.
+        Fill in the <strong>price</strong> for each seat (e.g. <strong>500</strong>) or type <strong>X</strong> to block a seat.
       </div>
       <button class="download-btn" onclick="downloadTemplate()">
-        ⬇️ Download Sayajirao Hall Template
+        ⬇️ Download Hall Template
       </button>
       <div style="font-size:11px;color:var(--muted);text-align:center;">Excel file · Fill prices · Upload below</div>
     </div>
-
-    <div class="form-card">
+    <div class="form-card" id="excel-upload-card">
       <div class="form-card-title">📤 Step 2 — Upload filled template</div>
       <div class="excel-zone" id="excel-zone" onclick="document.getElementById('excel-input').click()">
         <div class="excel-zone-icon">📊</div>
         <div class="excel-zone-text" id="zone-text">Tap to upload filled Excel</div>
-        <div class="excel-zone-sub" id="zone-sub">Sayajirao_Hall_Seat_Template.xlsx</div>
+        <div class="excel-zone-sub" id="zone-sub">Hall_Seat_Template.xlsx</div>
       </div>
       <input type="file" id="excel-input" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelUpload(this)">
     </div>
-
-    <!-- Parsed pricing preview -->
     <div class="form-card" id="pricing-preview" style="display:none;">
       <div class="form-card-title">✅ Pricing detected</div>
       <div id="pricing-list"></div>
-      <div class="info-box green" style="margin-top:10px;">
-        Colours are auto-assigned per price group. You can rename sections in the next step.
-      </div>
+      <div class="info-box green" style="margin-top:10px;">Colours auto-assigned per price group.</div>
     </div>
-
-    <!-- Free mode notice -->
     <div class="form-card" id="free-notice" style="display:none;">
       <div class="form-card-title">🎁 Free event</div>
-      <div class="info-box green">
-        No pricing needed. All seats will be available for free reservation. You can still block specific seats by uploading a template with X in those cells.
-      </div>
+      <div class="info-box green">No pricing needed. All seats available for free reservation. Upload template with X to block specific seats.</div>
       <div style="margin-top:12px;">
-        <button class="download-btn" onclick="downloadTemplate()" style="background:var(--green);">
-          ⬇️ Download template (optional — to block seats)
-        </button>
+        <button class="download-btn" onclick="downloadTemplate()" style="background:var(--green);">⬇️ Download template (optional — to block seats)</button>
       </div>
+    </div>
+    <div class="form-card" id="open-ground-notice" style="display:none;">
+      <div class="form-card-title">🌳 Open Ground Event</div>
+      <div class="info-box amber">No seat map needed. Tickets are issued as entry passes. Proceed to next step.</div>
     </div>
   </div>
   <div class="bottom-nav">
     <button class="btn-secondary" onclick="goStep(1)">← Back</button>
-    <button class="btn-primary" id="step2-next" onclick="goStep(3)">Next — Booking window →</button>
+    <button class="btn-primary" id="step2-next" onclick="goStep(3)">Next →</button>
   </div>
 </div>
 
-<!-- ══ STEP 3: BOOKING WINDOW ══ -->
+<!-- ══ STEP 3: SUMMARY ══ -->
 <div class="screen" id="s3">
   <div class="topbar">
     <button class="back-btn" onclick="goStep(2)">←</button>
@@ -441,9 +494,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         </div>
       </div>
     </div>
-    <div class="info-box blue">
-      ℹ️ Booking link will go live as soon as you publish. It will automatically close on the date you set.
+    <div class="form-card">
+      <div class="form-card-title">📋 Event summary</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Category</span>
+          <span id="sum-category" style="font-weight:500;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted);">Duration</span>
+          <span id="sum-duration" style="font-weight:500;">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;">
+          <span style="color:var(--muted);">Ticket type</span>
+          <span id="sum-mode" style="font-weight:500;">—</span>
+        </div>
+      </div>
     </div>
+    <div class="info-box blue">ℹ️ Booking link goes live as soon as you publish and closes automatically on the set date.</div>
   </div>
   <div class="bottom-nav">
     <button class="btn-secondary" onclick="goStep(2)">← Back</button>
@@ -477,16 +545,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="preview-tag">How audience sees it</div>
       <div class="preview-name" id="prev-name">—</div>
       <div class="preview-meta-row" id="prev-datetime">📅 —</div>
-      <div class="preview-meta-row">📍 Sayajirao Nagar Gruha, Akota, Vadodara</div>
+      <div class="preview-meta-row" id="prev-venue">📍 —</div>
+      <div class="preview-meta-row" id="prev-days-tag" style="display:none;"></div>
     </div>
     <div id="prev-sections-wrap"></div>
     <div class="form-card">
       <div class="form-card-title">✅ Ready to publish?</div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-        <div id="chk-details" style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Event details filled</div>
-        <div id="chk-pricing" style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Seat pricing configured</div>
-        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Booking window selected</div>
-        
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Event details filled</div>
+        <div id="chk-pricing" style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Pricing configured</div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:var(--green);">✓</span> Booking window set</div>
       </div>
     </div>
   </div>
@@ -518,15 +586,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <script>
 const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
-const HALL_ID = '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentOrg = null;
 let hallLayout = null;
+let allHalls = [];
+let selectedHallId = null;
+let selectedHallName = '';
 let eventMode = 'paid';
-let parsedSections = []; // [{name, price, color, seats, blocked}]
-let selectedWindowDays = '1';
-let selectedWindowFee = '₹199';
+let eventCategory = 'hall'; // 'hall' or 'open_ground'
+let eventDuration = 'single'; // 'single' or 'multi'
+let parsedSections = [];
 let createdEventId = null;
 
 const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
@@ -564,18 +634,13 @@ async function loginWithSession(session) {
   currentOrg = org;
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('home-org-name').textContent = org.name || 'Welcome';
-  await loadHall();
+  await loadHalls();
   showScreen('screen-home');
 }
 
-async function loadHall() {
-  const { data: hall } = await sb.from('kh_halls').select('name, city, layout_json').eq('id', HALL_ID).single();
-  if (hall) {
-    hallLayout = hall;
-    const displayName = hall.name + (hall.city ? ', ' + hall.city : '');
-    document.getElementById('hall-display').textContent = displayName;
-    document.getElementById('home-hall-sub') && (document.getElementById('home-hall-sub').textContent = displayName);
-  }
+async function loadHalls() {
+  const { data: halls } = await sb.from('kh_halls').select('id, name, city, layout_json').order('name');
+  allHalls = halls || [];
 }
 
 // ── LOGIN ──
@@ -626,50 +691,151 @@ function showScreen(id) {
 }
 
 function startCreateEvent() {
-  // Reset form
   parsedSections = [];
+  selectedHallId = null;
+  selectedHallName = '';
   document.getElementById('ev-name').value = '';
   document.getElementById('ev-desc').value = '';
+  document.getElementById('ev-venue').value = '';
   document.getElementById('ev-date').value = '';
   document.getElementById('ev-time').value = '';
+  document.getElementById('ev-from-date').value = '';
+  document.getElementById('ev-to-date').value = '';
+  document.getElementById('ev-daily-time').value = '';
+  document.getElementById('ev-days-display').textContent = '—';
   document.getElementById('excel-zone').className = 'excel-zone';
   document.getElementById('zone-text').textContent = 'Tap to upload filled Excel';
   document.getElementById('pricing-preview').style.display = 'none';
+  selectCategory('hall');
+  selectDuration('single');
   selectMode('paid');
+  renderHallList();
   showScreen('s1');
 }
 
-function goStep(n) {
-  if (n === 2) { if (!validateStep1()) return; if(eventMode==='open'){updateWindowSummary();showScreen('s3');return;} showStep2(); }
-  else if (n === 3) { if (!validateStep2()) return; updateWindowSummary(); }
-  else if (n === 4) { buildPreview(); }
-  if (n <= 4) showScreen('s' + n);
+function renderHallList() {
+  const list = document.getElementById('hall-list');
+  if (!allHalls.length) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px;">No halls found.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  allHalls.forEach(hall => {
+    const item = document.createElement('div');
+    item.className = 'hall-item' + (selectedHallId === hall.id ? ' selected' : '');
+    item.id = 'hall-item-' + hall.id;
+    item.onclick = () => pickHall(hall);
+    item.innerHTML = `
+      <div class="hall-item-icon">🏛️</div>
+      <div style="flex:1;">
+        <div class="hall-item-name">${hall.name}</div>
+        <div class="hall-item-seats">${hall.city || ''}</div>
+      </div>
+      <div class="hall-item-check">${selectedHallId === hall.id ? '✓' : ''}</div>
+    `;
+    list.appendChild(item);
+  });
 }
 
-function updateWindowSummary() {
-  const openDate = document.getElementById('booking-open-date').value;
-  const closeDate = document.getElementById('booking-close-date').value;
-  const fmt = (d) => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
-  document.getElementById('sum-open').textContent = fmt(openDate);
-  document.getElementById('sum-close').textContent = fmt(closeDate);
+function pickHall(hall) {
+  selectedHallId = hall.id;
+  selectedHallName = hall.name + (hall.city ? ', ' + hall.city : '');
+  hallLayout = typeof hall.layout_json === 'string' ? JSON.parse(hall.layout_json) : hall.layout_json;
+  renderHallList();
+}
+
+// ── CATEGORY ──
+function selectCategory(cat) {
+  eventCategory = cat;
+  document.getElementById('cat-hall-btn').classList.toggle('active', cat === 'hall');
+  document.getElementById('cat-open-btn').classList.toggle('active', cat === 'open_ground');
+  document.getElementById('cat-hall-desc').style.display = cat === 'hall' ? 'block' : 'none';
+  document.getElementById('cat-open-desc').style.display = cat === 'open_ground' ? 'block' : 'none';
+  document.getElementById('hall-select-card').style.display = cat === 'hall' ? 'block' : 'none';
+  // For open ground, auto-fill venue placeholder
+  if (cat === 'open_ground') {
+    const venueEl = document.getElementById('ev-venue');
+    if (!venueEl.value) venueEl.placeholder = 'e.g. Race Course Maidan, Vadodara';
+  }
+}
+
+// ── DURATION ──
+function selectDuration(dur) {
+  eventDuration = dur;
+  document.getElementById('dur-single-btn').classList.toggle('active', dur === 'single');
+  document.getElementById('dur-multi-btn').classList.toggle('active', dur === 'multi');
+  document.getElementById('dur-single-fields').style.display = dur === 'single' ? 'block' : 'none';
+  document.getElementById('dur-multi-fields').style.display = dur === 'multi' ? 'block' : 'none';
+}
+
+function calcDays() {
+  const from = document.getElementById('ev-from-date').value;
+  const to = document.getElementById('ev-to-date').value;
+  if (from && to) {
+    const d1 = new Date(from), d2 = new Date(to);
+    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+    if (diff > 0 && diff <= 10) {
+      document.getElementById('ev-days-display').textContent = diff + ' day' + (diff > 1 ? 's' : '');
+    } else if (diff > 10) {
+      document.getElementById('ev-days-display').textContent = '⚠️ Max 10';
+    } else {
+      document.getElementById('ev-days-display').textContent = '⚠️ Invalid';
+    }
+  }
+}
+
+// ── MODE ──
+function selectMode(mode) {
+  eventMode = mode;
+  ['paid','free','open'].forEach(m => {
+    const el = document.getElementById('mode-' + m);
+    if (!el) return;
+    el.classList.toggle('selected', mode === m);
+    el.querySelector('.mode-check').textContent = mode === m ? '✓' : '';
+  });
+}
+
+// ── STEPS ──
+function goStep(n) {
+  if (n === 2) {
+    if (!validateStep1()) return;
+    showStep2();
+  } else if (n === 3) {
+    if (!validateStep2()) return;
+    updateSummary();
+  } else if (n === 4) {
+    buildPreview();
+  }
+  if (n <= 4) showScreen('s' + n);
 }
 
 function validateStep1() {
   const name = document.getElementById('ev-name').value.trim();
-  const date = document.getElementById('ev-date').value;
-  const time = document.getElementById('ev-time').value;
+  const venue = document.getElementById('ev-venue').value.trim();
   const openDate = document.getElementById('booking-open-date').value;
   const closeDate = document.getElementById('booking-close-date').value;
   if (!name) { alert('Please enter event name.'); return false; }
-  if (!date) { alert('Please select event date.'); return false; }
-  if (!time) { alert('Please select event time.'); return false; }
+  if (!venue) { alert('Please enter venue / location.'); return false; }
+  if (eventDuration === 'single') {
+    if (!document.getElementById('ev-date').value) { alert('Please select event date.'); return false; }
+    if (!document.getElementById('ev-time').value) { alert('Please select event time.'); return false; }
+  } else {
+    const from = document.getElementById('ev-from-date').value;
+    const to = document.getElementById('ev-to-date').value;
+    if (!from) { alert('Please select from date.'); return false; }
+    if (!to) { alert('Please select to date.'); return false; }
+    const diff = Math.round((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24)) + 1;
+    if (diff < 1) { alert('To date must be after from date.'); return false; }
+    if (diff > 10) { alert('Maximum 10 days allowed.'); return false; }
+  }
+  if (eventCategory === 'hall' && !selectedHallId) { alert('Please select a hall.'); return false; }
   if (!openDate) { alert('Please select booking open date.'); return false; }
   if (!closeDate) { alert('Please select booking close date.'); return false; }
   return true;
 }
 
 function validateStep2() {
-  if (eventMode === 'paid' && parsedSections.length === 0) {
+  if (eventCategory === 'hall' && eventMode === 'paid' && parsedSections.length === 0) {
     alert('Please upload the filled pricing template first.');
     return false;
   }
@@ -677,167 +843,145 @@ function validateStep2() {
 }
 
 function showStep2() {
-  document.getElementById('free-notice').style.display = eventMode === 'free' ? 'block' : 'none';
-  document.getElementById('step2-next').textContent = eventMode === 'free'
-    ? 'Next — Booking window →'
-    : 'Next — Booking window →';
+  const isHall = eventCategory === 'hall';
+  const isOpenGround = eventCategory === 'open_ground';
+  document.getElementById('excel-download-card').style.display = isHall && eventMode !== 'open' ? 'block' : 'none';
+  document.getElementById('excel-upload-card').style.display = isHall && eventMode !== 'open' ? 'block' : 'none';
+  document.getElementById('free-notice').style.display = isHall && eventMode === 'free' ? 'block' : 'none';
+  document.getElementById('open-ground-notice').style.display = isOpenGround || eventMode === 'open' ? 'block' : 'none';
+  document.getElementById('pricing-preview').style.display = parsedSections.length > 0 ? 'block' : 'none';
 }
 
-// ── MODE ──
-function selectMode(mode) {
-  eventMode = mode;
-  ['paid','free','open'].forEach(m=>{
-    const el=document.getElementById('mode-'+m);
-    if(!el)return;
-    el.classList.toggle('selected', mode===m);
-    el.querySelector('.mode-check').textContent = mode===m ? '✓' : '';
-  });
+function updateSummary() {
+  const openDate = document.getElementById('booking-open-date').value;
+  const closeDate = document.getElementById('booking-close-date').value;
+  const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+  document.getElementById('sum-open').textContent = fmt(openDate);
+  document.getElementById('sum-close').textContent = fmt(closeDate);
+  document.getElementById('sum-category').textContent = eventCategory === 'hall' ? '🏛️ Hall Event' : '🌳 Open Ground';
+  const modeLabels = { paid: '💳 Paid', free: '🎁 Free', open: '🚪 Free Open Entry' };
+  document.getElementById('sum-mode').textContent = modeLabels[eventMode] || eventMode;
+  if (eventDuration === 'single') {
+    const d = document.getElementById('ev-date').value;
+    document.getElementById('sum-duration').textContent = d ? fmt(d) + ' (1 day)' : '—';
+  } else {
+    const from = document.getElementById('ev-from-date').value;
+    const to = document.getElementById('ev-to-date').value;
+    if (from && to) {
+      const diff = Math.round((new Date(to) - new Date(from)) / (1000 * 60 * 60 * 24)) + 1;
+      document.getElementById('sum-duration').textContent = fmt(from) + ' → ' + fmt(to) + ' (' + diff + ' days)';
+    }
+  }
 }
 
-// ── EXCEL DOWNLOAD ──
+function buildPreview() {
+  updateSummary();
+  const name = document.getElementById('ev-name').value || 'Your Event';
+  const venue = document.getElementById('ev-venue').value || '—';
+  document.getElementById('prev-name').textContent = name;
+  document.getElementById('prev-venue').textContent = '📍 ' + venue;
+  if (eventDuration === 'single') {
+    const d = document.getElementById('ev-date').value;
+    const t = document.getElementById('ev-time').value;
+    const ds = d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : '—';
+    document.getElementById('prev-datetime').textContent = '📅 ' + ds + (t ? ' · ' + t : '');
+    document.getElementById('prev-days-tag').style.display = 'none';
+  } else {
+    const from = document.getElementById('ev-from-date').value;
+    const to = document.getElementById('ev-to-date').value;
+    const t = document.getElementById('ev-daily-time').value;
+    const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    document.getElementById('prev-datetime').textContent = '📅 ' + fmt(from) + ' → ' + fmt(to) + (t ? ' · ' + t : '');
+    const diff = from && to ? Math.round((new Date(to)-new Date(from))/(1000*60*60*24))+1 : 0;
+    if (diff > 1) {
+      document.getElementById('prev-days-tag').textContent = '🗓️ ' + diff + '-day event · Ticket valid all days';
+      document.getElementById('prev-days-tag').style.display = 'block';
+    }
+  }
+  const wrap = document.getElementById('prev-sections-wrap');
+  wrap.innerHTML = '';
+  if (eventCategory === 'open_ground' || eventMode === 'open') {
+    wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🌳 Open Entry · First come first basis · No seat map</div>';
+  } else if (parsedSections.length > 0) {
+    parsedSections.filter(s => !s.blocked).forEach(sec => {
+      const row = document.createElement('div');
+      row.className = 'pricing-section-row';
+      row.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:var(--rsm);margin-bottom:6px;';
+      row.innerHTML = `<div class="pricing-dot" style="background:${sec.color};"></div><div class="pricing-name">${sec.name}</div><div class="pricing-seats">${sec.seats} seats</div><div class="pricing-price">₹${sec.price}</div>`;
+      wrap.appendChild(row);
+    });
+  } else if (eventMode === 'free') {
+    wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🎁 All seats available free</div>';
+  }
+}
+
+// ── EXCEL ──
 function downloadTemplate() {
+  // Use selected hall template if available
   window.location.href = 'https://raw.githubusercontent.com/vkv-coder/SEATBOOK/main/Sayajirao_Hall_Seat_Template.xlsx';
 }
 
-
-// ── EXCEL UPLOAD & PARSE ──
 function handleExcelUpload(input) {
   const file = input.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-
-      // Parse pricing: find cells with numeric values (prices) or 'X' (blocked)
-      const priceMap = {}; // price -> seat count
+      const priceMap = {};
       let blockedCount = 0;
-
-      // Parse Excel: each data row maps to a hall row
-      // Row label (AA, BB, A...) identifies the hall row
-      // Non-label, non-empty cells are prices in seat order
       let seatPriceMap = {};
-      let exLayout = hallLayout?.layout_json;
+      let exLayout = hallLayout;
       if (typeof exLayout === 'string') exLayout = JSON.parse(exLayout);
       const allHallRows = exLayout?.rows || [];
-
-      // Build a map of rowLabel -> ordered seat numbers from hall layout
-      const hallSeatMap = {}; // { "AA": [1,2,3,...35], "BB": [...], ... }
-      allHallRows.forEach(row => {
-        if (row.type !== 'row') return;
-        hallSeatMap[row.label] = row.cells
-          .filter(c => c.t === 'seat' && c.sn != null)
-          .map(c => c.sn);
-      });
-
-      // Build column->seatKey map using hall layout cell positions directly
-      // Excel column index maps 1:1 to hall layout cell index
-      const colSeatMap = {}; // { "AA": { 10: "AA-1", 11: "AA-2", ... }, ... }
+      const colSeatMap = {};
       allHallRows.forEach(row => {
         if (row.type !== 'row') return;
         colSeatMap[row.label] = {};
         row.cells.forEach((cell, ci) => {
-          if (cell.t === 'seat' && cell.sn != null) {
-            colSeatMap[row.label][ci] = row.label + '-' + cell.sn;
-          }
+          if (cell.t === 'seat' && cell.sn != null) colSeatMap[row.label][ci] = row.label + '-' + cell.sn;
         });
       });
-
-      // Process each Excel data row using column positions
-      // Row order in Excel matches hall layout row order (including hgaps)
       let hallRowPointer = 0;
       for (let ri = 3; ri < data.length; ri++) {
         const rowArr = data[ri];
         const isEmpty = !rowArr || rowArr.every(c => c === '');
-
-        // Skip hgap rows in hall layout
-        while (hallRowPointer < allHallRows.length && allHallRows[hallRowPointer].type === 'hgap') {
-          hallRowPointer++;
-        }
+        while (hallRowPointer < allHallRows.length && allHallRows[hallRowPointer].type === 'hgap') hallRowPointer++;
         if (hallRowPointer >= allHallRows.length) break;
-
         const hallRow = allHallRows[hallRowPointer];
-
-        if (isEmpty) {
-          // Empty Excel row = hgap spacer row — don't advance hallRowPointer
-          continue;
-        }
-
-        hallRowPointer++; // only advance when we have actual data
+        if (isEmpty) continue;
+        hallRowPointer++;
         if (hallRow.type !== 'row') continue;
-
-        const rowLabel = hallRow.label;
-        const colMap = colSeatMap[rowLabel] || {};
-
-        // Map each column directly to seat using position
+        const colMap = colSeatMap[hallRow.label] || {};
         rowArr.forEach((cell, ci) => {
-          const seatKey = colMap[ci]; // ci = Excel col, colMap has seat col indices
-          if (!seatKey) return; // not a seat column
-
+          const seatKey = colMap[ci];
+          if (!seatKey) return;
           const v = String(cell).trim().toUpperCase();
-          if (v === '') return; // unfilled — keep as-is (will be blocked in booking page)
-
-          if (v === 'X') {
-            blockedCount++;
-            seatPriceMap[seatKey] = 'X';
-          } else {
-            const num = parseInt(v);
-            if (!isNaN(num) && num > 0) {
-              priceMap[num] = (priceMap[num] || 0) + 1;
-              seatPriceMap[seatKey] = num;
-            }
-          }
+          if (v === '') return;
+          if (v === 'X') { blockedCount++; seatPriceMap[seatKey] = 'X'; }
+          else { const num = parseInt(v); if (!isNaN(num) && num > 0) { priceMap[num] = (priceMap[num] || 0) + 1; seatPriceMap[seatKey] = num; } }
         });
       }
-
-      // Store seat price map globally
       window._seatPriceMap = seatPriceMap;
-      console.log('Seat price map built:', Object.keys(seatPriceMap).length, 'seats mapped');
-
-      // Build sections from price groups
       const prices = Object.keys(priceMap).map(Number).sort((a, b) => b - a);
-
-      if (prices.length === 0 && blockedCount === 0) {
-        alert('No pricing data found in the uploaded file. Please fill in prices and re-upload.');
-        return;
-      }
-
+      if (prices.length === 0 && blockedCount === 0) { alert('No pricing data found. Please fill in prices and re-upload.'); return; }
       parsedSections = prices.map((price, idx) => ({
-        name: getSectionName(price, idx, prices),
-        price: price,
-        color: SECTION_COLORS[idx % SECTION_COLORS.length],
-        seats: priceMap[price],
-        blocked: false
+        name: getSectionName(price, idx, prices), price, color: SECTION_COLORS[idx % SECTION_COLORS.length], seats: priceMap[price], blocked: false
       }));
-
-      if (blockedCount > 0) {
-        parsedSections.push({
-          name: 'Blocked seats',
-          price: 0,
-          color: '#888888',
-          seats: blockedCount,
-          blocked: true
-        });
-      }
-
-      // Update UI
+      if (blockedCount > 0) parsedSections.push({ name: 'Blocked seats', price: 0, color: '#888888', seats: blockedCount, blocked: true });
       document.getElementById('excel-zone').className = 'excel-zone has-file';
       document.getElementById('zone-text').textContent = '✅ ' + file.name;
       document.getElementById('zone-sub').textContent = prices.length + ' price group(s) detected';
-
       renderPricingPreview();
-    } catch(err) {
-      alert('Error reading file: ' + err.message);
-    }
+    } catch(err) { alert('Error reading file: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function getSectionName(price, idx, allPrices) {
-  const names = ['Premium', 'Gold', 'Silver', 'Regular', 'Economy', 'Balcony', 'Gallery', 'Back'];
+  const names = ['Premium','Gold','Silver','Regular','Economy','Balcony','Gallery','Back'];
   if (allPrices.length === 1) return 'General';
   return names[idx] || 'Section ' + (idx + 1);
 }
@@ -848,64 +992,10 @@ function renderPricingPreview() {
   parsedSections.forEach(sec => {
     const row = document.createElement('div');
     row.className = 'pricing-section-row';
-    row.innerHTML = `
-      <div class="pricing-dot" style="background:${sec.color};"></div>
-      <div class="pricing-name">${sec.name}</div>
-      <div class="pricing-seats">${sec.seats} seats</div>
-      <div class="pricing-price">${sec.blocked ? 'Blocked' : '₹' + sec.price}</div>
-    `;
+    row.innerHTML = `<div class="pricing-dot" style="background:${sec.color};"></div><div class="pricing-name">${sec.name}</div><div class="pricing-seats">${sec.seats} seats</div><div class="pricing-price">${sec.blocked ? 'Blocked' : '₹' + sec.price}</div>`;
     list.appendChild(row);
   });
   document.getElementById('pricing-preview').style.display = 'block';
-}
-
-// ── WINDOW ──
-function selectWindow(el, days, fee) {
-  document.querySelectorAll('.window-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedWindowDays = days;
-  selectedWindowFee = fee;
-  document.getElementById('sum-window').textContent = days + ' day' + (days !== '1' ? 's' : '');
-  document.getElementById('sum-fee').textContent = fee;
-}
-
-// ── PREVIEW ──
-function buildPreview() {
-  const name = document.getElementById('ev-name').value || 'Your Event';
-  const date = document.getElementById('ev-date').value;
-  const time = document.getElementById('ev-time').value;
-  const openDate = document.getElementById('booking-open-date').value;
-  const closeDate = document.getElementById('booking-close-date').value;
-  document.getElementById('prev-name').textContent = name;
-  const d = date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' }) : '—';
-  document.getElementById('prev-datetime').textContent = '📅 ' + d + (time ? ' · ' + time : '');
-  // Update step 3 summary
-  document.getElementById('sum-open').textContent = openDate ? new Date(openDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
-  document.getElementById('sum-close').textContent = closeDate ? new Date(closeDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
-
-  const wrap = document.getElementById('prev-sections-wrap');
-  wrap.innerHTML = '';
-  if (parsedSections.length > 0) {
-    parsedSections.filter(s => !s.blocked).forEach(sec => {
-      const row = document.createElement('div');
-      row.className = 'pricing-section-row';
-      row.style.background = '#fff';
-      row.style.border = '1px solid var(--border)';
-      row.style.borderRadius = 'var(--rsm)';
-      row.style.marginBottom = '6px';
-      row.innerHTML = `
-        <div class="pricing-dot" style="background:${sec.color};"></div>
-        <div class="pricing-name">${sec.name}</div>
-        <div class="pricing-seats">${sec.seats} seats</div>
-        <div class="pricing-price">₹${sec.price}</div>
-      `;
-      wrap.appendChild(row);
-    });
-  } else if (eventMode === 'free') {
-    wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🎁 All seats available free</div>';
-  } else if (eventMode === 'open') {
-    wrap.innerHTML = '<div class="info-box green" style="margin-bottom:14px;">🚪 Free · Open Entry · First Come First Basis — no seat map shown to audience</div>';
-  }
 }
 
 // ── PUBLISH ──
@@ -913,49 +1003,61 @@ async function publishEvent() {
   const btn = document.getElementById('publish-btn');
   btn.innerHTML = '<div class="spinner"></div> Saving…';
   btn.disabled = true;
-
   try {
     const name = document.getElementById('ev-name').value.trim();
     const desc = document.getElementById('ev-desc').value.trim();
-    const date = document.getElementById('ev-date').value;
-    const time = document.getElementById('ev-time').value;
-
+    const venue = document.getElementById('ev-venue').value.trim();
     const bookingOpenDate = document.getElementById('booking-open-date').value;
     const bookingOpenTime = document.getElementById('booking-open-time').value || '00:00';
     const bookingCloseDate = document.getElementById('booking-close-date').value;
     const bookingCloseTime = document.getElementById('booking-close-time').value || '23:59';
-
     const bookingOpen = new Date(bookingOpenDate + 'T' + bookingOpenTime);
     const bookingClose = new Date(bookingCloseDate + 'T' + bookingCloseTime);
 
-    // Insert event
-    const { data: ev, error: evErr } = await sb.from('kh_events').insert({
+    let eventDate, eventTime, fromDate, toDate;
+    if (eventDuration === 'single') {
+      eventDate = document.getElementById('ev-date').value;
+      eventTime = document.getElementById('ev-time').value;
+      fromDate = eventDate;
+      toDate = eventDate;
+    } else {
+      fromDate = document.getElementById('ev-from-date').value;
+      toDate = document.getElementById('ev-to-date').value;
+      eventDate = fromDate;
+      eventTime = document.getElementById('ev-daily-time').value || '00:00';
+    }
+
+    const insertData = {
       organiser_id: currentOrg.id,
-      hall_id: HALL_ID,
+      hall_id: eventCategory === 'hall' ? selectedHallId : null,
       name,
       description: desc,
-      event_date: date,
-      event_time: time,
+      event_date: eventDate,
+      event_time: eventTime,
+      event_type: eventCategory,
+      from_date: fromDate,
+      to_date: toDate,
       mode: eventMode,
       booking_open: bookingOpen.toISOString(),
       booking_close: bookingClose.toISOString(),
       status: 'live',
       seat_price_map: window._seatPriceMap || {},
       created_at: new Date().toISOString()
-    }).select().single();
+    };
 
+    // For open ground, store venue in description or a dedicated field
+    if (eventCategory === 'open_ground') {
+      insertData.description = venue + (desc ? '\n' + desc : '');
+    }
+
+    const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select().single();
     if (evErr) throw evErr;
     createdEventId = ev.id;
 
-    // Insert sections
-    if (parsedSections.length > 0) {
+    if (parsedSections.length > 0 && eventCategory === 'hall') {
       const sectionsToInsert = parsedSections.filter(s => !s.blocked).map(sec => ({
-        event_id: ev.id,
-        name: sec.name,
-        color: sec.color,
-        price: sec.price,
-        mode: eventMode === 'free' ? 'free' : 'paid',
-        created_at: new Date().toISOString()
+        event_id: ev.id, name: sec.name, color: sec.color, price: sec.price,
+        mode: eventMode === 'free' ? 'free' : 'paid', created_at: new Date().toISOString()
       }));
       if (sectionsToInsert.length > 0) {
         const { error: secErr } = await sb.from('kh_sections').insert(sectionsToInsert);
@@ -963,7 +1065,6 @@ async function publishEvent() {
       }
     }
 
-    // Show success
     const bookingUrl = `https://khursilo.in/booking.html?event=${ev.id}`;
     document.getElementById('success-link').textContent = bookingUrl;
     showScreen('screen-success');
@@ -984,7 +1085,7 @@ function copyLink() {
 function shareWhatsApp() {
   const url = document.getElementById('success-link').textContent;
   const name = document.getElementById('ev-name').value;
-  window.open('https://wa.me/?text=' + encodeURIComponent('Book your seats for ' + name + ':\n' + url));
+  window.open('https://wa.me/?text=' + encodeURIComponent('Book your entry for ' + name + ':\n' + url));
 }
 
 function showErr(id, msg) {
