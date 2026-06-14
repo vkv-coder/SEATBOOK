@@ -239,28 +239,31 @@ window.addEventListener('DOMContentLoaded',loadEvent);
 
 // ── GOOGLE APPS SCRIPT EMAIL WEB APP URL ──
 // Paste your deployed GAS web app URL here after deploying gas-email.gs
-const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbwMA-kKeH27rdDMU0_tMs-7KEjy74UqxqUwa63xE79qC8m_NwMyZFKXptD-q8prIWhJ/exec';
+const GAS_EMAIL_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
 
 async function sendConfirmationEmail(emailAddr, bookingData) {
   if (!emailAddr || !emailAddr.includes('@')) return;
   if (!GAS_EMAIL_URL || GAS_EMAIL_URL.includes('YOUR_GAS')) return;
   try {
-    await fetch(GAS_EMAIL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: emailAddr,
-        bookerName: bookingData.bookerName,
-        eventName: bookingData.eventName,
-        eventDate: bookingData.eventDate,
-        hallName: bookingData.hallName,
-        seats: bookingData.seatKeys.join(', '),
-        amount: bookingData.amount > 0 ? '₹' + bookingData.amount : 'Free',
-        bookingId: bookingData.bookingId,
-        bookedAt: bookingData.bookedAt,
-        totalDays: bookingData.totalDays || 1,
-      })
-    });
+    // Use no-cors mode for GAS web app (avoids CORS block from GitHub Pages)
+    // GAS receives the POST but response is opaque — that's fine, fire and forget
+    const form = new FormData();
+    form.append('payload', JSON.stringify({
+      to: emailAddr,
+      bookerName: bookingData.bookerName,
+      eventName: bookingData.eventName,
+      eventDate: bookingData.eventDate,
+      hallName: bookingData.hallName,
+      seats: bookingData.seatKeys.join(', '),
+      amount: bookingData.amount > 0 ? '₹' + bookingData.amount : 'Free',
+      bookingId: bookingData.bookingId,
+      bookedAt: bookingData.bookedAt,
+      totalDays: bookingData.totalDays || 1,
+      organiserName:   bookingData.organiserName   || '',
+      organiserEmail:  bookingData.organiserEmail  || '',
+      organiserMobile: bookingData.organiserMobile || '',
+    }));
+    await fetch(GAS_EMAIL_URL, { method: 'POST', mode: 'no-cors', body: form });
   } catch(e) { console.warn('Email send failed (non-critical):', e.message); }
 }
 
@@ -592,7 +595,13 @@ async function showSuccess(name,mobile,email,seatKeys,amount){
   qrDataUrl=await generateQR(bookingId||'KHURSILO-'+Date.now());if(qrDataUrl)renderQROnCard(qrDataUrl);
   if(qrDataUrl&&bookingId)await sb.from('kh_bookings').update({qr_code:qrDataUrl}).eq('id',bookingId);
   // Send confirmation email if provided (non-blocking)
-  if(email){sendConfirmationEmail(email,{bookerName:name,eventName,eventDate:evDate,hallName,seatKeys,amount,bookingId:bookingId||'',bookedAt,totalDays:eventTotalDays});}
+  if(email){sendConfirmationEmail(email,{
+    bookerName:name, eventName, eventDate:evDate, hallName, seatKeys,
+    amount, bookingId:bookingId||'', bookedAt, totalDays:eventTotalDays,
+    organiserName:   organiserData?.contact_1_name  || '',
+    organiserEmail:  organiserData?.email_1         || '',
+    organiserMobile: organiserData?.contact_1_mobile|| '',
+  });}
   setTimeout(()=>downloadTicketPDF(),800);selectedSeats=[];updateBottomBar();
 }
 
