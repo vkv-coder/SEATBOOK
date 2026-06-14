@@ -245,7 +245,6 @@ async function sendConfirmationEmail(emailAddr, bookingData) {
   if (!emailAddr || !emailAddr.includes('@')) return;
   if (!GAS_EMAIL_URL || GAS_EMAIL_URL.includes('YOUR_GAS')) return;
   try {
-    // Use GET with URL params — most reliable way to call GAS from browser
     const params = new URLSearchParams({
       to:              emailAddr,
       bookerName:      bookingData.bookerName      || '',
@@ -261,8 +260,12 @@ async function sendConfirmationEmail(emailAddr, bookingData) {
       organiserEmail:  bookingData.organiserEmail  || '',
       organiserMobile: bookingData.organiserMobile || '',
     });
-    // Use image trick — creates a GET request that bypasses CORS entirely
-    new Image().src = GAS_EMAIL_URL + '?' + params.toString();
+    // Hidden iframe GET — bypasses CORS completely, works from any domain
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = GAS_EMAIL_URL + '?' + params.toString();
+    document.body.appendChild(iframe);
+    setTimeout(() => { if(iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 10000);
   } catch(e) { console.warn('Email send failed (non-critical):', e.message); }
 }
 
