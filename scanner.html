@@ -55,18 +55,24 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
 .scan-hint{text-align:center;font-size:13px;color:var(--muted);line-height:1.6;}
 .scan-status{text-align:center;font-size:12px;color:var(--green);font-weight:600;margin-top:6px;min-height:18px;}
 canvas{display:none;}
-/* camera start overlay */
 .cam-start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#000;z-index:5;}
 .cam-start-icon{font-size:48px;}
 .cam-start-btn{background:#fff;color:#000;border:none;border-radius:10px;padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 .cam-start-btn:active{opacity:.8;}
 .cam-err{color:var(--red);font-size:12px;text-align:center;line-height:1.6;padding:0 20px;}
-.cam-err a{color:var(--amber);}
+
+/* ── DAY SELECTOR (new for multi-day) ── */
+.day-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;}
+.day-bar-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.day-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex-wrap:wrap;}
+.day-chips::-webkit-scrollbar{display:none;}
+.day-chip{flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;}
+.day-chip.active{background:var(--text);color:#000;border-color:var(--text);}
 
 /* ── RESULT OVERLAY ── */
 .result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-end;justify-content:center;}
 .result-overlay.show{display:flex;}
-.result-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:28px 22px 36px;animation:slideUp .25s ease;}
+.result-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:28px 22px 36px;animation:slideUp .25s ease;max-height:90vh;overflow-y:auto;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .result-icon{font-size:56px;text-align:center;margin-bottom:12px;line-height:1;}
 .result-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;}
@@ -79,6 +85,27 @@ canvas{display:none;}
 .bc-row:last-child{border-bottom:none;}
 .bc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
 .bc-val{font-size:14px;font-weight:600;color:var(--text);text-align:right;max-width:200px;}
+
+/* ── DAY ATTENDANCE BOXES in result (new) ── */
+.att-days-wrap{margin-top:12px;margin-bottom:4px;}
+.att-days-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-weight:600;}
+.att-day-boxes{display:flex;flex-wrap:wrap;gap:6px;}
+.att-day-box{width:36px;height:36px;border:1.5px solid var(--border);border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;}
+.att-day-box .adb-num{font-size:11px;font-weight:700;color:var(--muted);}
+.att-day-box .adb-lbl{font-size:7px;color:var(--muted);margin-top:1px;}
+.att-day-box.attended{background:var(--green);border-color:var(--green);}
+.att-day-box.attended .adb-num,.att-day-box.attended .adb-lbl{color:#fff;}
+.att-day-box.today-pending{border-color:var(--amber);background:rgba(244,162,97,0.15);}
+.att-day-box.today-pending .adb-num{color:var(--amber);}
+.att-day-box.today-pending .adb-lbl{color:var(--amber);}
+
+/* ── MANUAL PUNCH (new) ── */
+.manual-punch-wrap{background:#1a1200;border:1px solid #3a2800;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:none;}
+.manual-punch-label{font-size:11px;color:var(--amber);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.punch-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.punch-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--amber);background:transparent;color:var(--amber);font-family:inherit;}
+.punch-chip.done{background:var(--green);border-color:var(--green);color:#fff;cursor:default;}
+
 .override-box{background:#1a0a00;border:1px solid #5a2800;border-radius:10px;padding:12px 14px;margin-bottom:14px;}
 .override-box p{font-size:12px;color:var(--amber);line-height:1.5;}
 .override-pin-row{display:flex;gap:8px;margin-top:10px;}
@@ -87,14 +114,12 @@ canvas{display:none;}
 .override-submit{background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;}
 .override-err{font-size:11px;color:var(--red);margin-top:6px;}
 
-/* ── LOADING ── */
+/* ── LOADING / ERROR ── */
 .loading-screen{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .loading-screen.active{display:flex;}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-size:13px;color:var(--muted);}
-
-/* ── ERROR SCREEN ── */
 .error-screen{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:30px;text-align:center;}
 .error-screen.active{display:flex;}
 .error-icon{font-size:40px;}
@@ -108,19 +133,17 @@ canvas{display:none;}
   <div class="ev-name" id="ev-name">Loading event…</div>
 </div>
 
-<!-- LOADING -->
 <div class="loading-screen active" id="loading-screen">
   <div class="spinner"></div>
   <div class="loading-txt">Loading event…</div>
 </div>
 
-<!-- ERROR -->
 <div class="error-screen" id="error-screen">
   <div class="error-icon">⚠️</div>
   <div class="error-msg" id="error-msg">Could not load event.</div>
 </div>
 
-<!-- SCREEN: OTP LOGIN -->
+<!-- SCREEN: OTP LOGIN (unchanged from live) -->
 <div class="screen" id="screen-otp" style="justify-content:center;">
   <div class="setup-title">Gate Checker Login</div>
   <div class="setup-sub">Enter the organiser's registered email and today's 6-digit access code. Get the code from the organiser dashboard.</div>
@@ -143,10 +166,15 @@ canvas{display:none;}
 
 <!-- SCREEN: SCANNER -->
 <div class="screen" id="screen-scan">
+  <!-- Day selector (shown only for multi-day events) -->
+  <div class="day-bar" id="day-bar">
+    <div class="day-bar-label">Scanning for day:</div>
+    <div class="day-chips" id="day-chips"></div>
+  </div>
+
   <div class="scanner-wrap" id="scanner-wrap">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
-    <!-- camera start overlay — shown until user taps Allow -->
     <div class="cam-start" id="cam-start">
       <div class="cam-start-icon">📷</div>
       <button class="cam-start-btn" onclick="requestCamera()">Tap to Start Camera</button>
@@ -170,6 +198,19 @@ canvas{display:none;}
     <div class="result-title ok" id="res-title">VALID ENTRY</div>
     <div class="result-sub" id="res-sub">Ticket verified. Allow entry.</div>
     <div class="booking-card" id="booking-card"></div>
+
+    <!-- DAY ATTENDANCE BOXES (new — shown for multi-day) -->
+    <div class="att-days-wrap" id="att-days-wrap" style="display:none;">
+      <div class="att-days-label">Attendance days</div>
+      <div class="att-day-boxes" id="att-day-boxes"></div>
+    </div>
+
+    <!-- MANUAL PUNCH (new — for multi-day) -->
+    <div class="manual-punch-wrap" id="manual-punch-wrap">
+      <div class="manual-punch-label">⬇ Manual day punch</div>
+      <div class="punch-chips" id="punch-chips"></div>
+    </div>
+
     <div class="override-box" id="override-box" style="display:none;">
       <p>⚠️ This ticket was already scanned. Enter today's 6-digit access code to override and allow entry.</p>
       <div class="override-pin-row">
@@ -192,23 +233,28 @@ const eventId = params.get('event');
 let eventData = null;
 let currentBooking = null;
 let scanning  = true;
+let eventTotalDays = 1;   // NEW
+let currentDay = 1;        // NEW — which day the scanner is operating on
 
 const OTP_KEY = 'kh_otp_' + eventId;
 
-// XSS-safe escape for user data
+// XSS-safe escape (from live version)
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// SHA-256 (unchanged from live)
 async function _sha256hex(s){
   const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
 }
 
+// Daily OTP code (unchanged from live)
 async function computeOtpCode(evId){
   const today=new Date().toLocaleDateString('en-CA');
   const hash=await _sha256hex(evId+'|'+today+'|kh_scan_auth_2026');
   return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
 }
-let wakeLock    = null;
+
+let wakeLock = null;
 let activeStream = null;
 
 async function acquireWakeLock() {
@@ -217,11 +263,10 @@ async function acquireWakeLock() {
   }
 }
 
-// Re-acquire wake lock and check camera when page becomes visible again
+// Visibility / camera restart (unchanged from live)
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible') return;
   if (!wakeLock || wakeLock.released) acquireWakeLock();
-  // If camera stream died while screen was off, show restart button
   if (activeStream) {
     const track = activeStream.getVideoTracks()[0];
     if (!track || track.readyState === 'ended') cameraInterrupted();
@@ -242,22 +287,34 @@ function cameraInterrupted() {
   }
 }
 
-
 // ── INIT ──────────────────────────────────────────────────
 async function init() {
   if (!eventId) { showError('No event ID in URL.<br>Use the link provided by Khursilo.'); return; }
 
   const { data: ev, error } = await sb.from('kh_events')
-    .select('id, name, event_date, hall_id')
+    .select('id, name, event_date, from_date, to_date, hall_id')
     .eq('id', eventId).single();
 
   if (error || !ev) { showError('Event not found or not accessible.'); return; }
   eventData = ev;
   document.getElementById('ev-name').textContent = ev.name;
 
+  // ── Compute total days (NEW) ──
+  const fromDate = ev.from_date || ev.event_date;
+  const toDate   = ev.to_date   || ev.event_date;
+  if (fromDate && toDate) {
+    const d1 = new Date(fromDate), d2 = new Date(toDate);
+    eventTotalDays = Math.max(1, Math.round((d2 - d1) / (1000*60*60*24)) + 1);
+  }
+  // Compute today's day number
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  const fromStr  = fromDate || todayStr;
+  const diffDays = Math.round((new Date(todayStr) - new Date(fromStr)) / (1000*60*60*24)) + 1;
+  currentDay = Math.max(1, Math.min(diffDays, eventTotalDays));
+
   document.getElementById('loading-screen').classList.remove('active');
 
-  // Check if OTP already verified today
+  // Check if OTP already verified today (unchanged from live)
   try {
     const saved = JSON.parse(localStorage.getItem(OTP_KEY) || 'null');
     const today = new Date().toLocaleDateString('en-CA');
@@ -279,58 +336,62 @@ function showError(msg) {
   document.getElementById('error-msg').innerHTML = msg;
 }
 
-// ── OTP VERIFY ────────────────────────────────────────────
+// ── OTP VERIFY (unchanged from live) ──────────────────────
 async function verifyOtp() {
   const email = document.getElementById('otp-email').value.trim().toLowerCase();
   const code  = document.getElementById('otp-code').value.trim();
   const errEl = document.getElementById('otp-error');
   const btn   = document.getElementById('otp-btn');
   errEl.textContent = '';
-
   if (!email) { errEl.textContent = 'Enter organiser email.'; return; }
   if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Enter the 6-digit code from organiser dashboard.'; return; }
-
   btn.textContent = 'Verifying…'; btn.disabled = true;
-
-  // Verify email belongs to this event's organiser
   const {data: evOrg} = await sb.from('kh_events')
     .select('kh_organisers!organiser_id(email_1,email_2)')
     .eq('id', eventId).maybeSingle();
-
   const org = evOrg?.kh_organisers;
   const e1  = (org?.email_1 || '').toLowerCase();
   const e2  = (org?.email_2 || '').toLowerCase();
-
   if (!e1 || (email !== e1 && email !== e2)) {
     errEl.textContent = 'Email not registered for this event.';
     btn.textContent = 'Activate Scanner →'; btn.disabled = false;
     return;
   }
-
   const expected = await computeOtpCode(eventId);
   if (code !== expected) {
     errEl.textContent = 'Incorrect code. Check organiser dashboard for today\'s code.';
     btn.textContent = 'Activate Scanner →'; btn.disabled = false;
     return;
   }
-
-  // Store verification for today
   localStorage.setItem(OTP_KEY, JSON.stringify({date: new Date().toLocaleDateString('en-CA')}));
   startScanner();
 }
 
-function _unused_nkDel() {
-  // kept as placeholder to avoid removing DOM refs
-  void 0;
-  void 0; // placeholder
-}
-
-// ── CAMERA / SCANNER ──────────────────────────────────────
+// ── SCANNER START (NEW: build day chips if multi-day) ──────
 function startScanner() {
+  // Build day selector for multi-day events
+  if (eventTotalDays > 1) {
+    const dayBar = document.getElementById('day-bar');
+    dayBar.style.display = 'block';
+    const chips = document.getElementById('day-chips');
+    chips.innerHTML = '';
+    for (let d = 1; d <= eventTotalDays; d++) {
+      const chip = document.createElement('button');
+      chip.className = 'day-chip' + (d === currentDay ? ' active' : '');
+      chip.textContent = 'Day ' + d;
+      chip.onclick = () => setCurrentDay(d);
+      chips.appendChild(chip);
+    }
+  }
   showScreen('screen-scan');
-  // show tap-to-start overlay; user must grant permission via tap
 }
 
+function setCurrentDay(d) {
+  currentDay = d;
+  document.querySelectorAll('.day-chip').forEach((c, i) => c.classList.toggle('active', i + 1 === d));
+}
+
+// ── CAMERA (unchanged from live) ──────────────────────────
 async function requestCamera() {
   const btn    = document.querySelector('.cam-start-btn');
   const errEl  = document.getElementById('cam-err');
@@ -340,85 +401,45 @@ async function requestCamera() {
   btn.textContent = 'Starting camera…';
   btn.disabled = true;
   errEl.innerHTML = '';
-
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     errEl.innerHTML = 'Camera not supported.<br>Open this page in Chrome or Safari.';
     btn.textContent = 'Try Again'; btn.disabled = false;
     return;
   }
-
-  // 12-second timeout in case getUserMedia hangs silently
   let done = false;
   const hangTimer = setTimeout(() => {
-    if (!done) {
-      done = true;
-      btn.textContent = 'Try Again'; btn.disabled = false;
-      errEl.innerHTML = '⏱ Camera took too long.<br>Reload the page and try again, or use Chrome.';
-    }
+    if (!done) { done = true; btn.textContent = 'Try Again'; btn.disabled = false; errEl.innerHTML = '⏱ Camera took too long.<br>Reload and try again, or use Chrome.'; }
   }, 12000);
-
   try {
-    // Try back camera first, fall back to any camera
     let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } }
-      });
-    } catch(_) {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    }
-
+    try { stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: 'environment'}}}); }
+    catch(_) { stream = await navigator.mediaDevices.getUserMedia({video: true}); }
     if (done) { stream.getTracks().forEach(t => t.stop()); return; }
-    done = true;
-    clearTimeout(hangTimer);
-
-    // set all attrs programmatically for Android compatibility
-    video.muted      = true;
-    video.playsInline = true;
-    video.srcObject  = stream;
-
-    // hide overlay immediately so video area is visible
+    done = true; clearTimeout(hangTimer);
+    video.muted = true; video.playsInline = true; video.srcObject = stream;
     document.getElementById('cam-start').style.display  = 'none';
     document.getElementById('scan-frame').style.display = 'flex';
     document.getElementById('scan-hint').textContent    = 'Point camera at the QR code on the ticket';
-
-    // attempt play with retry
-    for (let i = 0; i < 3; i++) {
-      try { await video.play(); break; } catch(_) {
-        await new Promise(r => setTimeout(r, 400));
-      }
-    }
-
-    // wait for actual video data, up to 5s
+    for (let i = 0; i < 3; i++) { try { await video.play(); break; } catch(_) { await new Promise(r => setTimeout(r, 400)); } }
     await new Promise(resolve => {
       if (video.readyState >= 2) { resolve(); return; }
-      video.addEventListener('playing',    resolve, { once: true });
-      video.addEventListener('canplay',    resolve, { once: true });
-      video.addEventListener('loadeddata', resolve, { once: true });
+      video.addEventListener('playing',    resolve, {once: true});
+      video.addEventListener('canplay',    resolve, {once: true});
+      video.addEventListener('loadeddata', resolve, {once: true});
       setTimeout(resolve, 5000);
     });
-
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
-
-    // keep screen awake
     acquireWakeLock();
-
-    // save stream reference + watch for stream dying
     activeStream = stream;
-    stream.getVideoTracks().forEach(track => {
-      track.onended = () => cameraInterrupted();
-    });
-
+    stream.getVideoTracks().forEach(track => { track.onended = () => cameraInterrupted(); });
     requestAnimationFrame(() => scanFrame(video, canvas, ctx));
-
   } catch(e) {
     clearTimeout(hangTimer);
     if (done) return;
-    done = true;
-    btn.textContent = 'Try Again'; btn.disabled = false;
+    done = true; btn.textContent = 'Try Again'; btn.disabled = false;
     if (e.name === 'NotAllowedError') {
-      errEl.innerHTML = '❌ Camera permission denied.<br>Tap the lock 🔒 in address bar → Camera → Allow → reload.';
+      errEl.innerHTML = '❌ Camera permission denied.<br>Tap 🔒 in address bar → Camera → Allow → reload.';
     } else if (e.name === 'NotFoundError') {
       errEl.innerHTML = '❌ No camera found on this device.';
     } else {
@@ -434,11 +455,10 @@ function scanFrame(video, canvas, ctx) {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    const code = jsQR(img.data, img.width, img.height, {inversionAttempts: 'dontInvert'});
     if (code && code.data && scanning) {
       const val = code.data.trim();
       const now = Date.now();
-      // debounce: don't re-process same QR within 4 seconds
       if (val !== lastScanned || now - lastScannedTime > 4000) {
         lastScanned = val;
         lastScannedTime = now;
@@ -451,113 +471,221 @@ function scanFrame(video, canvas, ctx) {
   requestAnimationFrame(() => scanFrame(video, canvas, ctx));
 }
 
-// ── PROCESS BOOKING ───────────────────────────────────────
+// ── PROCESS BOOKING (enhanced for multi-day) ──────────────
 async function processBooking(bookingId) {
   document.getElementById('scan-status').textContent = 'Checking ticket…';
-
   try {
     const { data: bk, error } = await sb.from('kh_bookings')
       .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden')
       .eq('id', bookingId).single();
 
-    if (error || !bk) {
-      showResult('invalid', null, bookingId);
-      return;
+    if (error || !bk) { showResult('invalid', null, bookingId); return; }
+    if (bk.event_id !== eventId) { showResult('wrong-event', bk, bookingId); return; }
+    if (bk.status !== 'confirmed') { showResult('not-confirmed', bk, bookingId); return; }
+
+    if (eventTotalDays <= 1) {
+      // ── SINGLE-DAY logic (unchanged from live) ──
+      if (bk.entry_scanned_at) { showResult('already-used', bk, bookingId); return; }
+      const { data: updated, error: upErr } = await sb.from('kh_bookings')
+        .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: 1 })
+        .eq('id', bookingId).is('entry_scanned_at', null).select().single();
+      if (upErr || !updated) {
+        const { data: refetch } = await sb.from('kh_bookings')
+          .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden')
+          .eq('id', bookingId).single();
+        showResult('already-used', refetch, bookingId); return;
+      }
+      showResult('valid', updated, bookingId);
+    } else {
+      // ── MULTI-DAY logic (NEW) ──
+      // Check attendance for today's day
+      const { data: todayAtt } = await sb.from('kh_attendance')
+        .select('id').eq('booking_id', bookingId).eq('event_id', eventId).eq('day_number', currentDay);
+      const alreadyToday = todayAtt && todayAtt.length > 0;
+
+      // Fetch all attendance days for this booking
+      const { data: allAtt } = await sb.from('kh_attendance')
+        .select('day_number').eq('booking_id', bookingId).eq('event_id', eventId);
+      const attendedDays = (allAtt || []).map(a => a.day_number);
+
+      currentBooking = { ...bk, attendedDays, alreadyToday };
+
+      if (alreadyToday) {
+        showResult('already-used', bk, bookingId, attendedDays); return;
+      }
+
+      // Valid — allow entry for today
+      showResult('valid', bk, bookingId, attendedDays);
     }
-
-    if (bk.event_id !== eventId) {
-      showResult('wrong-event', bk, bookingId);
-      return;
-    }
-
-    if (bk.status !== 'confirmed') {
-      showResult('not-confirmed', bk, bookingId);
-      return;
-    }
-
-    if (bk.entry_scanned_at) {
-      showResult('already-used', bk, bookingId);
-      return;
-    }
-
-    // ── FIRST TIME SCAN — mark used atomically ──
-    const { data: updated, error: upErr } = await sb.from('kh_bookings')
-      .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: 1 })
-      .eq('id', bookingId)
-      .is('entry_scanned_at', null)
-      .select().single();
-
-    if (upErr || !updated) {
-      // Another device beat us to it — re-fetch to show actual state
-      const { data: refetch } = await sb.from('kh_bookings')
-        .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden')
-        .eq('id', bookingId).single();
-      showResult('already-used', refetch, bookingId);
-      return;
-    }
-
-    showResult('valid', updated, bookingId);
-
   } catch(e) {
     document.getElementById('scan-status').textContent = 'Network error — retrying…';
     setTimeout(() => processBooking(bookingId), 2000);
   }
 }
 
-// ── SHOW RESULT ───────────────────────────────────────────
-function showResult(type, bk, rawId) {
+// ── SHOW RESULT (enhanced for multi-day) ──────────────────
+function showResult(type, bk, rawId, attendedDays) {
   document.getElementById('scan-status').textContent = '';
-  currentBooking = bk;
+  if (!currentBooking || eventTotalDays <= 1) currentBooking = bk;
 
-  const icon   = document.getElementById('res-icon');
-  const title  = document.getElementById('res-title');
-  const sub    = document.getElementById('res-sub');
-  const card   = document.getElementById('booking-card');
-  const ovrBox = document.getElementById('override-box');
-  const nextBtn= document.getElementById('res-next-btn');
+  const icon    = document.getElementById('res-icon');
+  const title   = document.getElementById('res-title');
+  const sub     = document.getElementById('res-sub');
+  const card    = document.getElementById('booking-card');
+  const ovrBox  = document.getElementById('override-box');
+  const nextBtn = document.getElementById('res-next-btn');
+  const attWrap = document.getElementById('att-days-wrap');
+  const mpWrap  = document.getElementById('manual-punch-wrap');
   ovrBox.style.display = 'none';
+  attWrap.style.display = 'none';
+  mpWrap.style.display = 'none';
   document.getElementById('override-err').textContent = '';
   document.getElementById('override-pin').value = '';
   nextBtn.className = 'action-btn success';
   nextBtn.textContent = 'Scan Next Ticket';
 
   if (type === 'valid') {
-    icon.textContent   = '✅';
-    title.textContent  = 'VALID — ALLOW ENTRY';
-    title.className    = 'result-title ok';
-    sub.textContent    = 'First time scan. Ticket is genuine.';
-    card.innerHTML     = buildCard(bk);
+    icon.textContent  = '✅';
+    title.className   = 'result-title ok';
+    if (eventTotalDays > 1) {
+      title.textContent = 'ALLOW — DAY ' + currentDay;
+      sub.textContent   = 'First scan for Day ' + currentDay + '. Record entry.';
+    } else {
+      title.textContent = 'VALID — ALLOW ENTRY';
+      sub.textContent   = 'First time scan. Ticket is genuine.';
+    }
+    card.innerHTML = buildCard(bk);
+    // Show day boxes for multi-day
+    if (eventTotalDays > 1 && attendedDays !== undefined) {
+      buildAttDayBoxes(attendedDays, currentDay, true);
+      // Show confirm button instead of auto-recording (safer for multi-day)
+      nextBtn.textContent = '✅ Record Day ' + currentDay + ' Entry';
+      nextBtn.className = 'action-btn success';
+      nextBtn.onclick = () => confirmDayEntry(bk.id, attendedDays);
+      // Show manual punch for other days
+      buildManualPunch(bk.id, attendedDays);
+    }
   } else if (type === 'already-used') {
-    icon.textContent   = '❌';
-    title.textContent  = 'ALREADY USED';
-    title.className    = 'result-title fail';
-    const t = bk && bk.entry_scanned_at ? formatTime(bk.entry_scanned_at) : 'earlier';
-    sub.textContent    = 'This ticket was already scanned at ' + t;
-    card.innerHTML     = bk ? buildCard(bk) : '<div style="padding:10px;color:#888;font-size:13px;">Booking ID: ' + rawId + '</div>';
+    icon.textContent  = '❌';
+    title.className   = 'result-title fail';
+    if (eventTotalDays > 1) {
+      title.textContent = 'ALREADY IN — DAY ' + currentDay;
+      sub.textContent   = 'This ticket already entered on Day ' + currentDay + '.';
+    } else {
+      const t = bk && bk.entry_scanned_at ? formatTime(bk.entry_scanned_at) : 'earlier';
+      title.textContent = 'ALREADY USED';
+      sub.textContent   = 'This ticket was already scanned at ' + t;
+    }
+    card.innerHTML  = bk ? buildCard(bk) : '<div style="padding:10px;color:#888;font-size:13px;">Booking ID: ' + rawId + '</div>';
+    // Multi-day: show day boxes + override + manual punch for other days
+    if (eventTotalDays > 1 && attendedDays !== undefined) {
+      buildAttDayBoxes(attendedDays, currentDay, false);
+      buildManualPunch(bk.id, attendedDays);
+    }
     ovrBox.style.display = 'block';
-    nextBtn.className  = 'action-btn danger';
+    nextBtn.className = 'action-btn danger';
     nextBtn.textContent = 'Reject & Scan Next';
+    nextBtn.onclick = () => closeResult();
   } else if (type === 'wrong-event') {
-    icon.textContent   = '⛔';
-    title.textContent  = 'WRONG EVENT';
-    title.className    = 'result-title fail';
-    sub.textContent    = 'This ticket is for a different event.';
-    card.innerHTML     = bk ? buildCard(bk) : '';
+    icon.textContent  = '⛔';
+    title.textContent = 'WRONG EVENT';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'This ticket is for a different event.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
   } else if (type === 'not-confirmed') {
-    icon.textContent   = '⛔';
-    title.textContent  = 'BOOKING NOT CONFIRMED';
-    title.className    = 'result-title fail';
-    sub.textContent    = 'Payment may be pending. Do not allow entry.';
-    card.innerHTML     = bk ? buildCard(bk) : '';
+    icon.textContent  = '⛔';
+    title.textContent = 'BOOKING NOT CONFIRMED';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'Payment may be pending. Do not allow entry.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
   } else {
-    icon.textContent   = '❓';
-    title.textContent  = 'INVALID QR CODE';
-    title.className    = 'result-title fail';
-    sub.textContent    = 'Ticket not found in system. Verify manually.';
-    card.innerHTML     = '<div style="padding:8px;font-size:11px;color:#888;word-break:break-all;">Scanned: ' + rawId + '</div>';
+    icon.textContent  = '❓';
+    title.textContent = 'INVALID QR CODE';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'Ticket not found in system. Verify manually.';
+    card.innerHTML    = '<div style="padding:8px;font-size:11px;color:#888;word-break:break-all;">Scanned: ' + rawId + '</div>';
   }
-
   document.getElementById('result-overlay').classList.add('show');
+}
+
+// Build attendance day boxes (NEW)
+function buildAttDayBoxes(attendedDays, todayDay, isPending) {
+  if (eventTotalDays <= 1) return;
+  const wrap = document.getElementById('att-days-wrap');
+  const boxes = document.getElementById('att-day-boxes');
+  wrap.style.display = 'block';
+  boxes.innerHTML = '';
+  for (let d = 1; d <= eventTotalDays; d++) {
+    const box = document.createElement('div');
+    const attended = attendedDays.includes(d);
+    const isToday  = d === todayDay;
+    if (isToday && isPending) box.className = 'att-day-box today-pending';
+    else if (attended)        box.className = 'att-day-box attended';
+    else                      box.className = 'att-day-box';
+    box.innerHTML = `<div class="adb-num">${d}</div><div class="adb-lbl">${attended ? '✓' : isToday && isPending ? 'NOW' : ''}</div>`;
+    boxes.appendChild(box);
+  }
+}
+
+// Manual punch for other days (NEW)
+function buildManualPunch(bookingId, attendedDays) {
+  if (eventTotalDays <= 1) return;
+  const wrap = document.getElementById('manual-punch-wrap');
+  const chips = document.getElementById('punch-chips');
+  wrap.style.display = 'block';
+  chips.innerHTML = '';
+  for (let d = 1; d <= eventTotalDays; d++) {
+    const already = attendedDays.includes(d);
+    const chip = document.createElement('button');
+    chip.className = 'punch-chip' + (already ? ' done' : '');
+    chip.textContent = (already ? '✓ ' : '') + 'Day ' + d;
+    if (!already) {
+      chip.onclick = async () => {
+        chip.textContent = '…'; chip.disabled = true;
+        await punchAttendance(bookingId, d, true);
+        chip.textContent = '✓ Day ' + d;
+        chip.className = 'punch-chip done';
+        attendedDays.push(d);
+        buildAttDayBoxes(attendedDays, currentDay, false);
+      };
+    }
+    chips.appendChild(chip);
+  }
+}
+
+// Confirm day entry (multi-day valid result) (NEW)
+async function confirmDayEntry(bookingId, attendedDays) {
+  const btn = document.getElementById('res-next-btn');
+  btn.textContent = 'Recording…'; btn.disabled = true;
+  await punchAttendance(bookingId, currentDay, false);
+  // Also update entry_scanned_at on first-ever scan
+  try {
+    await sb.from('kh_bookings')
+      .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: (attendedDays.length + 1) })
+      .eq('id', bookingId).is('entry_scanned_at', null);
+  } catch(_) {}
+  attendedDays.push(currentDay);
+  buildAttDayBoxes(attendedDays, currentDay, false);
+  btn.textContent = '✅ Recorded! Scan Next';
+  btn.disabled = false;
+  btn.onclick = () => closeResult();
+  setTimeout(() => closeResult(), 3000);
+}
+
+// Write to kh_attendance (NEW)
+async function punchAttendance(bookingId, dayNum, manual) {
+  try {
+    await sb.from('kh_attendance').insert({
+      booking_id: bookingId,
+      event_id: eventId,
+      day_number: dayNum,
+      scanned_at: new Date().toISOString(),
+      scanned_by: 'scanner',
+      manually_punched: manual
+    });
+  } catch(e) {
+    if (!e.message?.includes('duplicate') && e.code !== '23505') console.error('Punch error:', e);
+  }
 }
 
 function buildCard(bk) {
@@ -575,37 +703,40 @@ function buildCard(bk) {
 function formatTime(ts) {
   if (!ts) return '—';
   const d = new Date(ts);
-  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) +
-         ' on ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  return d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:true}) +
+         ' on ' + d.toLocaleDateString('en-IN', {day:'numeric',month:'short'});
 }
 
 function closeResult() {
   document.getElementById('result-overlay').classList.remove('show');
   document.getElementById('scan-status').textContent = '';
+  document.getElementById('res-next-btn').onclick = () => closeResult();
   scanning = true;
 }
 
-// ── OVERRIDE ──────────────────────────────────────────────
+// ── OVERRIDE (unchanged from live) ────────────────────────
 async function doOverride() {
-  const entered   = document.getElementById('override-pin').value.trim();
-  const expected  = await computeOtpCode(eventId);
-  const errEl     = document.getElementById('override-err');
-
+  const entered  = document.getElementById('override-pin').value.trim();
+  const expected = await computeOtpCode(eventId);
+  const errEl    = document.getElementById('override-err');
   if (entered !== expected) {
     errEl.textContent = 'Incorrect code.';
     document.getElementById('override-pin').value = '';
     return;
   }
-
   if (!currentBooking) return;
   errEl.textContent = '';
-
   try {
     await sb.from('kh_bookings').update({
       entry_scanned_at: currentBooking.entry_scanned_at || new Date().toISOString(),
       entry_scan_count: (currentBooking.entry_scan_count || 0) + 1,
       entry_overridden: true
     }).eq('id', currentBooking.id);
+
+    // For multi-day, also punch this day
+    if (eventTotalDays > 1) {
+      await punchAttendance(currentBooking.id, currentDay, false);
+    }
 
     document.getElementById('res-icon').textContent = '✅';
     document.getElementById('res-title').textContent = 'OVERRIDE — ENTRY ALLOWED';
@@ -614,6 +745,7 @@ async function doOverride() {
     document.getElementById('override-box').style.display = 'none';
     document.getElementById('res-next-btn').className = 'action-btn success';
     document.getElementById('res-next-btn').textContent = 'Scan Next Ticket';
+    document.getElementById('res-next-btn').onclick = () => closeResult();
   } catch(e) {
     errEl.textContent = 'Network error. Try again.';
   }
