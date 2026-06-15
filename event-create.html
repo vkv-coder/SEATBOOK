@@ -50,6 +50,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .input-field::placeholder { color: #bbb; }
 .input-field:disabled { opacity: 0.6; cursor: not-allowed; }
 .field-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+/* IMAGE UPLOAD */
+.img-upload-zone{border:2px dashed var(--border2);border-radius:var(--rsm);overflow:hidden;cursor:pointer;transition:all 0.2s;background:var(--surface2);position:relative;}
+.img-upload-zone:hover{border-color:var(--accent);}
+.img-upload-zone.has-image{border-style:solid;border-color:var(--green);}
+.img-upload-placeholder{padding:24px;text-align:center;}
+.img-upload-icon{font-size:32px;margin-bottom:8px;}
+.img-upload-text{font-size:13px;font-weight:500;color:var(--text);}
+.img-upload-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.img-preview{width:100%;aspect-ratio:16/7;object-fit:cover;display:block;}
+.img-remove-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .hall-chip { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--rsm); padding: 11px 14px; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
 .hall-chip-icon { font-size: 16px; }
 
@@ -284,6 +294,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div class="field-label">Venue / Location <span>*</span></div>
         <input class="input-field" type="text" id="ev-venue" placeholder="e.g. Race Course Maidan, Vadodara">
       </div>
+    </div>
+
+    <!-- Event Poster / Banner Image -->
+    <div class="form-card">
+      <div class="form-card-title">🖼️ Event poster / banner <span style="font-size:11px;color:var(--muted);font-weight:400;">(optional)</span></div>
+      <div class="info-box blue" style="margin-bottom:12px;font-size:11px;">
+        Upload a poster or cast photo. Shown on event listing and booking page. Recommended: landscape 16:9 (e.g. 1200×525px).
+      </div>
+      <div class="img-upload-zone" id="img-upload-zone" onclick="document.getElementById('img-file-input').click()">
+        <div class="img-upload-placeholder" id="img-placeholder">
+          <div class="img-upload-icon">🖼️</div>
+          <div class="img-upload-text">Tap to upload poster / banner</div>
+          <div class="img-upload-sub">JPG, PNG, WebP · Max 2MB</div>
+        </div>
+        <img class="img-preview" id="img-preview" src="" alt="" style="display:none;">
+        <button class="img-remove-btn" id="img-remove-btn" onclick="removeImage(event)" style="display:none;">✕ Remove</button>
+      </div>
+      <input type="file" id="img-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleImageUpload(this)">
     </div>
 
     <!-- Duration: Single or Multi-day -->
@@ -630,6 +658,52 @@ let createdEventId = null;
 
 const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891b2','#d97706','#059669'];
 
+// ── IMAGE UPLOAD ──
+let uploadedImageFile = null;
+let uploadedImageUrl = null;
+
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('Image too large. Max 2MB.'); return; }
+  uploadedImageFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('img-preview').src = e.target.result;
+    document.getElementById('img-preview').style.display = 'block';
+    document.getElementById('img-placeholder').style.display = 'none';
+    document.getElementById('img-remove-btn').style.display = 'block';
+    document.getElementById('img-upload-zone').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(e) {
+  e.stopPropagation();
+  uploadedImageFile = null;
+  uploadedImageUrl = null;
+  document.getElementById('img-preview').src = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-placeholder').style.display = 'block';
+  document.getElementById('img-remove-btn').style.display = 'none';
+  document.getElementById('img-upload-zone').classList.remove('has-image');
+  document.getElementById('img-file-input').value = '';
+}
+
+async function uploadEventImage(eventId) {
+  if (!uploadedImageFile) return null;
+  try {
+    const ext = uploadedImageFile.name.split('.').pop().toLowerCase();
+    const path = `events/${eventId}.${ext}`;
+    const { error } = await sb.storage
+      .from('event-images')
+      .upload(path, uploadedImageFile, { upsert: true, contentType: uploadedImageFile.type });
+    if (error) { console.warn('Image upload error:', error.message); return null; }
+    const { data } = sb.storage.from('event-images').getPublicUrl(path);
+    return data.publicUrl;
+  } catch(e) { console.warn('Image upload failed:', e.message); return null; }
+}
+
 // ── CANCELLATION POLICY ──
 const DEFAULT_POLICY = [
   { days: 7, refund: 100 },
@@ -787,6 +861,8 @@ function startCreateEvent() {
   document.getElementById('excel-zone').className = 'excel-zone';
   document.getElementById('zone-text').textContent = 'Tap to upload filled Excel';
   document.getElementById('pricing-preview').style.display = 'none';
+  uploadedImageFile = null;
+  uploadedImageUrl = null;
   selectCategory('hall');
   selectDuration('single');
   selectMode('paid');
@@ -1136,6 +1212,14 @@ async function publishEvent() {
     const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select().single();
     if (evErr) throw evErr;
     createdEventId = ev.id;
+
+    // ── Upload event image if provided ──
+    if (uploadedImageFile) {
+      const imgUrl = await uploadEventImage(ev.id);
+      if (imgUrl) {
+        await sb.from('kh_events').update({ image_url: imgUrl }).eq('id', ev.id);
+      }
+    }
 
     if (parsedSections.length > 0 && eventCategory === 'hall') {
       const sectionsToInsert = parsedSections.filter(s => !s.blocked).map(sec => ({
