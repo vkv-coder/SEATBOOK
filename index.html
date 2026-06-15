@@ -64,11 +64,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .events-list { display: flex; flex-direction: column; gap: 10px; }
 .event-card {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 16px;
-  display: flex; align-items: center; gap: 14px;
+  border-radius: var(--radius); overflow: hidden;
   text-decoration: none; color: var(--text);
+  display: block;
 }
 .event-card:active { border-color: var(--text); }
+.event-card-banner { width:100%; aspect-ratio:16/7; object-fit:cover; display:block; background:var(--border); }
+.event-card-banner-placeholder { width:100%; aspect-ratio:16/7; background:linear-gradient(135deg,#1a1a1a 0%,#333 100%); display:flex; align-items:center; justify-content:center; }
+.event-card-body { padding: 12px 14px; display:flex; align-items:center; gap:12px; }
 .event-date-box {
   background: var(--text); color: #fff;
   border-radius: 8px; padding: 8px 10px;
@@ -174,7 +177,7 @@ async function loadEvents() {
 
     const { data: events, error } = await sb
       .from('kh_events')
-      .select('id, name, event_date, event_time, hall_id, mode')
+      .select('id, name, event_date, event_time, hall_id, mode, image_url')
       .in('status', ['live', 'published', 'active', 'open'])
       .gte('event_date', today)
       .order('event_date', { ascending: true })
@@ -210,17 +213,23 @@ async function loadEvents() {
       const card = document.createElement('a');
       card.className = 'event-card';
       card.href = 'booking.html?event=' + ev.id + '&v=22';
+      const bannerHtml = ev.image_url
+        ? `<img class="event-card-banner" src="${ev.image_url}" alt="${ev.name}" loading="lazy" onerror="this.parentNode.removeChild(this)">`
+        : '';
       card.innerHTML = `
-        <div class="event-date-box">
-          <div class="edb-day">${day}</div>
-          <div class="edb-mon">${mon}</div>
+        ${bannerHtml}
+        <div class="event-card-body">
+          <div class="event-date-box">
+            <div class="edb-day">${day}</div>
+            <div class="edb-mon">${mon}</div>
+          </div>
+          <div class="event-info">
+            <div class="mode-badge ${badge.cls}">${badge.label}</div>
+            <div class="event-name">${ev.name}</div>
+            <div class="event-meta">${[hall, time].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div class="event-arrow">→</div>
         </div>
-        <div class="event-info">
-          <div class="mode-badge ${badge.cls}">${badge.label}</div>
-          <div class="event-name">${ev.name}</div>
-          <div class="event-meta">${[hall, time].filter(Boolean).join(' · ')}</div>
-        </div>
-        <div class="event-arrow">→</div>
       `;
       list.appendChild(card);
     });
