@@ -17,7 +17,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 .event-card{background:var(--white);border-bottom:1px solid var(--border);padding:12px 14px;}
 .ev-name{font-size:15px;font-weight:600;margin-bottom:2px;}
 .ev-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
-/* Multi-day badge */
+/* Event banner image */
+.event-banner-img{width:100%;aspect-ratio:16/7;object-fit:cover;display:block;}
 .ev-days-badge{display:inline-flex;align-items:center;gap:5px;background:#1a1a1a;color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-top:6px;}
 .sec-tabs-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:0 14px;overflow-x:auto;display:flex;gap:6px;scrollbar-width:none;}
 .sec-tabs-wrap::-webkit-scrollbar{display:none;}
@@ -124,6 +125,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="ev-meta"><span id="ev-date">—</span><span id="ev-hall">—</span></div>
   <div id="ev-days-badge-wrap" style="display:none;margin-top:6px;"></div>
   <div id="ev-organiser" style="display:none;font-size:12px;margin-top:6px;color:var(--muted);"></div>
+</div>
+<!-- Event banner image — shown if organiser uploaded one -->
+<div id="ev-banner-wrap" style="display:none;">
+  <img id="ev-banner-img" class="event-banner-img" src="" alt="" loading="lazy">
 </div>
 <div class="sec-tabs-wrap" id="sec-tabs">
   <button class="sec-tab active" data-sec="ALL" onclick="filterSection('ALL',this)">All seats</button>
@@ -330,6 +335,15 @@ async function loadEvent(){
     }
 
     document.getElementById('ev-name').textContent=ev.name;
+
+    // ── Show banner image if available ──
+    if(ev.image_url){
+      const bw=document.getElementById('ev-banner-wrap');
+      const bi=document.getElementById('ev-banner-img');
+      bi.src=ev.image_url;
+      bi.alt=ev.name;
+      bw.style.display='block';
+    }
 
     // ── Date display (multi-day aware) ──
     const fmtD=d=>new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
