@@ -284,6 +284,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </div>
+  <div style="background:var(--white);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:12px;color:var(--muted);">Showing active events only</div>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--muted);">
+      <input type="checkbox" id="toggle-show-all" onchange="loadDashboard()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;">
+      Show cancelled / past
+    </label>
+  </div>
   <div class="dash-body" id="dash-body">
     <div class="loading-card">
       <div class="loading-spinner"></div>
@@ -483,11 +490,16 @@ async function loadDashboard(){
   const body = document.getElementById('dash-body');
   body.innerHTML = '<div class="loading-card"><div class="loading-spinner"></div><div class="loading-text">Loading your events…</div></div>';
 
-  // 1. Fetch all events for this organiser
-  const {data:events, error:evErr} = await sb.from('kh_events')
+  // 1. Fetch events for this organiser
+  const showAll = document.getElementById('toggle-show-all')?.checked;
+  let query = sb.from('kh_events')
     .select('*')
     .eq('organiser_id', currentOrganiser.id)
     .order('event_date', {ascending: true});
+  if(!showAll){
+    query = query.in('status', ['active','live','open','published','upcoming']);
+  }
+  const {data:events, error:evErr} = await query;
 
   if(evErr || !events){
     body.innerHTML = '<div class="empty-card"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load events</div><div class="empty-sub">'+( evErr?.message||'Unknown error')+'</div></div>';
