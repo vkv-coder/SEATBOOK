@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
 :root{--bg:#f5f5f3;--white:#fff;--s2:#f0eeea;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);--text:#1a1a1a;--muted:#888;--accent:#c8860a;--green:#2e9e60;--red:#cc3333;--radius:12px;--rsm:8px;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -143,6 +144,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     📱 <strong>Show this QR at the gate.</strong> You can open this link again anytime — no screenshot needed. Works every time.
   </div>
 
+  <!-- FOOD SECTION — shown only if food available and before event date -->
+  <div id="food-section" style="display:none;width:100%;">
+
+    <!-- Previous food orders -->
+    <div id="food-prev-orders" style="display:none;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">🍽 Your food orders</div>
+      <div id="food-prev-list"></div>
+    </div>
+
+    <!-- New order -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;">
+      <div style="background:linear-gradient(135deg,#c84010 0%,#e05520 100%);color:#fff;padding:14px 16px;">
+        <div style="font-size:11px;opacity:0.8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Advance offer · Today only</div>
+        <div style="font-size:17px;font-weight:700;" id="food-combo-title">—</div>
+        <div style="font-size:12px;opacity:0.85;margin-top:3px;" id="food-free-badge">—</div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <div style="font-size:22px;font-weight:700;color:var(--text);" id="food-price-display">₹—</div>
+            <div style="font-size:12px;color:var(--muted);text-decoration:line-through;" id="food-orig-display"></div>
+            <div style="font-size:11px;color:var(--green);font-weight:500;" id="food-saving-display"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0;background:var(--s2);border-radius:var(--rsm);border:1px solid var(--border2);overflow:hidden;">
+            <button onclick="foodQtyChange(-1)" style="width:36px;height:36px;border:none;background:none;font-size:20px;cursor:pointer;color:var(--text);font-weight:300;">−</button>
+            <div id="food-qty-display" style="width:32px;text-align:center;font-size:16px;font-weight:700;color:var(--text);">1</div>
+            <button onclick="foodQtyChange(1)" style="width:36px;height:36px;border:none;background:none;font-size:20px;cursor:pointer;color:var(--text);font-weight:300;">+</button>
+          </div>
+        </div>
+        <div style="background:var(--s2);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;" id="food-order-summary">—</div>
+        <button onclick="bookFood()" id="food-book-btn" style="width:100%;padding:13px;background:#c84010;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+          Book Food →
+        </button>
+        <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px;">Advance booking discount · Not available on event day</div>
+      </div>
+    </div>
+  </div>
+
   <button class="download-btn" id="download-btn" onclick="downloadPDF()">⬇ Download Ticket PDF</button>
   <button class="home-btn" onclick="window.location.href='index.html'">← Back to home</button>
 </div>
@@ -246,10 +285,12 @@ async function loadTicket(){
   const bookedAt=fmtTs(booking.created_at);
   ticketData={
     bookingId,
+    eventId:ev.id,
     eventName:ev.name||'Event',
     eventDate:fmtDate(ev.event_date)+fmtTime(ev.event_time),
     hallName,
     bookerName:booking.booker_name||'—',
+    bookerMobile:booking.booker_mobile||'',
     persons,
     personsLabel,
     amount:booking.amount||0,
@@ -281,6 +322,9 @@ async function loadTicket(){
   // Show ticket
   document.getElementById('loading-screen').style.display='none';
   document.getElementById('ticket-wrap').classList.add('show');
+
+  // Load food section if available and before event date
+  if(!isPending) await loadFoodSection(ev);
 }
 
 function generateQR(id){
@@ -293,6 +337,172 @@ function generateQR(id){
       r(can?can.toDataURL('image/png'):img?img.src:null);
     },300);
   });
+}
+
+// ── FOOD PRE-BOOKING ──
+let foodItem = null;
+let foodQty = 1;
+
+async function loadFoodSection(eventData){
+  // Only show if event is in the future (not on event day or after)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const evDate = new Date(eventData.event_date); evDate.setHours(0,0,0,0);
+  if(evDate <= today) return; // Event day or past — no food booking
+
+  // Load food item for this event
+  const {data:fi} = await sb.from('kh_food_items')
+    .select('*').eq('event_id',eventData.id).eq('is_active',true).maybeSingle();
+  if(!fi) return;
+  foodItem = fi;
+
+  // Load previous food orders for this booking
+  await loadPrevFoodOrders();
+
+  // Populate UI
+  const freeLabel = fi.free_item_name ? fi.free_item_name+' FREE' : '';
+  document.getElementById('food-combo-title').textContent =
+    fi.paid_item_name + (fi.free_item_name ? ' + '+fi.free_item_name : '');
+  document.getElementById('food-free-badge').textContent =
+    fi.free_item_name ? '🎁 '+fi.free_item_name+' FREE with every order' : 'Advance price offer';
+  updateFoodUI();
+  document.getElementById('food-section').style.display='block';
+}
+
+function updateFoodUI(){
+  if(!foodItem) return;
+  const total = foodItem.paid_item_price * foodQty;
+  const origTotal = foodItem.paid_item_original_price * foodQty;
+  const saving = origTotal - total;
+  document.getElementById('food-qty-display').textContent = foodQty;
+  document.getElementById('food-price-display').textContent = total>0 ? '₹'+total : 'FREE';
+  document.getElementById('food-orig-display').textContent =
+    origTotal > total ? '₹'+origTotal+' at counter' : '';
+  document.getElementById('food-saving-display').textContent =
+    saving>0 ? 'You save ₹'+saving : '';
+
+  const freeDesc = foodItem.free_item_name
+    ? foodItem.paid_item_name+' × '+foodQty+' + '+foodItem.free_item_name+' × '+foodQty+' (FREE)'
+    : foodItem.paid_item_name+' × '+foodQty;
+  document.getElementById('food-order-summary').textContent = freeDesc;
+  document.getElementById('food-book-btn').textContent =
+    total>0 ? 'Book Food — Pay ₹'+total+' →' : 'Book Food (Free) →';
+}
+
+function foodQtyChange(delta){
+  const n = foodQty + delta;
+  if(n < 1 || n > 20) return;
+  foodQty = n;
+  updateFoodUI();
+}
+
+async function loadPrevFoodOrders(){
+  const {data:orders} = await sb.from('kh_food_orders')
+    .select('*').eq('booking_id',bookingId).eq('status','confirmed')
+    .order('created_at',{ascending:false});
+  if(!orders||orders.length===0) return;
+
+  const wrap = document.getElementById('food-prev-orders');
+  const list = document.getElementById('food-prev-list');
+  wrap.style.display='block';
+  list.innerHTML = orders.map(o=>`
+    <div style="background:#f0faf4;border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:600;color:var(--green);">✅ Order confirmed</div>
+        <div style="font-size:13px;font-weight:700;">₹${o.total_amount}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+        ${o.paid_item_name} × ${o.quantity}${o.free_item_name?' + '+o.free_item_name+' × '+o.quantity+' (FREE)':''}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Show this screen at food counter</div>
+    </div>`).join('');
+}
+
+async function bookFood(){
+  if(!foodItem) return;
+  const btn = document.getElementById('food-book-btn');
+  const total = foodItem.paid_item_price * foodQty;
+
+  // If free (₹0 total) — skip Razorpay
+  if(total === 0){
+    btn.textContent='Confirming…'; btn.disabled=true;
+    await confirmFoodOrder(null);
+    return;
+  }
+
+  if(!foodItem.vendor_razorpay_key){
+    alert('Payment not configured for food orders. Contact organiser.');
+    return;
+  }
+
+  btn.textContent='Opening payment…'; btn.disabled=true;
+
+  const rzp = new Razorpay({
+    key: foodItem.vendor_razorpay_key,
+    amount: total * 100,
+    currency: 'INR',
+    name: 'Food Pre-booking',
+    description: foodItem.paid_item_name + (foodItem.free_item_name?' + '+foodItem.free_item_name+' (free)':'') + ' × '+foodQty,
+    prefill: {
+      name: ticketData ? ticketData.bookerName : '',
+      contact: ''
+    },
+    theme: { color: '#c84010' },
+    modal: {
+      ondismiss: ()=>{ btn.textContent='Book Food →'; btn.disabled=false; }
+    },
+    handler: async(res)=>{
+      btn.textContent='Confirming…';
+      await confirmFoodOrder(res.razorpay_payment_id);
+    }
+  });
+  rzp.on('payment.failed', ()=>{ btn.textContent='Book Food →'; btn.disabled=false; alert('Payment failed. Please try again.'); });
+  rzp.open();
+}
+
+async function confirmFoodOrder(paymentId){
+  const btn = document.getElementById('food-book-btn');
+  const total = foodItem.paid_item_price * foodQty;
+  const {data,error} = await sb.from('kh_food_orders').insert({
+    booking_id: bookingId,
+    event_id: ticketData ? ticketData.eventId : null,
+    booker_name: ticketData ? ticketData.bookerName : '',
+    booker_mobile: ticketData ? ticketData.bookerMobile : '',
+    quantity: foodQty,
+    paid_item_name: foodItem.paid_item_name,
+    free_item_name: foodItem.free_item_name||null,
+    amount_per_unit: foodItem.paid_item_price,
+    total_amount: total,
+    razorpay_payment_id: paymentId||null,
+    status: 'confirmed'
+  }).select().single();
+
+  if(error){ alert('Error saving order: '+error.message); btn.textContent='Book Food →'; btn.disabled=false; return; }
+
+  // Notify vendor via WhatsApp
+  notifyVendor(data);
+
+  // Refresh previous orders
+  await loadPrevFoodOrders();
+
+  // Reset qty
+  foodQty=1; updateFoodUI();
+  btn.textContent='Book Food →'; btn.disabled=false;
+  alert('✅ Food order confirmed! Show your ticket screen at the food counter.');
+}
+
+function notifyVendor(order){
+  if(!foodItem||!foodItem.vendor_whatsapp) return;
+  const ev = ticketData ? ticketData.eventName : 'Event';
+  const guestName = ticketData ? ticketData.bookerName : 'Guest';
+  const freeDesc = order.free_item_name ? '\n🎁 '+order.free_item_name+' × '+order.quantity+' (FREE)' : '';
+  const msg =
+    '🍽 *New Food Order — '+ev+'*\n\n'+
+    'Guest: '+guestName+'\n'+
+    'Booking: '+bookingId.slice(0,8)+'…\n\n'+
+    '✅ '+order.paid_item_name+' × '+order.quantity+freeDesc+'\n'+
+    '💰 Paid: '+(order.total_amount>0?'₹'+order.total_amount:'FREE')+'\n\n'+
+    'Ticket: khursilo.in/ticket.html?id='+bookingId;
+  window.open('https://wa.me/91'+foodItem.vendor_whatsapp+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 function downloadPDF(){

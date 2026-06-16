@@ -359,6 +359,76 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
+<!-- ── FOOD PRE-BOOKING SETUP MODAL ── -->
+<div class="modal-overlay" id="food-modal" onclick="closeFoodModal(event)">
+  <div class="modal-panel" style="max-height:92vh;overflow-y:auto;padding-bottom:40px;">
+    <button class="modal-close" onclick="closeFoodModal()">×</button>
+    <div class="modal-title">🍽 Food Pre-booking Setup</div>
+    <div class="modal-sub" id="food-modal-event-name" style="margin-bottom:14px;"></div>
+
+    <!-- Current combo display -->
+    <div id="food-current-wrap" style="display:none;margin-bottom:16px;">
+      <div style="background:rgba(46,158,96,0.07);border:1px solid rgba(46,158,96,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Current combo</div>
+        <div style="font-size:14px;font-weight:600;" id="food-current-paid">—</div>
+        <div style="font-size:12px;color:var(--green);margin-top:2px;" id="food-current-free">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="food-current-price">—</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="editFoodItem()" style="flex:1;padding:8px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;">✏ Edit</button>
+          <button onclick="toggleFoodActive()" id="food-toggle-btn" style="flex:1;padding:8px;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">—</button>
+          <button onclick="deleteFoodItem()" style="padding:8px 12px;background:var(--red-dim);color:var(--red);border:1px solid rgba(204,51,51,0.2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;">🗑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div id="food-form-wrap">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;" id="food-form-title">Add food combo</div>
+
+      <div class="field-group" style="margin-bottom:10px;">
+        <div class="field-label">Paid item name *</div>
+        <input class="input-field" type="text" id="food-paid-name" placeholder="e.g. Veg Thali" style="margin:4px 0 0;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Advance price (₹) *</div>
+          <input class="input-field" type="number" id="food-disc-price" placeholder="180" style="margin:4px 0 0;">
+        </div>
+        <div class="field-group" style="margin:0;">
+          <div class="field-label">Counter price (₹)</div>
+          <input class="input-field" type="number" id="food-orig-price" placeholder="250" style="margin:4px 0 0;">
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <div class="field-label">Free item name (comes with every paid item)</div>
+        <input class="input-field" type="text" id="food-free-name" placeholder="e.g. Cold Drink" style="margin:4px 0 0;">
+      </div>
+      <div style="background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#1a4a8a;line-height:1.5;margin-bottom:10px;">
+        ℹ️ Vendor receives payment and WhatsApp notification. Use your vendor's Razorpay key below.
+      </div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <div class="field-label">Vendor Razorpay Key ID *</div>
+        <input class="input-field" type="text" id="food-rzp-key" placeholder="rzp_live_XXXXXXXXXXXX" style="margin:4px 0 0;font-family:monospace;font-size:12px;">
+      </div>
+      <div class="field-group" style="margin-bottom:14px;">
+        <div class="field-label">Vendor WhatsApp number (10 digits) *</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 10px;font-size:13px;color:var(--muted);flex-shrink:0;">+91</div>
+          <input class="input-field" type="tel" id="food-vendor-wa" placeholder="98765 43210" maxlength="10" style="margin:0;flex:1;">
+        </div>
+      </div>
+      <div id="food-form-err" style="display:none;background:var(--red-dim);border:1px solid rgba(204,51,51,0.2);border-radius:var(--radius-sm);padding:10px;font-size:12px;color:var(--red);margin-bottom:10px;"></div>
+      <button onclick="saveFoodItem()" id="food-save-btn" style="width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Save Food Combo</button>
+    </div>
+
+    <!-- Food orders summary -->
+    <div id="food-orders-wrap" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">📊 Food orders received</div>
+      <div id="food-orders-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ── COMPLIMENTARY TICKETS MODAL ── -->
 <div class="modal-overlay" id="compl-modal" onclick="closeComplModal(event)">
   <div class="modal-panel" style="max-height:90vh;overflow-y:auto;padding-bottom:40px;">
@@ -701,6 +771,7 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="toggleBooking('${eid}',this)"><div class="qa-icon">${event.status==='active'?'🔒':'🔓'}</div><div class="qa-label">${event.status==='active'?'Close booking':'Open booking'}</div></button>
       <button class="qa-btn" onclick="openComplimentary('${eid}')" style="grid-column:span 2;background:rgba(46,158,96,0.07);border-color:rgba(46,158,96,0.2);"><div class="qa-icon">🎟</div><div class="qa-label" style="color:var(--green);">Complimentary Tickets</div></button>
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
+      <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="grid-column:span 2;background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Pre-booking Setup</div></button>
     </div>
 
     <div style="padding:8px 16px 4px;">
@@ -1070,6 +1141,168 @@ function showScreen(id){
 function showErr(id,msg){
   const el=document.getElementById(id);
   if(el){el.innerHTML=msg;el.style.display='block';}
+}
+
+// ── FOOD PRE-BOOKING SETUP ──
+let foodEventId = null;
+let currentFoodItem = null;
+
+async function openFoodPanel(eid){
+  foodEventId = eid;
+  currentFoodItem = null;
+  const ev = allEvents.find(e=>e.event.id===eid);
+  document.getElementById('food-modal-event-name').textContent = ev ? ev.event.name : '';
+  document.getElementById('food-form-err').style.display='none';
+  document.getElementById('food-modal').classList.add('show');
+  resetFoodForm();
+  await loadFoodItem();
+  await loadFoodOrders();
+}
+
+function closeFoodModal(e){
+  if(e && e.target !== document.getElementById('food-modal')) return;
+  document.getElementById('food-modal').classList.remove('show');
+}
+
+async function loadFoodItem(){
+  const {data} = await sb.from('kh_food_items').select('*').eq('event_id',foodEventId).maybeSingle();
+  currentFoodItem = data || null;
+  const wrap = document.getElementById('food-current-wrap');
+  const formWrap = document.getElementById('food-form-wrap');
+  if(data){
+    document.getElementById('food-current-paid').textContent = data.paid_item_name + (data.paid_item_original_price ? '  —  ₹'+fmt(data.discounted_price||data.paid_item_price)+' advance  (₹'+fmt(data.paid_item_original_price)+' at counter)' : '');
+    document.getElementById('food-current-free').textContent = data.free_item_name ? '+ '+data.free_item_name+' FREE with every order' : 'No free item';
+    document.getElementById('food-current-price').textContent = 'Vendor WA: +91'+data.vendor_whatsapp+' · '+( data.is_active ? '✅ Active' : '⏸ Paused');
+    document.getElementById('food-toggle-btn').textContent = data.is_active ? '⏸ Pause' : '▶ Activate';
+    wrap.style.display='block';
+    formWrap.style.display='none';
+  } else {
+    wrap.style.display='none';
+    formWrap.style.display='block';
+    document.getElementById('food-form-title').textContent='Add food combo';
+  }
+}
+
+function editFoodItem(){
+  if(!currentFoodItem) return;
+  const d = currentFoodItem;
+  document.getElementById('food-paid-name').value = d.paid_item_name||'';
+  document.getElementById('food-disc-price').value = d.paid_item_price||'';
+  document.getElementById('food-orig-price').value = d.paid_item_original_price||'';
+  document.getElementById('food-free-name').value = d.free_item_name||'';
+  document.getElementById('food-rzp-key').value = d.vendor_razorpay_key||'';
+  document.getElementById('food-vendor-wa').value = d.vendor_whatsapp||'';
+  document.getElementById('food-form-title').textContent='Edit food combo';
+  document.getElementById('food-form-wrap').style.display='block';
+  document.getElementById('food-current-wrap').style.display='none';
+}
+
+async function saveFoodItem(){
+  const paidName = document.getElementById('food-paid-name').value.trim();
+  const discPrice = parseInt(document.getElementById('food-disc-price').value)||0;
+  const origPrice = parseInt(document.getElementById('food-orig-price').value)||0;
+  const freeName = document.getElementById('food-free-name').value.trim();
+  const rzpKey = document.getElementById('food-rzp-key').value.trim();
+  const vendorWa = document.getElementById('food-vendor-wa').value.replace(/\D/g,'').slice(-10);
+  const errEl = document.getElementById('food-form-err');
+  errEl.style.display='none';
+
+  if(!paidName){ errEl.textContent='Paid item name is required.'; errEl.style.display='block'; return; }
+  if(!discPrice){ errEl.textContent='Advance price is required.'; errEl.style.display='block'; return; }
+  if(!rzpKey){ errEl.textContent='Vendor Razorpay Key is required.'; errEl.style.display='block'; return; }
+  if(vendorWa.length!==10){ errEl.textContent='Enter valid 10-digit vendor WhatsApp number.'; errEl.style.display='block'; return; }
+
+  const btn = document.getElementById('food-save-btn');
+  btn.textContent='Saving…'; btn.disabled=true;
+
+  const payload = {
+    event_id: foodEventId,
+    paid_item_name: paidName,
+    paid_item_price: discPrice,
+    paid_item_original_price: origPrice||discPrice,
+    free_item_name: freeName||null,
+    vendor_razorpay_key: rzpKey,
+    vendor_whatsapp: vendorWa,
+    is_active: true
+  };
+
+  let error;
+  if(currentFoodItem){
+    ({error} = await sb.from('kh_food_items').update(payload).eq('id',currentFoodItem.id));
+  } else {
+    ({error} = await sb.from('kh_food_items').insert(payload));
+  }
+
+  btn.textContent='Save Food Combo'; btn.disabled=false;
+  if(error){ errEl.textContent='Error: '+error.message; errEl.style.display='block'; return; }
+  showToast('Food combo saved!');
+  resetFoodForm();
+  await loadFoodItem();
+  await loadFoodOrders();
+}
+
+async function toggleFoodActive(){
+  if(!currentFoodItem) return;
+  const newVal = !currentFoodItem.is_active;
+  const {error} = await sb.from('kh_food_items').update({is_active:newVal}).eq('id',currentFoodItem.id);
+  if(error){ showToast('Error: '+error.message); return; }
+  showToast(newVal ? 'Food booking activated' : 'Food booking paused');
+  await loadFoodItem();
+}
+
+async function deleteFoodItem(){
+  if(!currentFoodItem) return;
+  if(!confirm('Remove food combo for this event? Existing orders are not affected.')) return;
+  const {error} = await sb.from('kh_food_items').delete().eq('id',currentFoodItem.id);
+  if(error){ showToast('Error: '+error.message); return; }
+  currentFoodItem=null;
+  showToast('Food combo removed');
+  await loadFoodItem();
+}
+
+function resetFoodForm(){
+  ['food-paid-name','food-disc-price','food-orig-price','food-free-name','food-rzp-key','food-vendor-wa']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('food-form-err').style.display='none';
+  document.getElementById('food-save-btn').textContent='Save Food Combo';
+  document.getElementById('food-save-btn').disabled=false;
+}
+
+async function loadFoodOrders(){
+  const {data:orders} = await sb.from('kh_food_orders')
+    .select('*').eq('event_id',foodEventId)
+    .eq('status','confirmed')
+    .order('created_at',{ascending:false});
+
+  const wrap = document.getElementById('food-orders-wrap');
+  const list = document.getElementById('food-orders-list');
+  if(!orders||orders.length===0){ wrap.style.display='none'; return; }
+
+  wrap.style.display='block';
+  const totalQty = orders.reduce((s,o)=>s+o.quantity,0);
+  const totalAmt = orders.reduce((s,o)=>s+o.total_amount,0);
+
+  list.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--text);">${totalQty}</div>
+        <div style="font-size:10px;color:var(--muted);">Orders placed</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--green);">₹${fmt(totalAmt)}</div>
+        <div style="font-size:10px;color:var(--muted);">Collected</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;">
+      ${orders.map(o=>`
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:500;">${o.booker_name||'Guest'}</div>
+            <div style="font-size:11px;color:var(--muted);">${o.booker_mobile||'—'} · ${o.paid_item_name||''} × ${o.quantity}</div>
+          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--green);">₹${fmt(o.total_amount)}</div>
+        </div>`).join('')}
+    </div>`;
 }
 
 // ── COMPLIMENTARY TICKETS ──
