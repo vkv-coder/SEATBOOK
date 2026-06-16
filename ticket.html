@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Khursilo — Your Ticket</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#f5f5f3;--white:#fff;--s2:#f0eeea;--border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);--text:#1a1a1a;--muted:#888;--accent:#c8860a;--green:#2e9e60;--red:#cc3333;--radius:12px;--rsm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;}
+
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:center;position:sticky;top:0;z-index:50;}
+.tlogo{font-family:'DM Serif Display',serif;font-size:20px;}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;padding:40px;}
+.spinner{width:28px;height:28px;border:3px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted);}
+
+/* ERROR */
+.error-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px;text-align:center;}
+.error-screen.show{display:flex;}
+.err-icon{font-size:48px;margin-bottom:16px;}
+.err-title{font-size:17px;font-weight:600;margin-bottom:6px;}
+.err-msg{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* TICKET WRAPPER */
+.ticket-wrap{display:none;flex-direction:column;align-items:center;padding:20px 16px 40px;}
+.ticket-wrap.show{display:flex;}
+
+.ticket-label{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;text-align:center;}
+
+/* TICKET CARD */
+.ticket-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);width:100%;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.10);margin-bottom:20px;}
+.ticket-header{background:linear-gradient(135deg,#1a1a1a 0%,#333 100%);color:#fff;padding:16px 18px;}
+.ticket-brand{margin-bottom:6px;}
+.ticket-event{font-family:'DM Serif Display',serif;font-size:20px;line-height:1.2;margin-bottom:8px;}
+.ticket-meta{font-size:11px;opacity:0.7;display:flex;flex-direction:column;gap:3px;}
+.ticket-divider{border:none;height:0;border-top:2px dashed var(--border2);}
+.ticket-body{padding:16px 18px;display:flex;align-items:flex-start;gap:16px;}
+.ticket-info{flex:1;}
+.ticket-info-row{margin-bottom:10px;}
+.ticket-info-row:last-child{margin-bottom:0;}
+.ticket-info-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.ticket-info-val{font-size:14px;font-weight:600;color:var(--text);}
+.ticket-amount{font-size:18px;font-weight:600;color:var(--accent);}
+.ticket-compl{font-size:14px;font-weight:600;color:var(--green);}
+.ticket-qr-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;}
+.ticket-qr-box{width:90px;height:90px;background:var(--white);border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);overflow:hidden;}
+.ticket-qr-box canvas,.ticket-qr-box img{width:80px!important;height:80px!important;}
+.ticket-booking-id{font-size:8px;color:var(--muted);text-align:center;max-width:90px;word-break:break-all;line-height:1.4;}
+.ticket-footer{background:var(--s2);padding:10px 18px;font-size:10px;color:var(--muted);text-align:center;border-top:1px solid var(--border);line-height:1.8;}
+
+/* STATUS BADGE */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:16px;}
+.status-valid{background:rgba(46,158,96,0.12);color:var(--green);border:1px solid rgba(46,158,96,0.25);}
+.status-pending{background:rgba(200,134,10,0.12);color:var(--accent);border:1px solid rgba(200,134,10,0.25);}
+.pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* BUTTONS */
+.download-btn{width:100%;background:#1a1a1a;color:#fff;border:none;border-radius:var(--rsm);padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.download-btn:active{opacity:0.85;}
+.home-btn{width:100%;background:none;color:var(--muted);border:1px solid var(--border2);border-radius:var(--rsm);padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;}
+
+.info-box{background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--rsm);padding:12px 14px;font-size:12px;color:#1a4a8a;line-height:1.7;margin-bottom:16px;width:100%;}
+
+#qr-hidden{position:absolute;left:-9999px;top:-9999px;width:200px;height:200px;}
+</style>
+</head>
+<body>
+
+<div id="qr-hidden"></div>
+
+<div class="topbar">
+  <img src="logo.png?v=6" alt="Khursilo" style="width:80px;height:80px;object-fit:contain;border-radius:8px;display:block;">
+</div>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading your ticket…</div>
+</div>
+
+<!-- ERROR -->
+<div class="error-screen" id="error-screen">
+  <div class="err-icon">🎟️</div>
+  <div class="err-title">Ticket not found</div>
+  <div class="err-msg" id="err-msg">This ticket link is invalid or has been removed.</div>
+</div>
+
+<!-- TICKET -->
+<div class="ticket-wrap" id="ticket-wrap">
+  <div class="ticket-label">Your entry ticket</div>
+  <div class="status-badge status-valid" id="status-badge"><span class="pulse"></span><span id="status-text">Valid</span></div>
+  <div class="ticket-card" id="ticket-card">
+    <div class="ticket-header">
+      <div class="ticket-brand">
+        <img src="logo.png?v=6" alt="Khursilo" style="width:40px;height:40px;object-fit:contain;border-radius:5px;display:block;">
+      </div>
+      <div class="ticket-event" id="tc-event">—</div>
+      <div class="ticket-meta">
+        <span id="tc-date">—</span>
+        <span id="tc-hall">—</span>
+      </div>
+    </div>
+    <hr class="ticket-divider">
+    <div class="ticket-body">
+      <div class="ticket-info">
+        <div class="ticket-info-row">
+          <div class="ticket-info-label">Name</div>
+          <div class="ticket-info-val" id="tc-name">—</div>
+        </div>
+        <div class="ticket-info-row">
+          <div class="ticket-info-label">Persons</div>
+          <div class="ticket-info-val" id="tc-persons">—</div>
+        </div>
+        <div class="ticket-info-row">
+          <div class="ticket-info-label" id="tc-amount-label">Amount paid</div>
+          <div id="tc-amount">—</div>
+        </div>
+        <div class="ticket-info-row">
+          <div class="ticket-info-label">Booked</div>
+          <div class="ticket-info-val" id="tc-bookedat" style="font-size:12px;">—</div>
+        </div>
+      </div>
+      <div class="ticket-qr-wrap">
+        <div class="ticket-qr-box" id="qr-display"></div>
+        <div class="ticket-booking-id" id="tc-booking-id">—</div>
+      </div>
+    </div>
+    <div class="ticket-footer" id="ticket-footer">
+      Show QR at entry gate<br>khursilo.in
+    </div>
+  </div>
+
+  <div class="info-box">
+    📱 <strong>Show this QR at the gate.</strong> You can open this link again anytime — no screenshot needed. Works every time.
+  </div>
+
+  <button class="download-btn" id="download-btn" onclick="downloadPDF()">⬇ Download Ticket PDF</button>
+  <button class="home-btn" onclick="window.location.href='index.html'">← Back to home</button>
+</div>
+
+<script>
+const SUPABASE_URL='https://jqqnnkzozjskziaizajg.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const params=new URLSearchParams(location.search);
+const bookingId=params.get('id');
+
+let ticketData=null;
+let qrDataUrl=null;
+
+window.addEventListener('DOMContentLoaded',loadTicket);
+
+function showError(msg){
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('err-msg').textContent=msg||'This ticket link is invalid or has been removed.';
+  document.getElementById('error-screen').classList.add('show');
+}
+
+function fmtDate(d){
+  if(!d)return'—';
+  const dt=new Date(d);
+  return dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+function fmtTime(t){
+  if(!t)return'';
+  try{const[h,m]=t.split(':');const hr=parseInt(h);const ampm=hr>=12?'PM':'AM';return' · '+((hr%12)||12)+':'+m+' '+ampm;}
+  catch(e){return'';}
+}
+function fmtTs(ts){
+  if(!ts)return'—';
+  const d=new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+}
+
+async function loadTicket(){
+  if(!bookingId){showError('No ticket ID provided. Please use the link sent to you on WhatsApp.');return;}
+
+  // Load booking
+  const{data:booking,error:bErr}=await sb.from('kh_bookings').select('*').eq('id',bookingId).maybeSingle();
+  if(bErr||!booking){showError('Ticket not found. Please check the link or contact the organiser.');return;}
+
+  // Load event
+  const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',booking.event_id).maybeSingle();
+  if(evErr||!ev){showError('Event details not found.');return;}
+
+  // Load hall
+  let hallName='—';
+  if(ev.hall_id){
+    const{data:hall}=await sb.from('kh_halls').select('name').eq('id',ev.hall_id).maybeSingle();
+    if(hall)hallName=hall.name;
+  }
+
+  // Determine persons label
+  const persons=booking.seat_count||1;
+  const seatKeys=(booking.seat_keys||[]).filter(k=>k&&k.trim());
+  const personsLabel=seatKeys.length>0?seatKeys.join(', '):persons+' person'+(persons>1?'s':'');
+
+  // Determine amount / type
+  const isCompl=(booking.booking_type==='complimentary'||booking.payment_status==='free'||booking.payment_status==='complimentary');
+  const isPaid=booking.payment_status==='paid'||booking.status==='confirmed';
+  const isPending=booking.status==='pending_manual'||booking.status==='pending_payment'||booking.payment_status==='pending';
+
+  // Status badge
+  const badge=document.getElementById('status-badge');
+  const statusText=document.getElementById('status-text');
+  if(isPending){
+    badge.className='status-badge status-pending';
+    statusText.textContent='Payment pending — ticket not yet confirmed';
+  } else {
+    badge.className='status-badge status-valid';
+    statusText.textContent='Valid ticket';
+  }
+
+  // Populate card
+  document.getElementById('tc-event').textContent=ev.name||'Event';
+  document.getElementById('tc-date').textContent=fmtDate(ev.event_date)+fmtTime(ev.event_time);
+  document.getElementById('tc-hall').textContent=hallName;
+  document.getElementById('tc-name').textContent=booking.booker_name||'—';
+  document.getElementById('tc-persons').textContent=personsLabel;
+  document.getElementById('tc-bookedat').textContent=fmtTs(booking.created_at);
+
+  const amountEl=document.getElementById('tc-amount');
+  if(isCompl){
+    document.getElementById('tc-amount-label').textContent='Ticket type';
+    amountEl.innerHTML='<div class="ticket-compl">Complimentary</div>';
+  } else {
+    document.getElementById('tc-amount-label').textContent='Amount paid';
+    amountEl.innerHTML='<div class="ticket-amount">'+(booking.amount>0?'₹'+Number(booking.amount).toLocaleString('en-IN'):'Free')+'</div>';
+  }
+
+  document.getElementById('tc-booking-id').textContent=bookingId.slice(0,20)+'…';
+  document.getElementById('ticket-footer').innerHTML=
+    'Show QR at entry gate · Valid for '+persons+' person'+(persons>1?'s':'')+'<br>khursilo.in';
+
+  // Store for PDF
+  const bookedAt=fmtTs(booking.created_at);
+  ticketData={
+    bookingId,
+    eventName:ev.name||'Event',
+    eventDate:fmtDate(ev.event_date)+fmtTime(ev.event_time),
+    hallName,
+    bookerName:booking.booker_name||'—',
+    persons,
+    personsLabel,
+    amount:booking.amount||0,
+    isCompl,
+    bookedAt
+  };
+
+  // Generate QR
+  qrDataUrl=await generateQR(bookingId);
+  if(qrDataUrl){
+    const box=document.getElementById('qr-display');
+    box.innerHTML='';
+    const img=document.createElement('img');
+    img.src=qrDataUrl;
+    img.style.width='80px';img.style.height='80px';
+    box.appendChild(img);
+  }
+
+  // If pending, hide download and show instructions instead
+  if(isPending){
+    document.getElementById('download-btn').style.display='none';
+    const infoBox=document.querySelector('.info-box');
+    infoBox.innerHTML='⏳ <strong>Payment pending.</strong> Once the organiser confirms your payment, your ticket will be activated and you can download it here.';
+    infoBox.style.background='rgba(200,134,10,0.08)';
+    infoBox.style.borderColor='rgba(200,134,10,0.2)';
+    infoBox.style.color='#7a4f00';
+  }
+
+  // Show ticket
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('ticket-wrap').classList.add('show');
+}
+
+function generateQR(id){
+  return new Promise(r=>{
+    const c=document.getElementById('qr-hidden');
+    c.innerHTML='';
+    new QRCode(c,{text:id,width:200,height:200,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    setTimeout(()=>{
+      const img=c.querySelector('img'),can=c.querySelector('canvas');
+      r(can?can.toDataURL('image/png'):img?img.src:null);
+    },300);
+  });
+}
+
+function downloadPDF(){
+  if(!ticketData||!qrDataUrl){alert('Ticket not ready yet.');return;}
+  const btn=document.getElementById('download-btn');
+  btn.textContent='⏳ Preparing…';btn.disabled=true;
+
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[80,120]});
+  const W=80;
+  const persons=ticketData.persons;
+  const vt='Valid for '+persons+' person'+(persons>1?'s':'');
+
+  // Header
+  doc.setFillColor(26,26,26);doc.rect(0,0,W,38,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('Khursilo',6,8);
+  doc.setFontSize(12);
+  const el=doc.splitTextToSize(ticketData.eventName,W-12);
+  doc.text(el,6,15);
+  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(200,200,200);
+  const ym=15+(el.length*5);
+  doc.text(ticketData.eventDate,6,ym);
+  doc.text(ticketData.hallName,6,ym+4);
+
+  // Divider
+  doc.setDrawColor(200,200,200);doc.setLineDashPattern([1,1],0);doc.line(0,39,W,39);doc.setLineDashPattern([],0);
+
+  // Body
+  doc.setFillColor(255,255,255);doc.rect(0,39,W,81,'F');
+  if(qrDataUrl)doc.addImage(qrDataUrl,'PNG',W-34,42,28,28);
+  doc.setTextColor(136,136,136);doc.setFontSize(4.5);doc.setFont('helvetica','normal');
+  doc.text(ticketData.bookingId.slice(0,20)+'...',W-34,72,{maxWidth:28});
+
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.text('NAME',6,46);
+  doc.setTextColor(26,26,26);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text(ticketData.bookerName,6,51);
+
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('PERSONS',6,59);
+  doc.setTextColor(26,26,26);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  const pl=doc.splitTextToSize(ticketData.personsLabel,38);
+  doc.text(pl,6,64);
+
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text(ticketData.isCompl?'TICKET TYPE':'AMOUNT PAID',6,72);
+  if(ticketData.isCompl){
+    doc.setTextColor(46,158,96);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text('Complimentary',6,77);
+  } else {
+    doc.setTextColor(200,134,10);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text(ticketData.amount>0?'Rs '+ticketData.amount:'Free',6,77);
+  }
+
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('BOOKED AT',6,85);
+  doc.setTextColor(26,26,26);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text(ticketData.bookedAt,6,90);
+
+  // Footer
+  doc.setFillColor(240,238,234);doc.rect(0,100,W,20,'F');
+  doc.setTextColor(136,136,136);doc.setFontSize(5.5);doc.setFont('helvetica','normal');
+  doc.text('Show QR at entry gate · '+vt,W/2,107,{align:'center'});
+  doc.text('khursilo.in',W/2,113,{align:'center'});
+
+  doc.save('Khursilo_Ticket_'+ticketData.bookingId.slice(0,8)+'.pdf');
+
+  btn.textContent='✓ Downloaded!';
+  btn.style.background='var(--green)';
+  btn.disabled=false;
+  setTimeout(()=>{btn.textContent='⬇ Download Again';btn.style.background='#1a1a1a';},3000);
+}
+</script>
+</body>
+</html>

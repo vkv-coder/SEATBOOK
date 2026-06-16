@@ -202,6 +202,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     </div>
   </div>
 </div>
+<!-- MANUAL PAYMENT INSTRUCTIONS OVERLAY -->
+<div class="form-overlay" id="manual-overlay" style="z-index:70;">
+  <div class="form-panel" style="padding-bottom:40px;">
+    <div class="fp-title">📋 How to pay</div>
+    <div class="fp-sub" id="manual-sub">Complete your payment using the details below</div>
+    <div style="background:#f0f7ff;border:1px solid rgba(43,111,212,0.2);border-radius:var(--rsm);padding:14px;margin-bottom:16px;white-space:pre-wrap;font-size:13px;color:#1a1a1a;line-height:1.8;" id="manual-instructions">—</div>
+    <div style="background:rgba(46,158,96,0.08);border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:#1a4a1a;line-height:1.6;">
+      ✅ Once you pay, the organiser will verify and activate your ticket.<br>
+      🔗 You can check your ticket status anytime using the link below.
+    </div>
+    <button onclick="openTicketLink()" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">🎟 View My Ticket →</button>
+    <button onclick="copyTicketLink()" style="width:100%;padding:11px;background:none;color:var(--muted);border:1px solid var(--border2);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">📋 Copy ticket link</button>
+    <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--muted);">Booking ID: <span id="manual-booking-id" style="font-family:monospace;">—</span></div>
+  </div>
+</div>
+
 <div class="success-overlay" id="success-overlay">
   <div class="success-inner">
     <div class="success-icon">🎟️</div>
@@ -799,6 +815,7 @@ async function confirmBooking(){
   try{
     const clientAmt=selectedSeats.reduce((a,s)=>a+s.price,0),seatKeys=selectedSeats.map(s=>s.seatKey);
     if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,email,seatKeys,clientAmt);return;}
+    if(eventData.payment_mode==='manual'){await saveManualBooking(name,mobile,seatKeys,clientAmt);return;}
     if(clientAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
     // ── Server-side amount verify (SECURITY — from live version) ──
     let totalAmt=clientAmt;
@@ -861,6 +878,51 @@ async function saveFreeBooking(name,mobile,email,seatKeys,totalAmt){
     selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
     clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,totalAmt);
   }catch(e){alert('Error: '+(e.message||'Unknown'));document.querySelector('.confirm-btn').textContent='Confirm & Pay →';document.querySelector('.confirm-btn').disabled=false;}
+}
+
+let manualBookingId=null;
+
+async function saveManualBooking(name,mobile,seatKeys,amt,qty){
+  const btn=document.querySelector('.confirm-btn')||document.getElementById('open-book-btn');
+  try{
+    const sc=qty||seatKeys.length||1;
+    const{data,error}=await sb.from('kh_bookings').insert({
+      event_id:eventId,booker_name:name,booker_mobile:mobile,
+      seat_keys:seatKeys,seat_count:sc,amount:amt,
+      payment_status:'pending',status:'pending_manual',
+      booking_type:'paid',created_at:new Date().toISOString()
+    }).select().single();
+    if(error)throw error;
+    manualBookingId=data.id;
+    closeForm();
+    showManualInstructions(name,sc,amt);
+  }catch(e){
+    alert('Error: '+(e.message||'Unknown'));
+    if(btn){btn.textContent='Confirm & Pay →';btn.disabled=false;}
+  }
+}
+
+function showManualInstructions(name,persons,amt){
+  const instructions=eventData.payment_instructions||'Please contact the organiser for payment details.';
+  const ticketUrl=location.origin+'/ticket.html?id='+manualBookingId;
+  document.getElementById('manual-sub').textContent=
+    'Hi '+name+' — pay ₹'+Number(amt).toLocaleString('en-IN')+' for '+persons+' person'+(persons>1?'s':'')+' using details below:';
+  document.getElementById('manual-instructions').textContent=instructions;
+  document.getElementById('manual-booking-id').textContent=manualBookingId.slice(0,16)+'…';
+  window._manualTicketUrl=ticketUrl;
+  document.getElementById('manual-overlay').classList.add('show');
+}
+
+function openTicketLink(){
+  if(window._manualTicketUrl)window.open(window._manualTicketUrl,'_blank');
+}
+
+function copyTicketLink(){
+  if(!window._manualTicketUrl)return;
+  navigator.clipboard.writeText(window._manualTicketUrl).then(()=>{
+    const btn=document.querySelector('#manual-overlay .form-panel button:last-of-type');
+    if(btn){const t=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=t,2000);}
+  });
 }
 
 // ── PDF with day boxes (NEW multi-day support) ──
@@ -992,6 +1054,10 @@ async function bookOpenEntry(){
   if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.getElementById('open-book-btn');btn.textContent='Booking…';btn.disabled=true;
   try{
+    if(eventData.payment_mode==='manual'&&eventData.ticket_price>0){
+      await saveManualBooking(name,mobile,[],eventData.ticket_price*openQty,openQty);
+      btn.textContent='Book Now →';btn.disabled=false;return;
+    }
     const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
     if(error)throw error;
     bookingId=data.id;
