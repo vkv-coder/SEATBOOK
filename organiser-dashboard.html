@@ -1463,7 +1463,7 @@ function sendComplWA(idx){
   const evName = ev ? ev.event.name : 'Event';
   const seatInfo = b.seat ? `\n🪑 Seat: *${b.seat}*` : '';
   const foodUrl = `https://khursilo.in/food-prebook.html?booking=${b.bookingId}`;
-  const msg = `🎟 *Your complimentary ticket for ${evName}*\n\nHello ${b.name}!${seatInfo}\n\nYour ticket PDF is attached. Scan the QR on the ticket to pre-book your food online.\n\n🍹 *Pre-book food & get FREE Mojito:*\n${foodUrl}\n\n_Khursilo · khursilo.in_`;
+  const msg = `🎟 *Your complimentary ticket for ${evName}*\n\nHello ${b.name}!${seatInfo}\n\nYour ticket PDF is attached. *Show the QR at the entry gate.*\n\n🍹 *Pre-book food & get FREE Mojito:*\n${foodUrl}\n\n_Khursilo · khursilo.in_`;
   window.open('https://wa.me/91'+b.mobile+'?text='+encodeURIComponent(msg),'_blank');
   const btn = document.getElementById('csend-btn-'+idx);
   const tick = document.getElementById('csend-tick-'+idx);
@@ -1478,14 +1478,15 @@ async function downloadComplPDF(idx){
   if(!ev) return;
   const evInfo = ev.event;
 
+  const ticketUrl = `https://khursilo.in/ticket.html?id=${b.bookingId}`;
   const foodUrl = `https://khursilo.in/food-prebook.html?booking=${b.bookingId}`;
 
-  // Render QR into a hidden div
+  // Render QR (gate entry) into a hidden div
   const qrDiv = document.createElement('div');
   qrDiv.style.cssText='position:fixed;left:-9999px;top:0;width:200px;height:200px;background:#fff;';
   document.body.appendChild(qrDiv);
   await new Promise(resolve=>{
-    new QRCode(qrDiv,{text:foodUrl,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+    new QRCode(qrDiv,{text:ticketUrl,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
     setTimeout(resolve,400);
   });
   const qrCanvas = qrDiv.querySelector('canvas');
@@ -1569,15 +1570,33 @@ async function downloadComplPDF(idx){
     curY += qrSize + 8;
   } else { curY += 8; }
 
-  // Scan hint
+  // Gate entry label under QR
   doc.setTextColor(200,134,10);
   doc.setFontSize(8);
   doc.setFont('helvetica','bold');
-  doc.text('Scan QR to Pre-Book Food', W/2, curY, {align:'center'});
-  doc.setTextColor(130,130,130);
-  doc.setFontSize(7);
+  doc.text('Scan at Entry Gate', W/2, curY, {align:'center'});
+  curY += 7;
+
+  // Separator
+  doc.setDrawColor(45,45,45);
+  doc.setLineWidth(0.3);
+  doc.line(10, curY, W-10, curY);
+  curY += 8;
+
+  // Food pre-booking link section
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold');
+  doc.text('🍽  Pre-Book Food & Get FREE Mojito', W/2, curY, {align:'center'});
+  curY += 6;
+  doc.setTextColor(200,134,10);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica','normal');
-  doc.text('Includes 1 Complimentary Mojito · FREE', W/2, curY+6, {align:'center'});
+  doc.textWithLink(foodUrl, W/2, curY, {align:'center', url: foodUrl});
+  curY += 5;
+  doc.setTextColor(110,110,110);
+  doc.setFontSize(6.5);
+  doc.text('Tap the link above to pre-book online', W/2, curY, {align:'center'});
 
   // Bottom gold bar + footer
   doc.setFillColor(200,134,10);
