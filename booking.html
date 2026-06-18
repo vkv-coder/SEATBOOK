@@ -171,6 +171,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div><!-- /inner padding div -->
 </div>
 
+<!-- MEMBER BOOKING VERIFY PANEL -->
+<div id="member-verify-panel" style="display:none;">
+  <div id="mv-flyer-wrap" style="display:none;width:100%;aspect-ratio:1/1;background:#0a0a0a;overflow:hidden;">
+    <img id="mv-flyer-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:block;">
+  </div>
+  <div style="padding:16px 16px 80px;">
+    <div style="background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:18px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:6px;" id="mv-ev-name">—</div>
+      <div style="font-size:12px;color:#777;margin-bottom:3px;" id="mv-ev-date">📅 —</div>
+      <div style="font-size:12px;color:#777;" id="mv-ev-venue">📍 —</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:18px;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">🎟 Academy Members</div>
+      <div style="font-size:12px;color:#777;line-height:1.6;margin-bottom:14px;">Enter your registered mobile number. First come, first served — 2 free tickets per member.</div>
+      <input type="tel" id="mv-mobile" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric"
+        style="width:100%;box-sizing:border-box;padding:12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;"
+        onkeydown="if(event.key==='Enter')verifyMember()">
+      <div id="mv-error" style="display:none;font-size:12px;color:#e53e3e;padding:8px 10px;background:#fff5f5;border-radius:6px;margin-bottom:10px;line-height:1.5;"></div>
+      <button onclick="verifyMember()" id="mv-btn"
+        style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">
+        Check &amp; Select Seats →
+      </button>
+    </div>
+    <div style="background:rgba(46,158,96,0.06);border:1px solid rgba(46,158,96,0.2);border-radius:10px;padding:12px 14px;">
+      <div style="font-size:12px;color:#1a4a1a;line-height:1.8;">
+        ✅ First 2 seats — <strong>Free</strong><br>
+        🪑 3rd seat onwards — <strong>₹250 each</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- OPEN / OPEN-GROUND PANEL -->
 <div id="open-panel" style="display:none;padding:28px 16px 140px;text-align:center;">
   <div style="font-size:44px;margin-bottom:8px;" id="open-panel-icon">🎟</div>
@@ -287,6 +319,8 @@ let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
 let isSSG=false,isSayaji=false,wantedSeatCount=1;
 let eventTotalDays=1;
+let isMemberBooking=false,memberMobile='',memberFreeQty=2;
+const MEMBER_PAID_PRICE=250;
 let realtimeChannel=null; // Supabase Realtime channel
 const params=new URLSearchParams(location.search);
 const eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
@@ -458,6 +492,29 @@ async function loadEvent(){
         document.getElementById('manual-contact-info').innerHTML=contacts;
         document.getElementById('manual-contact-wrap').style.display='block';
       }
+      return;
+    }
+
+    // ── Member booking (academy members — 2 free + ₹250 paid, first-come-first-served) ──
+    isMemberBooking=(ev.mode==='member_booking');
+    if(isMemberBooking){
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('map-wrap').style.display='none';
+      document.querySelector('.bottom-bar').style.display='none';
+      document.querySelector('.sec-tabs-wrap').style.display='none';
+      document.querySelector('.legend').style.display='none';
+      document.getElementById('ev-banner-wrap').style.display='none';
+      const fmtDt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'—';
+      const tStr=ev.event_time?(' · '+ev.event_time.slice(0,5)):'';
+      document.getElementById('mv-ev-name').textContent=ev.name||'—';
+      document.getElementById('mv-ev-date').textContent='📅 '+fmtDt(ev.event_date)+tStr;
+      const mvVenue=ev.hall_id&&hallLayout?hallLayout.name:(ev.description||'').split('\n')[0]||'—';
+      document.getElementById('mv-ev-venue').textContent='📍 '+mvVenue;
+      if(ev.image_url){
+        const fw=document.getElementById('mv-flyer-wrap'),fi=document.getElementById('mv-flyer-img');
+        fi.src=ev.image_url;fi.alt=ev.name;fw.style.display='block';
+      }
+      document.getElementById('member-verify-panel').style.display='block';
       return;
     }
 
@@ -645,7 +702,7 @@ function changeSeatCount(delta){const n=wantedSeatCount+delta;if(n<1||n>6)return
 function updateBottomBar(){
   const btn=document.getElementById('proceed-btn'),list=document.getElementById('sel-seats-list'),total=document.getElementById('sel-total');
   if(selectedSeats.length===0){list.textContent='Tap any seat to auto-select '+wantedSeatCount+' seat'+(wantedSeatCount>1?'s':'');total.textContent='';btn.disabled=true;btn.textContent='Tap a seat to begin';}
-  else{const labels=selectedSeats.map(s=>s.rowLabel+'-'+s.seatNum).join(', ');const amt=selectedSeats.reduce((a,s)=>a+s.price,0);list.textContent=labels;total.textContent=amt>0?'₹'+amt:'Free';btn.disabled=false;btn.textContent='Proceed →';}
+  else{const labels=selectedSeats.map(s=>s.rowLabel+'-'+s.seatNum).join(', ');let dispText;if(isMemberBooking){const fC=Math.min(selectedSeats.length,memberFreeQty),pC=Math.max(0,selectedSeats.length-memberFreeQty);dispText=pC>0?fC+' Free + '+pC+' × ₹'+MEMBER_PAID_PRICE+' · ₹'+(pC*MEMBER_PAID_PRICE):fC+' × Free · ₹0';}else{const amt=selectedSeats.reduce((a,s)=>a+s.price,0);dispText=amt>0?'₹'+amt:'Free';}list.textContent=labels;total.textContent=dispText;btn.disabled=false;btn.textContent='Proceed →';}
 }
 
 function showWarn(msg){const ex=document.getElementById('toast-warn');if(ex)ex.remove();const t=document.createElement('div');t.id='toast-warn';t.textContent=msg;t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#cc3333;color:#fff;font-size:13px;font-weight:600;padding:12px 22px;border-radius:20px;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.35);text-align:center;';document.body.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3000);}
@@ -875,7 +932,9 @@ async function confirmBooking(){
   if(!name){alert('Please enter your name');return;}if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.querySelector('.confirm-btn');btn.textContent='Processing…';btn.disabled=true;
   try{
-    const clientAmt=selectedSeats.reduce((a,s)=>a+s.price,0),seatKeys=selectedSeats.map(s=>s.seatKey);
+    const seatKeys=selectedSeats.map(s=>s.seatKey);
+    const clientAmt=isMemberBooking?Math.max(0,seatKeys.length-memberFreeQty)*MEMBER_PAID_PRICE:selectedSeats.reduce((a,s)=>a+s.price,0);
+    if(eventData.mode==='member_booking'){await saveMemberBooking(name,mobile,email,seatKeys,clientAmt);return;}
     if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,email,seatKeys,clientAmt);return;}
     if(eventData.payment_mode==='manual'){await saveManualBooking(name,mobile,seatKeys,clientAmt);return;}
     if(clientAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
@@ -1142,6 +1201,118 @@ function gridToggleSeat(el){
   clearSelectedSeats();
   seats.forEach(s=>{s.classList.add('selected');selectedSeats.push({rowLabel:s.dataset.row,seatNum:s.dataset.sn,sectionId:s.dataset.sec,price:parseInt(s.dataset.price),colour:s.dataset.colour,seatKey:s.dataset.key});});
   updateBottomBar();
+}
+
+// ── MEMBER BOOKING ──
+async function verifyMember(){
+  const mob=(document.getElementById('mv-mobile').value||'').replace(/\D/g,'').slice(-10);
+  const errEl=document.getElementById('mv-error'),btn=document.getElementById('mv-btn');
+  errEl.style.display='none';
+  if(mob.length!==10){errEl.textContent='Please enter a valid 10-digit mobile number.';errEl.style.display='block';return;}
+  btn.textContent='Checking…';btn.disabled=true;
+  try{
+    const{data:member,error:mErr}=await sb.from('kh_event_members')
+      .select('mobile,name,free_qty').eq('event_id',eventId).eq('mobile',mob).maybeSingle();
+    if(mErr||!member){
+      errEl.textContent='Your mobile number is not registered for this event. Please contact the organiser.';
+      errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
+    }
+    const{data:existing}=await sb.from('kh_bookings').select('id')
+      .eq('event_id',eventId).eq('booker_mobile',mob)
+      .not('status','in','("cancelled","draft")').maybeSingle();
+    if(existing){
+      errEl.textContent='You have already claimed your tickets for this event. Your ticket was sent via WhatsApp.';
+      errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
+    }
+    memberMobile=mob;
+    memberFreeQty=member.free_qty||2;
+    const mobileInp=document.getElementById('inp-mobile');
+    if(mobileInp){mobileInp.value=mob;mobileInp.readOnly=true;}
+    if(member.name){const nameInp=document.getElementById('inp-name');if(nameInp)nameInp.value=member.name;}
+    document.getElementById('member-verify-panel').style.display='none';
+    await loadMemberSeatMap();
+  }catch(e){errEl.textContent='Error: '+(e.message||'Please try again.');errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;}
+}
+
+async function loadMemberSeatMap(){
+  document.getElementById('map-wrap').style.display='block';
+  document.getElementById('loading-screen').style.display='flex';
+  document.querySelector('.sec-tabs-wrap').style.display='flex';
+  document.querySelector('.legend').style.display='flex';
+  document.querySelector('.bottom-bar').style.display='block';
+  const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
+  sections=layout.sections||[];
+  await loadSeatStatus();
+  buildSectionTabs();
+  document.getElementById('loading-screen').style.display='none';
+  buildSeatMap(layout);
+  document.getElementById('hall-grid').style.display='flex';
+  scaleGridMap();
+  startRealtimeSync();
+}
+
+async function saveMemberBooking(name,mobile,email,seatKeys,amt){
+  const btn=document.querySelector('.confirm-btn');
+  if(amt===0){
+    // Only free seats — save as confirmed
+    let savedId=bookingId;
+    if(savedId){
+      const{error:updErr}=await sb.from('kh_bookings').update({
+        booker_name:name,booker_mobile:mobile,booker_email:email||null,
+        amount:0,payment_status:'free',status:'confirmed',booking_type:'member'
+      }).eq('id',savedId).eq('status','held');
+      if(updErr){console.warn(updErr.message);savedId=null;}
+    }
+    if(!savedId){
+      const{data:booking,error}=await sb.from('kh_bookings').insert({
+        event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+        seat_keys:seatKeys,seat_count:seatKeys.length,amount:0,
+        payment_status:'free',status:'confirmed',
+        booking_type:'member',created_at:new Date().toISOString()
+      }).select().single();
+      if(error)throw error;
+      savedId=booking.id;
+    }
+    bookingId=savedId;
+    clearInterval(holdTimer);
+    document.getElementById('timer-bar').style.display='none';
+    closeForm();
+    await showSuccess(name,mobile,email,seatKeys,0);
+    return;
+  }
+  // Paid component — Razorpay
+  const rzpKey=organiserData&&organiserData.razorpay_key_id;
+  if(!rzpKey){alert('Payment gateway not configured for this event.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
+  if(bookingId){
+    const{error:updErr}=await sb.from('kh_bookings').update({
+      booker_name:name,booker_mobile:mobile,booker_email:email||null,
+      amount:amt,payment_status:'pending',status:'pending_payment',booking_type:'member'
+    }).eq('id',bookingId).eq('status','held');
+    if(updErr){console.warn(updErr.message);bookingId=null;}
+  }
+  if(!bookingId){
+    const{data:booking,error}=await sb.from('kh_bookings').insert({
+      event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+      seat_keys:seatKeys,seat_count:seatKeys.length,amount:amt,
+      payment_status:'pending',status:'pending_payment',
+      booking_type:'member',created_at:new Date().toISOString()
+    }).select().single();
+    if(error)throw error;
+    bookingId=booking.id;
+  }
+  const rzp=new Razorpay({
+    key:rzpKey,amount:amt*100,currency:'INR',
+    name:eventData.name||'Khursilo',description:'Seats: '+seatKeys.join(', '),
+    prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},
+    modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},
+    handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,amt);}
+  });
+  rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
+  rzp.open();
+  let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}
+    const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();
+    if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,email,seatKeys,amt);}
+  },3000);
 }
 </script>
 </body>

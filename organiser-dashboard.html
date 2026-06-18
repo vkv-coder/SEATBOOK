@@ -431,6 +431,44 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
+<!-- ── MEMBER LIST MODAL ── -->
+<div class="modal-overlay" id="member-modal" onclick="closeMemberModal(event)">
+  <div class="modal-panel" style="max-height:90vh;overflow-y:auto;padding-bottom:40px;">
+    <button class="modal-close" onclick="closeMemberModal()">×</button>
+    <div class="modal-title">👥 Upload Member List</div>
+    <div class="modal-sub" id="member-event-name" style="margin-bottom:12px;"></div>
+    <div id="member-step-upload">
+      <div style="background:rgba(46,158,96,0.07);border:1px solid rgba(46,158,96,0.2);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:#1a4a1a;line-height:1.8;margin-bottom:14px;">
+        Upload Excel with 2 columns:<br>
+        <strong>Name</strong> &nbsp;|&nbsp; <strong>Mobile</strong><br>
+        Each row = one eligible member. Each gets <strong>2 free tickets</strong>.<br>
+        Uploading again <strong>replaces</strong> the existing list for this event.
+      </div>
+      <button onclick="downloadMemberTemplate()" style="width:100%;padding:11px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;">
+        ⬇ Download Excel Template
+      </button>
+      <div onclick="document.getElementById('member-file-input').click()" style="border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:24px;text-align:center;cursor:pointer;background:var(--surface2);">
+        <div style="font-size:32px;margin-bottom:8px;">📄</div>
+        <div style="font-size:13px;font-weight:500;">Tap to upload Excel file</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">.xlsx or .xls</div>
+      </div>
+      <input type="file" id="member-file-input" accept=".xlsx,.xls" style="display:none;" onchange="parseMemberExcel(this)">
+    </div>
+    <div id="member-step-preview" style="display:none;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;" id="member-preview-count">0 members</div>
+      <div id="member-preview-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:14px;"></div>
+      <button onclick="saveMemberList()" id="member-save-btn" style="width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">
+        ✓ Save Member List
+      </button>
+    </div>
+    <div id="member-step-done" style="display:none;text-align:center;padding:20px 0;">
+      <div style="font-size:32px;margin-bottom:10px;">✅</div>
+      <div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:6px;" id="member-done-msg">Member list saved!</div>
+      <div style="font-size:12px;color:var(--muted);">Members can now book tickets at the event page.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── COMPLIMENTARY TICKETS MODAL ── -->
 <div class="modal-overlay" id="compl-modal" onclick="closeComplModal(event)">
   <div class="modal-panel" style="max-height:90vh;overflow-y:auto;padding-bottom:40px;">
@@ -774,6 +812,7 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="openComplimentary('${eid}')" style="grid-column:span 2;background:rgba(46,158,96,0.07);border-color:rgba(46,158,96,0.2);"><div class="qa-icon">🎟</div><div class="qa-label" style="color:var(--green);">Complimentary Tickets</div></button>
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
       <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="grid-column:span 2;background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Pre-booking Setup</div></button>
+      ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="grid-column:span 2;background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Member List</div></button>`:''}
     </div>
 
     <div style="padding:8px 16px 4px;">
@@ -1606,6 +1645,86 @@ async function downloadComplPDF(idx){
   doc.text('Khursilo · khursilo.in', W/2, H-8, {align:'center'});
 
   doc.save(`Ticket_${b.name.replace(/\s+/g,'_')}.pdf`);
+}
+
+// ── MEMBER LIST ──
+let memberEventId=null;
+let memberRows=[];
+
+function openMemberModal(eid){
+  memberEventId=eid; memberRows=[];
+  const ev=allEvents.find(e=>e.event.id===eid);
+  document.getElementById('member-event-name').textContent=ev?ev.event.name:'';
+  document.getElementById('member-step-upload').style.display='block';
+  document.getElementById('member-step-preview').style.display='none';
+  document.getElementById('member-step-done').style.display='none';
+  document.getElementById('member-file-input').value='';
+  document.getElementById('member-modal').classList.add('show');
+}
+
+function closeMemberModal(e){
+  if(e&&e.target!==document.getElementById('member-modal'))return;
+  document.getElementById('member-modal').classList.remove('show');
+}
+
+function downloadMemberTemplate(){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([['Name','Mobile'],['Ramesh Shah','9876543210'],['Priya Mehta','9123456789']]);
+  ws['!cols']=[{wch:22},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Members');
+  XLSX.writeFile(wb,'Member_List_Template.xlsx');
+}
+
+function parseMemberExcel(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      memberRows=[];
+      for(let i=1;i<rows.length;i++){
+        const[name,mobile]=rows[i];
+        const n=String(name||'').trim();
+        const m=String(mobile||'').replace(/\D/g,'').slice(-10);
+        if(!n||m.length!==10)continue;
+        memberRows.push({name:n,mobile:m});
+      }
+      if(!memberRows.length){showToast('No valid rows found. Check Name & 10-digit Mobile columns.');return;}
+      document.getElementById('member-preview-count').textContent=memberRows.length+' member'+(memberRows.length>1?'s':'');
+      const list=document.getElementById('member-preview-list');
+      list.innerHTML='';
+      memberRows.forEach(g=>{
+        const el=document.createElement('div');
+        el.style.cssText='background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;';
+        el.innerHTML=`<div style="font-size:13px;font-weight:500;">${g.name}</div><div style="font-size:12px;color:var(--muted);">${g.mobile}</div>`;
+        list.appendChild(el);
+      });
+      document.getElementById('member-step-upload').style.display='none';
+      document.getElementById('member-step-preview').style.display='block';
+    }catch(err){showToast('Error reading file: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function saveMemberList(){
+  if(!memberRows.length)return;
+  const btn=document.getElementById('member-save-btn');
+  btn.textContent='Saving…';btn.disabled=true;
+  try{
+    // Delete existing members for this event first
+    await sb.from('kh_event_members').delete().eq('event_id',memberEventId);
+    // Insert new list in batches of 50
+    for(let i=0;i<memberRows.length;i+=50){
+      const batch=memberRows.slice(i,i+50).map(g=>({event_id:memberEventId,mobile:g.mobile,name:g.name,free_qty:2}));
+      const{error}=await sb.from('kh_event_members').insert(batch);
+      if(error)throw error;
+    }
+    document.getElementById('member-step-preview').style.display='none';
+    document.getElementById('member-done-msg').textContent=memberRows.length+' members saved successfully!';
+    document.getElementById('member-step-done').style.display='block';
+  }catch(err){showToast('Error: '+err.message);btn.textContent='✓ Save Member List';btn.disabled=false;}
 }
 
 // ── PENDING MANUAL PAYMENTS ──
