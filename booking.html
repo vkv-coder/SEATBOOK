@@ -377,8 +377,8 @@ async function loadEvent(){
 
     document.getElementById('ev-name').textContent=ev.name;
 
-    // ── Show banner image if available ──
-    if(ev.image_url){
+    // ── Show banner image if available (not for manual_alloc — uses its own full-screen flyer) ──
+    if(ev.image_url && ev.mode !== 'manual_alloc'){
       const bw=document.getElementById('ev-banner-wrap');
       const bi=document.getElementById('ev-banner-img');
       bi.src=ev.image_url;
@@ -412,7 +412,7 @@ async function loadEvent(){
 
     // ── Organiser contact (unchanged from live) ──
     if(ev.organiser_id){
-      const{data:org}=await sb.from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile,email_1').eq('id',ev.organiser_id).single();
+      const{data:org}=await sb.from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile,contact_2_name,contact_2_mobile,email_1').eq('id',ev.organiser_id).single();
       organiserData=org;
       if(org&&org.contact_1_mobile){
         const tel=org.contact_1_mobile.replace(/\D/g,'');
@@ -448,8 +448,13 @@ async function loadEvent(){
         fw.style.display='block';
       }
       if(organiserData&&organiserData.contact_1_mobile){
-        const tel=organiserData.contact_1_mobile.replace(/\D/g,'');
-        document.getElementById('manual-contact-info').innerHTML='<a href="tel:+91'+_e(tel)+'" style="color:var(--accent);text-decoration:none;font-weight:600;">'+_e(organiserData.contact_1_name||'Organiser')+' · '+_e(organiserData.contact_1_mobile)+'</a>';
+        const c1tel=organiserData.contact_1_mobile.replace(/\D/g,'');
+        let contactHtml=`<a href="tel:+91${_e(c1tel)}" style="color:var(--accent);text-decoration:none;font-weight:600;">${_e(organiserData.contact_1_name||'Organiser')} · ${_e(organiserData.contact_1_mobile)}</a>`;
+        if(organiserData.contact_2_mobile){
+          const c2tel=organiserData.contact_2_mobile.replace(/\D/g,'');
+          contactHtml+=`<br><a href="tel:+91${_e(c2tel)}" style="color:var(--accent);text-decoration:none;font-weight:600;margin-top:6px;display:inline-block;">${_e(organiserData.contact_2_name||'Organiser')} · ${_e(organiserData.contact_2_mobile)}</a>`;
+        }
+        document.getElementById('manual-contact-info').innerHTML=contactHtml;
         document.getElementById('manual-contact-wrap').style.display='block';
       }
       return;
