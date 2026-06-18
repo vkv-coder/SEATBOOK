@@ -147,10 +147,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 </div>
 
 <!-- MANUAL ALLOC PANEL — organiser-allocated seats, no public booking -->
-<div id="manual-alloc-panel" style="display:none;padding:20px 16px 60px;">
-  <div style="background:#1a1a1a;border-radius:12px;overflow:hidden;margin-bottom:16px;">
-    <img id="manual-flyer-img" src="" alt="" style="width:100%;display:none;border-radius:12px;">
+<div id="manual-alloc-panel" style="display:none;">
+  <!-- Edge-to-edge square flyer image -->
+  <div id="manual-flyer-wrap" style="display:none;width:100%;aspect-ratio:1/1;background:#0a0a0a;overflow:hidden;">
+    <img id="manual-flyer-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:block;">
   </div>
+  <div style="padding:16px 16px 60px;">
   <div style="background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:18px;margin-bottom:14px;">
     <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;" id="manual-ev-name">—</div>
     <div style="display:flex;flex-direction:column;gap:6px;">
@@ -166,6 +168,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div style="font-size:12px;font-weight:600;color:#777;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Organiser contact</div>
     <div id="manual-contact-info" style="font-size:13px;color:#1a1a1a;"></div>
   </div>
+  </div><!-- /inner padding div -->
 </div>
 
 <!-- OPEN / OPEN-GROUND PANEL -->
@@ -429,6 +432,7 @@ async function loadEvent(){
       document.querySelector('.bottom-bar').style.display='none';
       document.querySelector('.sec-tabs-wrap').style.display='none';
       document.querySelector('.legend').style.display='none';
+      document.getElementById('ev-banner-wrap').style.display='none';
       const panel=document.getElementById('manual-alloc-panel');
       panel.style.display='block';
       document.getElementById('manual-ev-name').textContent=ev.name||'—';
@@ -437,7 +441,12 @@ async function loadEvent(){
       document.getElementById('manual-ev-date').textContent='📅 '+fmtDt(ev.event_date)+tStr;
       const venueLine=ev.hall_id&&hallLayout?hallLayout.name:(ev.description||'').split('\n')[0]||'—';
       document.getElementById('manual-ev-venue').textContent='📍 '+venueLine;
-      if(ev.image_url){const fi=document.getElementById('manual-flyer-img');fi.src=ev.image_url;fi.style.display='block';}
+      if(ev.image_url){
+        const fw=document.getElementById('manual-flyer-wrap');
+        const fi=document.getElementById('manual-flyer-img');
+        fi.src=ev.image_url; fi.alt=ev.name;
+        fw.style.display='block';
+      }
       if(organiserData&&organiserData.contact_1_mobile){
         const tel=organiserData.contact_1_mobile.replace(/\D/g,'');
         document.getElementById('manual-contact-info').innerHTML='<a href="tel:+91'+_e(tel)+'" style="color:var(--accent);text-decoration:none;font-weight:600;">'+_e(organiserData.contact_1_name||'Organiser')+' · '+_e(organiserData.contact_1_mobile)+'</a>';
