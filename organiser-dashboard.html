@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root {
   --bg: #f5f5f3; --white: #ffffff; --surface: #ffffff; --surface2: #f0eeea;
@@ -440,8 +442,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div id="compl-step-upload">
       <div style="background:rgba(46,158,96,0.07);border:1px solid rgba(46,158,96,0.2);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:#1a4a1a;line-height:1.8;margin-bottom:14px;">
         Upload an Excel file with 3 columns:<br>
-        <strong>Name</strong> &nbsp;|&nbsp; <strong>Mobile</strong> &nbsp;|&nbsp; <strong>Qty</strong><br>
-        One guest per row. Qty = number of persons for that guest.
+        <strong>Name</strong> &nbsp;|&nbsp; <strong>Mobile</strong> &nbsp;|&nbsp; <strong>Seat No</strong><br>
+        One row per guest. Each row generates one ticket for that seat.
       </div>
       <button onclick="downloadComplTemplate()" style="width:100%;padding:11px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px;">
         ⬇ Download Excel Template
@@ -1308,8 +1310,8 @@ async function loadFoodOrders(){
 // ── COMPLIMENTARY TICKETS ──
 const TICKET_BASE = 'https://khursilo.in/ticket.html?id=';
 let complEventId = null;
-let complGuests = [];   // [{name, mobile, qty}]
-let complBookings = []; // [{bookingId, name, mobile, qty}] after creation
+let complGuests = [];   // [{name, mobile, seat}]
+let complBookings = []; // [{bookingId, name, mobile, seat}] after creation
 
 function openComplimentary(eid){
   complEventId = eid;
@@ -1332,11 +1334,11 @@ function closeComplModal(e){
 function downloadComplTemplate(){
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ['Name','Mobile','Qty'],
-    ['Ramesh Shah','9876543210',2],
-    ['Priya Mehta','9123456789',1]
+    ['Name','Mobile','Seat No'],
+    ['Ramesh Shah','9876543210','A-12'],
+    ['Priya Mehta','9123456789','B-5']
   ]);
-  ws['!cols']=[{wch:22},{wch:14},{wch:6}];
+  ws['!cols']=[{wch:22},{wch:14},{wch:10}];
   XLSX.utils.book_append_sheet(wb,ws,'Guests');
   XLSX.writeFile(wb,'Complimentary_Guests_Template.xlsx');
 }
@@ -1353,12 +1355,13 @@ function parseComplExcel(input){
       complGuests = [];
       // Skip header row (row 0)
       for(let i=1;i<rows.length;i++){
-        const [name, mobile, qty] = rows[i];
+        const [name, mobile, seatOrQty, maybeSeat] = rows[i];
         const n = String(name||'').trim();
         const m = String(mobile||'').replace(/\D/g,'').slice(-10);
-        const q = parseInt(qty)||1;
+        // Support 3-col (Name|Mobile|Seat) or 4-col (Name|Mobile|Qty|Seat)
+        const seat = maybeSeat ? String(maybeSeat).trim() : String(seatOrQty||'').trim();
         if(!n || m.length!==10) continue;
-        complGuests.push({name:n, mobile:m, qty:q});
+        complGuests.push({name:n, mobile:m, seat});
       }
       if(complGuests.length===0){showToast('No valid rows found. Check Name & 10-digit Mobile columns.');return;}
       renderComplPreview();
@@ -1368,13 +1371,13 @@ function parseComplExcel(input){
 }
 
 function renderComplPreview(){
-  document.getElementById('compl-preview-count').textContent = complGuests.length+' guest'+(complGuests.length>1?'s':'')+' · '+complGuests.reduce((s,g)=>s+g.qty,0)+' tickets total';
+  document.getElementById('compl-preview-count').textContent = complGuests.length+' guest'+(complGuests.length>1?'s':'')+' · '+complGuests.length+' ticket'+(complGuests.length>1?'s':'');
   const list = document.getElementById('compl-preview-list');
   list.innerHTML = '';
   complGuests.forEach(g=>{
     const el = document.createElement('div');
     el.style.cssText='background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;';
-    el.innerHTML=`<div><div style="font-size:13px;font-weight:500;">${g.name}</div><div style="font-size:11px;color:var(--muted);">${g.mobile}</div></div><div style="font-size:13px;font-weight:600;color:var(--green);">${g.qty} ticket${g.qty>1?'s':''}</div>`;
+    el.innerHTML=`<div><div style="font-size:13px;font-weight:500;">${g.name}</div><div style="font-size:11px;color:var(--muted);">${g.mobile}</div></div><div style="font-size:13px;font-weight:600;color:var(--green);">Seat ${g.seat||'—'}</div>`;
     list.appendChild(el);
   });
   document.getElementById('compl-step-upload').style.display='none';
@@ -1395,12 +1398,13 @@ async function createComplBookings(){
   complBookings = [];
   try{
     for(const g of complGuests){
+      const seatArr = g.seat ? [g.seat] : [];
       const {data,error} = await sb.from('kh_bookings').insert({
         event_id: complEventId,
         booker_name: g.name,
         booker_mobile: g.mobile,
-        seat_keys: [],
-        seat_count: g.qty,
+        seat_keys: seatArr,
+        seat_count: 1,
         amount: 0,
         payment_status: 'complimentary',
         status: 'confirmed',
@@ -1408,7 +1412,7 @@ async function createComplBookings(){
         created_at: new Date().toISOString()
       }).select('id').single();
       if(error) throw error;
-      complBookings.push({bookingId:data.id, name:g.name, mobile:g.mobile, qty:g.qty, sent:false});
+      complBookings.push({bookingId:data.id, name:g.name, mobile:g.mobile, seat:g.seat, sent:false});
     }
     renderComplSendList();
     // Refresh dashboard bookings in background
@@ -1428,19 +1432,26 @@ function renderComplSendList(){
     const el = document.createElement('div');
     el.id='csend-'+idx;
     el.style.cssText='background:var(--surface2);border-radius:var(--radius-sm);padding:12px;';
+    const seatLabel = b.seat ? `Seat ${b.seat}` : '1 ticket';
     el.innerHTML=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <div>
           <div style="font-size:13px;font-weight:500;">${b.name}</div>
-          <div style="font-size:11px;color:var(--muted);">${b.mobile} · ${b.qty} person${b.qty>1?'s':''}</div>
+          <div style="font-size:11px;color:var(--muted);">${b.mobile} · ${seatLabel}</div>
         </div>
         <div id="csend-tick-${idx}" style="display:none;color:var(--green);font-size:18px;">✓</div>
       </div>
-      <button onclick="sendComplWA(${idx})" id="csend-btn-${idx}"
-        style="width:100%;padding:10px;background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.117 1.535 5.845L.057 23.998l6.304-1.654A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 01-4.99-1.368l-.358-.213-3.742.981 1.001-3.65-.234-.375A9.797 9.797 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
-        Send on WhatsApp
-      </button>`;
+      <div style="display:flex;gap:8px;">
+        <button onclick="downloadComplPDF(${idx})"
+          style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">
+          ⬇ PDF
+        </button>
+        <button onclick="sendComplWA(${idx})" id="csend-btn-${idx}"
+          style="flex:2;padding:10px;background:#25d366;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.117 1.535 5.845L.057 23.998l6.304-1.654A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 01-4.99-1.368l-.358-.213-3.742.981 1.001-3.65-.234-.375A9.797 9.797 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+          Send on WhatsApp
+        </button>
+      </div>`;
     list.appendChild(el);
   });
 }
@@ -1450,14 +1461,132 @@ function sendComplWA(idx){
   if(!b) return;
   const ev = allEvents.find(e=>e.event.id===complEventId);
   const evName = ev ? ev.event.name : 'Event';
-  const ticketUrl = TICKET_BASE + b.bookingId;
-  const msg = `🎟 *Your complimentary ticket for ${evName}*\n\nHello ${b.name}!\n\nYou have been issued ${b.qty} complimentary ticket${b.qty>1?'s':''}.\n\n👉 View your ticket here:\n${ticketUrl}\n\nShow the QR code at the entry gate.\n\n_Khursilo · khursilo.in_`;
+  const seatInfo = b.seat ? `\n🪑 Seat: *${b.seat}*` : '';
+  const foodUrl = `https://khursilo.in/food-prebook.html?booking=${b.bookingId}`;
+  const msg = `🎟 *Your complimentary ticket for ${evName}*\n\nHello ${b.name}!${seatInfo}\n\nYour ticket PDF is attached. Scan the QR on the ticket to pre-book your food online.\n\n🍹 *Pre-book food & get FREE Mojito:*\n${foodUrl}\n\n_Khursilo · khursilo.in_`;
   window.open('https://wa.me/91'+b.mobile+'?text='+encodeURIComponent(msg),'_blank');
-  // Mark as sent
   const btn = document.getElementById('csend-btn-'+idx);
   const tick = document.getElementById('csend-tick-'+idx);
-  if(btn){ btn.textContent='✓ Sent — tap to resend'; btn.style.background='#128c7e'; }
+  if(btn){ btn.style.background='#128c7e'; btn.innerHTML='✓ Sent — tap to resend'; }
   if(tick) tick.style.display='block';
+}
+
+async function downloadComplPDF(idx){
+  const b = complBookings[idx];
+  if(!b) return;
+  const ev = allEvents.find(e=>e.event.id===complEventId);
+  if(!ev) return;
+  const evInfo = ev.event;
+
+  const foodUrl = `https://khursilo.in/food-prebook.html?booking=${b.bookingId}`;
+
+  // Render QR into a hidden div
+  const qrDiv = document.createElement('div');
+  qrDiv.style.cssText='position:fixed;left:-9999px;top:0;width:200px;height:200px;background:#fff;';
+  document.body.appendChild(qrDiv);
+  await new Promise(resolve=>{
+    new QRCode(qrDiv,{text:foodUrl,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+    setTimeout(resolve,400);
+  });
+  const qrCanvas = qrDiv.querySelector('canvas');
+  const qrDataUrl = qrCanvas ? qrCanvas.toDataURL('image/png') : null;
+  document.body.removeChild(qrDiv);
+
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
+  const W=148, H=210;
+
+  // Background
+  doc.setFillColor(18,18,18);
+  doc.rect(0,0,W,H,'F');
+
+  // Top gold bar
+  doc.setFillColor(200,134,10);
+  doc.rect(0,0,W,5,'F');
+
+  // "COMPLIMENTARY TICKET" label
+  doc.setTextColor(200,134,10);
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold');
+  doc.text('COMPLIMENTARY TICKET', W/2, 14, {align:'center'});
+
+  // Event name
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15);
+  const evNameLines = doc.splitTextToSize(evInfo.name||'Event', W-24);
+  doc.text(evNameLines, W/2, 24, {align:'center'});
+
+  // Date & venue
+  doc.setTextColor(160,160,160);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica','normal');
+  let curY = 24 + evNameLines.length * 6.5 + 5;
+  if(evInfo.event_date){
+    const d = new Date(evInfo.event_date);
+    const dateStr = d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const timeStr = evInfo.start_time ? (() => { try{ const[h,m]=evInfo.start_time.split(':'); const hr=parseInt(h); return ` · ${((hr%12)||12)}:${m} ${hr>=12?'PM':'AM'}`; }catch(e){return '';} })() : '';
+    doc.text(dateStr+timeStr, W/2, curY, {align:'center'});
+    curY += 6;
+  }
+  if(evInfo.venue){
+    const vLines = doc.splitTextToSize(evInfo.venue, W-24);
+    doc.text(vLines, W/2, curY, {align:'center'});
+    curY += vLines.length * 5 + 2;
+  }
+
+  // Separator
+  curY += 4;
+  doc.setDrawColor(55,55,55);
+  doc.setLineWidth(0.4);
+  doc.line(10, curY, W-10, curY);
+  curY += 10;
+
+  // Guest name
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica','bold');
+  doc.text(b.name, W/2, curY, {align:'center'});
+  curY += 8;
+
+  // Seat badge
+  if(b.seat){
+    doc.setFillColor(200,134,10);
+    const badgeW=44, badgeH=10;
+    doc.roundedRect((W-badgeW)/2, curY-1, badgeW, badgeH, 2, 2, 'F');
+    doc.setTextColor(18,18,18);
+    doc.setFontSize(8);
+    doc.text('SEAT  '+b.seat, W/2, curY+6, {align:'center'});
+    curY += badgeH + 8;
+  }
+
+  // QR code
+  const qrSize = 58;
+  const qrX = (W-qrSize)/2;
+  if(qrDataUrl){
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(qrX-3, curY-3, qrSize+6, qrSize+6, 3, 3, 'F');
+    doc.addImage(qrDataUrl,'PNG',qrX,curY,qrSize,qrSize);
+    curY += qrSize + 8;
+  } else { curY += 8; }
+
+  // Scan hint
+  doc.setTextColor(200,134,10);
+  doc.setFontSize(8);
+  doc.setFont('helvetica','bold');
+  doc.text('Scan QR to Pre-Book Food', W/2, curY, {align:'center'});
+  doc.setTextColor(130,130,130);
+  doc.setFontSize(7);
+  doc.setFont('helvetica','normal');
+  doc.text('Includes 1 Complimentary Mojito · FREE', W/2, curY+6, {align:'center'});
+
+  // Bottom gold bar + footer
+  doc.setFillColor(200,134,10);
+  doc.rect(0,H-5,W,5,'F');
+  doc.setTextColor(90,90,90);
+  doc.setFontSize(7);
+  doc.text('Khursilo · khursilo.in', W/2, H-8, {align:'center'});
+
+  doc.save(`Ticket_${b.name.replace(/\s+/g,'_')}.pdf`);
 }
 
 // ── PENDING MANUAL PAYMENTS ──

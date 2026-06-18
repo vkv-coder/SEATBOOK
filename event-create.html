@@ -397,6 +397,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
           </div>
           <div class="mode-desc">No seat selection. First come first basis. Name & mobile only.</div>
         </div>
+        <div class="mode-card" id="mode-manual_alloc" onclick="selectMode('manual_alloc')">
+          <div class="mode-card-header">
+            <div class="mode-icon">🎯</div>
+            <div class="mode-title">Organiser-Allocated</div>
+            <div class="mode-check"></div>
+          </div>
+          <div class="mode-desc">No public booking. Organiser uploads attendee list & issues tickets via dashboard. Event page shows flyer only.</div>
+        </div>
       </div>
     </div>
 
@@ -945,12 +953,15 @@ function calcDays() {
 // ── MODE ──
 function selectMode(mode) {
   eventMode = mode;
-  ['paid','free','open'].forEach(m => {
+  ['paid','free','open','manual_alloc'].forEach(m => {
     const el = document.getElementById('mode-' + m);
     if (!el) return;
     el.classList.toggle('selected', mode === m);
     el.querySelector('.mode-check').textContent = mode === m ? '✓' : '';
   });
+  // Hide cancellation policy for manual_alloc (organiser controls tickets)
+  const cc = document.getElementById('cancellation-card');
+  if (cc) cc.style.display = mode === 'manual_alloc' ? 'none' : 'block';
 }
 
 // ── STEPS ──
@@ -997,17 +1008,23 @@ function validateStep2() {
     alert('Please upload the filled pricing template first.');
     return false;
   }
+  if (eventMode === 'manual_alloc') return true;
   return true;
 }
 
 function showStep2() {
   const isHall = eventCategory === 'hall';
   const isOpenGround = eventCategory === 'open_ground';
-  document.getElementById('excel-download-card').style.display = isHall && eventMode !== 'open' ? 'block' : 'none';
-  document.getElementById('excel-upload-card').style.display = isHall && eventMode !== 'open' ? 'block' : 'none';
+  const isManualAlloc = eventMode === 'manual_alloc';
+  document.getElementById('excel-download-card').style.display = isHall && eventMode !== 'open' && !isManualAlloc ? 'block' : 'none';
+  document.getElementById('excel-upload-card').style.display = isHall && eventMode !== 'open' && !isManualAlloc ? 'block' : 'none';
   document.getElementById('free-notice').style.display = isHall && eventMode === 'free' ? 'block' : 'none';
-  document.getElementById('open-ground-notice').style.display = isOpenGround || eventMode === 'open' ? 'block' : 'none';
-  document.getElementById('pricing-preview').style.display = parsedSections.length > 0 ? 'block' : 'none';
+  document.getElementById('open-ground-notice').style.display = isOpenGround || eventMode === 'open' || isManualAlloc ? 'block' : 'none';
+  if (isManualAlloc) {
+    document.getElementById('open-ground-notice').querySelector('.form-card-title').textContent = '🎯 Organiser-Allocated Event';
+    document.getElementById('open-ground-notice').querySelector('.info-box').textContent = 'No seat map or pricing needed. You will issue tickets manually from the dashboard using an attendee Excel list.';
+  }
+  document.getElementById('pricing-preview').style.display = parsedSections.length > 0 && !isManualAlloc ? 'block' : 'none';
 }
 
 function updateSummary() {
