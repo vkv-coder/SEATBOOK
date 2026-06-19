@@ -1127,6 +1127,9 @@ function showInlineFoodCard(fi){
   document.getElementById('if-free').textContent=fi.free_item_name?'+ '+fi.free_item_name+' FREE with every order':'';
   const fw=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
   document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fw>0?fw:60)+' at stall) FREE with every pre-booking';
+  // Store booking ID in DOM so button can always find it
+  const btn=document.getElementById('if-pay-btn');
+  if(btn&&bookingId)btn.dataset.bid=bookingId;
   inlineFoodQty=1;
   updateInlineFoodUI();
   card.style.display='block';
@@ -1148,7 +1151,8 @@ function foodInlineQtyChange(delta){
 async function bookFoodInline(){
   if(!eventFoodItem){alert('Food item not loaded. Please refresh and try again.');return;}
   if(!bookingId)bookingId=sessionStorage.getItem('kh_last_booking_id');
-  if(!bookingId){alert('Booking ID missing. Please use the link from your ticket.');return;}
+  if(!bookingId)bookingId=document.getElementById('if-pay-btn')?.dataset?.bid;
+  if(!bookingId){alert('Session expired. Please open your ticket link and try again from there.');return;}
   const btn=document.getElementById('if-pay-btn');
   btn.disabled=true;btn.textContent='Opening payment…';
   const total=eventFoodItem.paid_item_price*inlineFoodQty;
