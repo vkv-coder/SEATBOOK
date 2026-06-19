@@ -1125,7 +1125,7 @@ function showInlineFoodCard(fi){
   document.getElementById('if-name').textContent=fi.paid_item_name;
   document.getElementById('if-free').textContent=fi.free_item_name?'+ '+fi.free_item_name+' FREE with every order':'';
   const fw=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
-  document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fw>0?fw:60)+' at stall) FREE with every pre-booking · One per ticket';
+  document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fw>0?fw:60)+' at stall) FREE with every pre-booking';
   inlineFoodQty=1;
   updateInlineFoodUI();
   card.style.display='block';
