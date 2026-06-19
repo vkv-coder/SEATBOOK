@@ -439,8 +439,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="modal-sub" id="member-event-name" style="margin-bottom:12px;"></div>
     <div id="member-step-upload">
       <div style="background:rgba(46,158,96,0.07);border:1px solid rgba(46,158,96,0.2);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:#1a4a1a;line-height:1.8;margin-bottom:14px;">
-        Upload Excel with 2 columns:<br>
-        <strong>Name</strong> &nbsp;|&nbsp; <strong>Mobile</strong><br>
+        Upload Excel with 3 columns:<br>
+        <strong>Name</strong> &nbsp;|&nbsp; <strong>Mobile</strong> &nbsp;|&nbsp; <strong>Studio</strong><br>
         Each row = one eligible member. Each gets <strong>2 free tickets</strong>.<br>
         Uploading again <strong>replaces</strong> the existing list for this event.
       </div>
@@ -465,6 +465,22 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div style="font-size:32px;margin-bottom:10px;">✅</div>
       <div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:6px;" id="member-done-msg">Member list saved!</div>
       <div style="font-size:12px;color:var(--muted);">Members can now book tickets at the event page.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STUDIO REVENUE REPORT MODAL ── -->
+<div class="modal-overlay" id="studio-modal" onclick="closeStudioModal(event)">
+  <div class="modal-panel" style="max-height:90vh;overflow-y:auto;padding-bottom:40px;">
+    <button class="modal-close" onclick="closeStudioModal()">×</button>
+    <div class="modal-title">📊 Studio Revenue Report</div>
+    <div class="modal-sub" id="studio-event-name" style="margin-bottom:16px;"></div>
+    <div id="studio-report-loading" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
+    <div id="studio-report-body" style="display:none;"></div>
+    <div id="studio-report-footer" style="display:none;margin-top:14px;">
+      <button onclick="downloadStudioReport()" style="width:100%;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        ⬇ Download as Excel
+      </button>
     </div>
   </div>
 </div>
@@ -812,7 +828,7 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="openComplimentary('${eid}')" style="grid-column:span 2;background:rgba(46,158,96,0.07);border-color:rgba(46,158,96,0.2);"><div class="qa-icon">🎟</div><div class="qa-label" style="color:var(--green);">Complimentary Tickets</div></button>
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
       <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="grid-column:span 2;background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Pre-booking Setup</div></button>
-      ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="grid-column:span 2;background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Member List</div></button>`:''}
+      ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Members</div></button><button class="qa-btn" onclick="openStudioReport('${eid}')" style="background:rgba(124,58,237,0.07);border-color:rgba(124,58,237,0.2);"><div class="qa-icon">📊</div><div class="qa-label" style="color:#7c3aed;">Studio Report</div></button>`:''}
     </div>
 
     <div style="padding:8px 16px 4px;">
@@ -1669,8 +1685,12 @@ function closeMemberModal(e){
 
 function downloadMemberTemplate(){
   const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet([['Name','Mobile'],['Ramesh Shah','9876543210'],['Priya Mehta','9123456789']]);
-  ws['!cols']=[{wch:22},{wch:14}];
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['Name','Mobile','Studio'],
+    ['Ramesh Shah','9876543210','Binny Thakkar Dance Studio'],
+    ['Priya Mehta','9123456789','Dhanush Dance Studio']
+  ]);
+  ws['!cols']=[{wch:22},{wch:14},{wch:28}];
   XLSX.utils.book_append_sheet(wb,ws,'Members');
   XLSX.writeFile(wb,'Member_List_Template.xlsx');
 }
@@ -1685,20 +1705,23 @@ function parseMemberExcel(input){
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       memberRows=[];
       for(let i=1;i<rows.length;i++){
-        const[name,mobile]=rows[i];
+        const[name,mobile,studio]=rows[i];
         const n=String(name||'').trim();
         const m=String(mobile||'').replace(/\D/g,'').slice(-10);
+        const s=String(studio||'').trim();
         if(!n||m.length!==10)continue;
-        memberRows.push({name:n,mobile:m});
+        memberRows.push({name:n,mobile:m,studio:s});
       }
       if(!memberRows.length){showToast('No valid rows found. Check Name & 10-digit Mobile columns.');return;}
-      document.getElementById('member-preview-count').textContent=memberRows.length+' member'+(memberRows.length>1?'s':'');
+      // Group preview by studio
+      const studios=[...new Set(memberRows.map(r=>r.studio||'—'))];
+      document.getElementById('member-preview-count').textContent=memberRows.length+' member'+(memberRows.length>1?'s':'')+' · '+studios.length+' studio'+(studios.length>1?'s':'');
       const list=document.getElementById('member-preview-list');
       list.innerHTML='';
       memberRows.forEach(g=>{
         const el=document.createElement('div');
-        el.style.cssText='background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;';
-        el.innerHTML=`<div style="font-size:13px;font-weight:500;">${g.name}</div><div style="font-size:12px;color:var(--muted);">${g.mobile}</div>`;
+        el.style.cssText='background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;';
+        el.innerHTML=`<div><div style="font-size:13px;font-weight:500;">${g.name}</div><div style="font-size:11px;color:var(--muted);">${g.studio||'—'}</div></div><div style="font-size:12px;color:var(--muted);white-space:nowrap;">${g.mobile}</div>`;
         list.appendChild(el);
       });
       document.getElementById('member-step-upload').style.display='none';
@@ -1713,11 +1736,9 @@ async function saveMemberList(){
   const btn=document.getElementById('member-save-btn');
   btn.textContent='Saving…';btn.disabled=true;
   try{
-    // Delete existing members for this event first
     await sb.from('kh_event_members').delete().eq('event_id',memberEventId);
-    // Insert new list in batches of 50
     for(let i=0;i<memberRows.length;i+=50){
-      const batch=memberRows.slice(i,i+50).map(g=>({event_id:memberEventId,mobile:g.mobile,name:g.name,free_qty:2}));
+      const batch=memberRows.slice(i,i+50).map(g=>({event_id:memberEventId,mobile:g.mobile,name:g.name,studio:g.studio||null,free_qty:2}));
       const{error}=await sb.from('kh_event_members').insert(batch);
       if(error)throw error;
     }
@@ -1725,6 +1746,130 @@ async function saveMemberList(){
     document.getElementById('member-done-msg').textContent=memberRows.length+' members saved successfully!';
     document.getElementById('member-step-done').style.display='block';
   }catch(err){showToast('Error: '+err.message);btn.textContent='✓ Save Member List';btn.disabled=false;}
+}
+
+// ── STUDIO REVENUE REPORT ──
+let studioReportData=null;
+let studioReportEventId=null;
+
+async function openStudioReport(eid){
+  studioReportEventId=eid;
+  studioReportData=null;
+  const ev=allEvents.find(e=>e.event.id===eid);
+  document.getElementById('studio-event-name').textContent=ev?ev.event.name:'';
+  document.getElementById('studio-report-loading').style.display='block';
+  document.getElementById('studio-report-body').style.display='none';
+  document.getElementById('studio-report-footer').style.display='none';
+  document.getElementById('studio-modal').classList.add('show');
+  try{
+    const[{data:members},{data:bookings}]=await Promise.all([
+      sb.from('kh_event_members').select('mobile,name,studio,free_qty').eq('event_id',eid),
+      sb.from('kh_bookings').select('booker_mobile,seat_count,amount,payment_status,status')
+        .eq('event_id',eid).not('status','in','("cancelled","draft")')
+    ]);
+    // Build booking lookup by mobile
+    const bkMap={};
+    (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
+    // Aggregate by studio
+    const studios={};
+    (members||[]).forEach(m=>{
+      const st=m.studio||'(No Studio)';
+      if(!studios[st])studios[st]={studio:st,total:0,booked:0,freeSeats:0,paidSeats:0,revenue:0,rows:[]};
+      studios[st].total++;
+      const bk=bkMap[m.mobile];
+      if(bk){
+        studios[st].booked++;
+        const fq=m.free_qty||2;
+        const paidS=Math.max(0,(bk.seat_count||0)-fq);
+        studios[st].freeSeats+=Math.min(bk.seat_count||0,fq);
+        studios[st].paidSeats+=paidS;
+        studios[st].revenue+=bk.amount||0;
+      }
+      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0});
+    });
+    studioReportData=Object.values(studios);
+    // Render report
+    const body=document.getElementById('studio-report-body');
+    let totalRev=0,totalPaid=0,totalBooked=0,totalMembers=0;
+    let html='';
+    studioReportData.forEach(st=>{
+      totalRev+=st.revenue; totalPaid+=st.paidSeats; totalBooked+=st.booked; totalMembers+=st.total;
+      html+=`
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">${st.studio}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:var(--surface);border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--text);">${st.total}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Members</div>
+          </div>
+          <div style="background:var(--surface);border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--green);">${st.booked}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Booked</div>
+          </div>
+          <div style="background:var(--surface);border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--text);">${st.freeSeats}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Free Seats</div>
+          </div>
+          <div style="background:var(--surface);border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:18px;font-weight:700;color:var(--accent);">${st.paidSeats}</div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Paid Seats</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding:10px 12px;background:rgba(200,134,10,0.08);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);">Revenue from paid seats</div>
+          <div style="font-size:16px;font-weight:700;color:var(--accent);">₹${fmt(st.revenue)}</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">${st.total-st.booked} member${st.total-st.booked!==1?'s':''} yet to book</div>
+      </div>`;
+    });
+    // Grand total
+    html+=`<div style="background:rgba(200,134,10,0.08);border:1px solid rgba(200,134,10,0.2);border-radius:var(--radius-sm);padding:14px;margin-top:4px;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Grand Total</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Total members</span><strong>${totalMembers}</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Booked so far</span><strong style="color:var(--green);">${totalBooked}</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Total paid seats</span><strong>${totalPaid}</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid rgba(200,134,10,0.2);"><span>Total revenue</span><span style="color:var(--accent);">₹${fmt(totalRev)}</span></div>
+    </div>`;
+    body.innerHTML=html;
+    document.getElementById('studio-report-loading').style.display='none';
+    body.style.display='block';
+    document.getElementById('studio-report-footer').style.display='block';
+  }catch(err){document.getElementById('studio-report-loading').textContent='Error: '+err.message;}
+}
+
+function closeStudioModal(e){
+  if(e&&e.target!==document.getElementById('studio-modal'))return;
+  document.getElementById('studio-modal').classList.remove('show');
+}
+
+function downloadStudioReport(){
+  if(!studioReportData)return;
+  const ev=allEvents.find(e=>e.event.id===studioReportEventId);
+  const evName=ev?ev.event.name:'Event';
+  const wb=XLSX.utils.book_new();
+  // Summary sheet
+  const summaryRows=[['Studio','Members','Booked','Yet to Book','Free Seats','Paid Seats','Revenue (₹)']];
+  let totals=['TOTAL',0,0,0,0,0,0];
+  studioReportData.forEach(st=>{
+    summaryRows.push([st.studio,st.total,st.booked,st.total-st.booked,st.freeSeats,st.paidSeats,st.revenue]);
+    totals[1]+=st.total;totals[2]+=st.booked;totals[3]+=st.total-st.booked;
+    totals[4]+=st.freeSeats;totals[5]+=st.paidSeats;totals[6]+=st.revenue;
+  });
+  summaryRows.push(totals);
+  const ws1=XLSX.utils.aoa_to_sheet(summaryRows);
+  ws1['!cols']=[{wch:30},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Summary');
+  // Detail sheet — all members with booking status
+  const detailRows=[['Studio','Name','Mobile','Booked','Total Seats','Amount Paid (₹)']];
+  studioReportData.forEach(st=>{
+    st.rows.forEach(r=>{
+      detailRows.push([st.studio,r.name,r.mobile,r.booked?'Yes':'No',r.seats||'',r.paid||0]);
+    });
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(detailRows);
+  ws2['!cols']=[{wch:30},{wch:22},{wch:14},{wch:8},{wch:12},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Member Details');
+  XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Studio_Report.xlsx');
 }
 
 // ── PENDING MANUAL PAYMENTS ──
