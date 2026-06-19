@@ -337,6 +337,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
             <button onclick="foodInlineQtyChange(1)" style="width:36px;height:34px;border:none;background:none;font-size:18px;cursor:pointer;color:#fff;">+</button>
           </div>
         </div>
+        <div id="if-summary" style="background:rgba(255,255,255,0.06);border-radius:8px;padding:9px 12px;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.7;margin-bottom:12px;">—</div>
         <button id="if-pay-btn" onclick="bookFoodInline()" style="width:100%;padding:13px;background:linear-gradient(135deg,#c84010,#e05520);color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Book Food — Pay ₹120 →</button>
         <div id="if-done" style="display:none;text-align:center;padding:14px;color:#4ade80;font-weight:700;font-size:15px;">✅ Food booked! Collect at stall on event day.</div>
       </div>
@@ -1130,9 +1131,12 @@ function showInlineFoodCard(fi){
 function updateInlineFoodUI(){
   if(!eventFoodItem)return;
   const total=eventFoodItem.paid_item_price*inlineFoodQty;
+  const free=eventFoodItem.free_item_name||'Mojito';
   document.getElementById('if-qty').textContent=inlineFoodQty;
   document.getElementById('if-price').textContent='₹'+total;
   document.getElementById('if-pay-btn').textContent='Book Food — Pay ₹'+total+' →';
+  const s=document.getElementById('if-summary');
+  if(s)s.innerHTML='<strong style="color:#fff">'+eventFoodItem.paid_item_name+'</strong> × '+inlineFoodQty+'<br>🍹 <strong style="color:#4ade80">'+free+'</strong> × '+inlineFoodQty+' <span style="color:#4ade80;font-weight:600;">(FREE)</span><br>Total: <strong style="color:#fff">₹'+total+'</strong>';
 }
 function foodInlineQtyChange(delta){
   const n=inlineFoodQty+delta;if(n<1||n>10)return;
