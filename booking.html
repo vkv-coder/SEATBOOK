@@ -1114,7 +1114,8 @@ async function loadEventFoodItem(){
   const bar=document.getElementById('food-promo-bar');
   if(bar){
     document.getElementById('fpb-name').textContent=fi.paid_item_name+(fi.free_item_name?' + '+fi.free_item_name+' FREE':'');
-    document.getElementById('fpb-sub').textContent='₹'+fi.paid_item_price+' · Pre-book now · '+( fi.free_item_name?fi.free_item_name+' worth ₹'+(fi.paid_item_original_price||60)+' at stall FREE':'');
+    const freeWorth=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
+    document.getElementById('fpb-sub').textContent='₹'+fi.paid_item_price+' · Pre-book now · '+(fi.free_item_name?fi.free_item_name+' worth ₹'+(freeWorth>0?freeWorth:60)+' at stall FREE':'');
     bar.style.display='flex';
   }
 }
@@ -1123,7 +1124,8 @@ function showInlineFoodCard(fi){
   if(!card)return;
   document.getElementById('if-name').textContent=fi.paid_item_name;
   document.getElementById('if-free').textContent=fi.free_item_name?'+ '+fi.free_item_name+' FREE with every order':'';
-  document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fi.paid_item_original_price||60)+' at stall) FREE with every pre-booking · One per ticket';
+  const fw=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
+  document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fw>0?fw:60)+' at stall) FREE with every pre-booking · One per ticket';
   inlineFoodQty=1;
   updateInlineFoodUI();
   card.style.display='block';
