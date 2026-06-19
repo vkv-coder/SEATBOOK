@@ -289,6 +289,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <hr class="ticket-divider">
       <div class="ticket-body">
         <div class="ticket-info">
+          <div class="ticket-info-row"><div class="ticket-info-label">Ticket No.</div><div class="ticket-info-val" id="tc-ticketno" style="font-family:monospace;font-weight:700;color:var(--accent);font-size:13px;">—</div></div>
           <div class="ticket-info-row"><div class="ticket-info-label">Name</div><div class="ticket-info-val" id="tc-name">—</div></div>
           <div class="ticket-info-row" id="tc-seats-row"><div class="ticket-info-label">Seats</div><div class="ticket-info-val" id="tc-seats">—</div></div>
           <div class="ticket-info-row" style="margin-bottom:0;"><div class="ticket-info-label">Amount paid</div><div class="ticket-amount" id="tc-amount">—</div></div>
@@ -304,6 +305,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <div class="ticket-footer" id="ticket-footer">Show QR at entry gate · Valid for 1 person<br>khursilo.in</div>
     </div>
     <button class="download-btn" id="download-btn" onclick="downloadTicketPDF()">⬇ Download Ticket PDF</button>
+    <button id="food-prebook-btn" style="display:none;width:100%;padding:13px;background:#c84010;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;" onclick="window.location.href='food-prebook.html?booking='+bookingId">🍽 Pre-book Food & Drinks →</button>
     <button class="home-btn" onclick="window.location.href='/index.html'">← Back to home</button>
   </div>
 </div>
@@ -905,11 +907,17 @@ async function showSuccess(name,mobile,email,seatKeys,amount){
   if(isOpen){document.getElementById('tc-seats-row').style.display='none';}
   else{document.getElementById('tc-seats').textContent=seatKeys.join(', ');}
   document.getElementById('tc-amount').textContent=amount>0?'₹'+amount:'Free';
-  document.getElementById('tc-booking-id').textContent=bookingId||'—';
+  const tktNo='TKT-'+(bookingId||'').slice(0,8).toUpperCase();
+  document.getElementById('tc-ticketno').textContent=tktNo;
+  document.getElementById('tc-booking-id').textContent=tktNo;
   document.getElementById('tc-bookedat').textContent=bookedAt;
   const orgEmail=organiserData&&organiserData.email_1?organiserData.email_1:'';
   const vt='Valid for '+seatCount+' person'+(seatCount>1?'s':'')+(eventTotalDays>1?' · All '+eventTotalDays+' days':'');
   document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · '+vt+(orgEmail?'<br>Support: '+orgEmail:'')+'<br>khursilo.in';
+  // Show food pre-book button if event has food items
+  sb.from('kh_food_items').select('id').eq('event_id',eventId).eq('is_active',true).limit(1).then(({data:fi})=>{
+    if(fi&&fi.length>0){const fb=document.getElementById('food-prebook-btn');if(fb)fb.style.display='block';}
+  });
   // Build day boxes
   buildDayBoxes(eventTotalDays);
   document.getElementById('success-overlay').classList.add('show');
