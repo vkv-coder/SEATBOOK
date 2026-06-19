@@ -1361,8 +1361,8 @@ async function verifyMember(){
   btn.textContent='Checking…';btn.disabled=true;
   try{
     console.log('verifyMember: eventId=',eventId,'mob=',mob);
-    const{data:member,error:mErr}=await sb.from('kh_event_members')
-      .select('mobile,name,free_qty').eq('event_id',eventId).eq('mobile',mob).maybeSingle();
+    const{data:rows,error:mErr}=await sb.rpc('verify_event_member',{p_event_id:eventId,p_mobile:mob});
+    const member=rows&&rows.length>0?rows[0]:null;
     console.log('member result:',member,'error:',mErr);
     if(mErr||!member){
       errEl.textContent='Your mobile number is not registered for this event. Please contact the organiser.';
