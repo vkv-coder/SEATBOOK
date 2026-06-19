@@ -1145,13 +1145,14 @@ function foodInlineQtyChange(delta){
   inlineFoodQty=n;updateInlineFoodUI();
 }
 async function bookFoodInline(){
-  if(!eventFoodItem||!bookingId)return;
+  if(!eventFoodItem){alert('Food item not loaded. Please refresh and try again.');return;}
+  if(!bookingId){alert('Booking ID missing. Please refresh the page.');return;}
   const btn=document.getElementById('if-pay-btn');
   btn.disabled=true;btn.textContent='Opening payment…';
   const total=eventFoodItem.paid_item_price*inlineFoodQty;
   const rzpKey=eventFoodItem.vendor_razorpay_key||(organiserData&&organiserData.razorpay_key_id);
-  if(!rzpKey){alert('Payment not configured.');btn.disabled=false;updateInlineFoodUI();return;}
-  const mobile=ticketData&&ticketData.bookerMobile||'';
+  if(!rzpKey){alert('Payment not configured. Contact organiser.');btn.disabled=false;updateInlineFoodUI();return;}
+  const mobile=(ticketData&&ticketData.bookerMobile)||'';
   const rzp=new Razorpay({
     key:rzpKey,amount:total*100,currency:'INR',
     name:eventData?eventData.name:'Khursilo',
