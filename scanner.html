@@ -166,8 +166,8 @@ canvas{display:none;}
 
 <!-- SCREEN: SCANNER -->
 <div class="screen" id="screen-scan">
-  <!-- Mode toggle -->
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
+  <!-- Mode toggle (hidden when mode is locked via URL param) -->
+  <div id="mode-toggle-wrap" style="display:flex;gap:8px;margin-bottom:12px;">
     <button id="mode-gate-btn" onclick="setMode('gate')" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:#000;border:2px solid #fff;">🚪 Gate Entry</button>
     <button id="mode-food-btn" onclick="setMode('food')" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#888;border:2px solid #333;">🍽 Food</button>
   </div>
@@ -241,7 +241,9 @@ let currentBooking = null;
 let scanning  = true;
 let eventTotalDays = 1;
 let currentDay = 1;
-let scanMode = 'gate';
+const urlMode = new URLSearchParams(location.search).get('mode');
+const modeLocked = urlMode === 'gate' || urlMode === 'food';
+let scanMode = modeLocked ? urlMode : 'gate';
 
 const OTP_KEY = 'kh_otp_' + eventId;
 
@@ -374,8 +376,19 @@ async function verifyOtp() {
   startScanner();
 }
 
-// ── SCANNER START (NEW: build day chips if multi-day) ──────
+// ── SCANNER START ──────────────────────────────────────────
 function startScanner() {
+  // Lock mode if specified in URL — hide toggle and brand the topbar
+  if (modeLocked) {
+    document.getElementById('mode-toggle-wrap').style.display = 'none';
+    if (scanMode === 'food') {
+      document.querySelector('.brand').textContent = 'Khursilo · Food Scanner';
+      setMode('food');
+    } else {
+      document.querySelector('.brand').textContent = 'Khursilo · Gate Scanner';
+    }
+  }
+
   // Build day selector for multi-day events
   if (eventTotalDays > 1) {
     const dayBar = document.getElementById('day-bar');
