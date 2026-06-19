@@ -354,7 +354,7 @@ const SAYAJI_HALL_ID='5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
 const DINDAYAL_HALL_ID='2b5ca724-c8f1-42d5-9730-00229916618b';
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
-let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null;
+let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null,bookingConfirmed=false;
 let isSSG=false,isSayaji=false,wantedSeatCount=1;
 let eventTotalDays=1;
 let isMemberBooking=false,memberMobile='',memberFreeQty=2;
@@ -832,7 +832,7 @@ function updateSeatVisual(key, status){
 
 // ── RELEASE DB HOLD ────────────────────────────────────────────
 async function releaseHold(){
-  if(!bookingId) return;
+  if(!bookingId||bookingConfirmed) return;
   const idToRelease=bookingId;
   bookingId=null;
   try{
@@ -932,7 +932,7 @@ function buildDayBoxes(totalDays){
 async function handlePaymentSuccess(payId,name,mobile,email,seatKeys,amt){
   await sb.from('kh_bookings').update({status:'confirmed',payment_status:'paid',razorpay_payment_id:payId}).eq('id',bookingId);
   selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';s.svgG.style.cursor='not-allowed';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
-  clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,amt);
+  bookingConfirmed=true;clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,amt);
 }
 
 async function showSuccess(name,mobile,email,seatKeys,amount){
@@ -1154,6 +1154,10 @@ async function bookFoodInline(){
   if(!eventFoodItem){alert('Food item not loaded. Please refresh and try again.');return;}
   if(!bookingId)bookingId=sessionStorage.getItem('kh_last_booking_id');
   if(!bookingId)bookingId=document.getElementById('if-pay-btn')?.dataset?.bid;
+  if(!bookingId){
+    const mob=(ticketData&&ticketData.bookerMobile)||memberMobile;
+    if(mob){const{data:bk}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').maybeSingle();if(bk)bookingId=bk.id;}
+  }
   if(!bookingId){alert('Session expired. Please open your ticket link and try again from there.');return;}
   const btn=document.getElementById('if-pay-btn');
   btn.disabled=true;btn.textContent='Opening payment…';
@@ -1433,6 +1437,7 @@ async function saveMemberBooking(name,mobile,email,seatKeys,amt){
       if(error)throw error;
     }
     bookingId=savedId;
+    bookingConfirmed=true;
     clearInterval(holdTimer);
     document.getElementById('timer-bar').style.display='none';
     closeForm();
