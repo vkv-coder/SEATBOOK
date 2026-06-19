@@ -882,7 +882,9 @@ async function openForm(){
   // ── Insert DB hold immediately ──
   console.log('Inserting hold for seats:', seatKeys);
   try{
-    const{data:hold,error:hErr}=await sb.from('kh_bookings').insert({
+    const newHoldId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+    const{error:hErr}=await sb.from('kh_bookings').insert({
+      id:newHoldId,
       event_id:eventId,
       seat_keys:seatKeys,
       seat_count:selectedSeats.length,
@@ -892,9 +894,9 @@ async function openForm(){
       booker_name:'',
       booker_mobile:'',
       created_at:new Date().toISOString()
-    }).select().single();
+    });
     if(hErr){ console.error('Hold insert error:', hErr.message); }
-    else if(hold){ bookingId=hold.id; console.log('Hold created:', hold.id); }
+    else{ bookingId=newHoldId; console.log('Hold created:', newHoldId); }
   }catch(e){ console.warn('Hold insert error:',e.message); }
 
   document.getElementById('form-overlay').classList.add('show');
@@ -1420,14 +1422,15 @@ async function saveMemberBooking(name,mobile,email,seatKeys,amt){
       if(updErr){console.warn(updErr.message);savedId=null;}
     }
     if(!savedId){
-      const{data:booking,error}=await sb.from('kh_bookings').insert({
+      savedId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+      const{error}=await sb.from('kh_bookings').insert({
+        id:savedId,
         event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
         seat_keys:seatKeys,seat_count:seatKeys.length,amount:0,
         payment_status:'free',status:'confirmed',
         booking_type:'member',created_at:new Date().toISOString()
-      }).select().single();
+      });
       if(error)throw error;
-      savedId=booking.id;
     }
     bookingId=savedId;
     clearInterval(holdTimer);
@@ -1447,14 +1450,15 @@ async function saveMemberBooking(name,mobile,email,seatKeys,amt){
     if(updErr){console.warn(updErr.message);bookingId=null;}
   }
   if(!bookingId){
-    const{data:booking,error}=await sb.from('kh_bookings').insert({
+    bookingId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+    const{error}=await sb.from('kh_bookings').insert({
+      id:bookingId,
       event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
       seat_keys:seatKeys,seat_count:seatKeys.length,amount:amt,
       payment_status:'pending',status:'pending_payment',
       booking_type:'member',created_at:new Date().toISOString()
-    }).select().single();
+    });
     if(error)throw error;
-    bookingId=booking.id;
   }
   const rzp=new Razorpay({
     key:rzpKey,amount:amt*100,currency:'INR',
