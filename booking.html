@@ -949,6 +949,7 @@ async function showSuccess(name,mobile,email,seatKeys,amount){
   const tktNo='TKT-'+(bookingId||'').slice(0,8).toUpperCase();
   document.getElementById('tc-ticketno').textContent=tktNo;
   document.getElementById('tc-booking-id').textContent=tktNo;
+  if(bookingId)sessionStorage.setItem('kh_last_booking_id',bookingId);
   document.getElementById('tc-bookedat').textContent=bookedAt;
   const orgEmail=organiserData&&organiserData.email_1?organiserData.email_1:'';
   const vt='Valid for '+seatCount+' person'+(seatCount>1?'s':'')+(eventTotalDays>1?' · All '+eventTotalDays+' days':'');
@@ -1146,7 +1147,8 @@ function foodInlineQtyChange(delta){
 }
 async function bookFoodInline(){
   if(!eventFoodItem){alert('Food item not loaded. Please refresh and try again.');return;}
-  if(!bookingId){alert('Booking ID missing. Please refresh the page.');return;}
+  if(!bookingId)bookingId=sessionStorage.getItem('kh_last_booking_id');
+  if(!bookingId){alert('Booking ID missing. Please use the link from your ticket.');return;}
   const btn=document.getElementById('if-pay-btn');
   btn.disabled=true;btn.textContent='Opening payment…';
   const total=eventFoodItem.paid_item_price*inlineFoodQty;
