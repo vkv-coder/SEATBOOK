@@ -184,6 +184,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <button class="download-btn" id="download-btn" onclick="downloadPDF()">⬇ Download Ticket PDF</button>
   <button class="home-btn" onclick="window.location.href='index.html'">← Back to home</button>
+
+  <!-- STAFF SCAN PANEL -->
+  <div id="staff-panel" style="width:100%;margin-top:22px;padding-top:18px;border-top:1px dashed var(--border2);">
+    <div style="font-size:10px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;">— Staff Scan Actions —</div>
+    <button id="gate-scan-btn" onclick="markScan('gate')" style="width:100%;padding:13px;background:#1a6b3a;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:5px;">🚪 Mark Gate Entry</button>
+    <div id="gate-scan-status" style="font-size:11px;text-align:center;color:var(--muted);margin-bottom:14px;min-height:16px;"></div>
+    <button id="food-scan-btn" onclick="markScan('food')" style="width:100%;padding:13px;background:#c84010;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:5px;">🍽 Mark Food Collected</button>
+    <div id="food-scan-status" style="font-size:11px;text-align:center;color:var(--muted);min-height:16px;"></div>
+  </div>
 </div>
 
 <script>
@@ -196,6 +205,7 @@ const bookingId=params.get('id');
 
 let ticketData=null;
 let qrDataUrl=null;
+let bookingData=null;
 
 window.addEventListener('DOMContentLoaded',loadTicket);
 
@@ -227,6 +237,7 @@ async function loadTicket(){
   // Load booking
   const{data:booking,error:bErr}=await sb.from('kh_bookings').select('*').eq('id',bookingId).maybeSingle();
   if(bErr||!booking){showError('Ticket not found. Please check the link or contact the organiser.');return;}
+  bookingData=booking;
 
   // Load event
   const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',booking.event_id).maybeSingle();
@@ -322,6 +333,7 @@ async function loadTicket(){
   // Show ticket
   document.getElementById('loading-screen').style.display='none';
   document.getElementById('ticket-wrap').classList.add('show');
+  updateStaffPanel();
 
   // Load food section if available and before event date
   if(!isPending) await loadFoodSection(ev);
@@ -503,6 +515,62 @@ function notifyVendor(order){
     '💰 Paid: '+(order.total_amount>0?'₹'+order.total_amount:'FREE')+'\n\n'+
     'Ticket: khursilo.in/ticket.html?id='+bookingId;
   window.open('https://wa.me/91'+foodItem.vendor_whatsapp+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+function updateStaffPanel(){
+  if(!bookingData)return;
+  const gBtn=document.getElementById('gate-scan-btn');
+  const fBtn=document.getElementById('food-scan-btn');
+  const gSt=document.getElementById('gate-scan-status');
+  const fSt=document.getElementById('food-scan-status');
+  if(!gBtn)return;
+  if(bookingData.gate_scanned_at){
+    gBtn.style.background='#cc3333';gBtn.textContent='⚠️ Already Entered — Gate';
+    gSt.textContent='Entered at '+fmtTs(bookingData.gate_scanned_at);gSt.style.color='var(--red)';
+  }else{
+    gBtn.style.background='#1a6b3a';gBtn.textContent='🚪 Mark Gate Entry';
+    gSt.textContent='Not yet scanned at gate';gSt.style.color='var(--muted)';
+  }
+  if(bookingData.food_scanned_at){
+    fBtn.style.background='#cc3333';fBtn.textContent='⚠️ Already Collected — Food';
+    fSt.textContent='Collected at '+fmtTs(bookingData.food_scanned_at);fSt.style.color='var(--red)';
+  }else{
+    fBtn.style.background='#c84010';fBtn.textContent='🍽 Mark Food Collected';
+    fSt.textContent='Not yet collected';fSt.style.color='var(--muted)';
+  }
+}
+
+async function markScan(type){
+  const field=type==='gate'?'gate_scanned_at':'food_scanned_at';
+  const label=type==='gate'?'gate entry':'food collection';
+  // Re-fetch fresh state from DB before marking
+  const{data:fresh}=await sb.from('kh_bookings').select('gate_scanned_at,food_scanned_at').eq('id',bookingId).single();
+  if(fresh){bookingData.gate_scanned_at=fresh.gate_scanned_at;bookingData.food_scanned_at=fresh.food_scanned_at;}
+  const currentVal=fresh?fresh[field]:null;
+  if(currentVal){
+    showScanPopup('warn',label,currentVal);
+    updateStaffPanel();
+    return;
+  }
+  const now=new Date().toISOString();
+  const{error}=await sb.from('kh_bookings').update({[field]:now}).eq('id',bookingId);
+  if(error){alert('Error: '+error.message);return;}
+  bookingData[field]=now;
+  updateStaffPanel();
+  showScanPopup('ok',label,now);
+}
+
+function showScanPopup(mode,label,ts){
+  const isWarn=mode==='warn';
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:14px;font-weight:700;padding:22px 26px;border-radius:14px;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,0.4);text-align:center;max-width:300px;line-height:1.6;background:'+(isWarn?'#cc3333':'#2e9e60')+';';
+  if(isWarn){
+    t.innerHTML='⚠️ Already scanned!<br><span style="font-weight:400;font-size:12px;">This ticket was already used for<br>'+label+' at '+fmtTs(ts)+'</span>';
+  }else{
+    t.innerHTML=(label==='gate entry'?'✅ Gate Entry Marked!':'✅ Food Collected Marked!')+'<br><span style="font-weight:400;font-size:12px;">'+fmtTs(ts)+'</span>';
+  }
+  document.body.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove();},isWarn?5000:3000);
 }
 
 function downloadPDF(){

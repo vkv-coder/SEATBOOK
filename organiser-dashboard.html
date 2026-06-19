@@ -478,8 +478,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div id="studio-report-loading" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
     <div id="studio-report-body" style="display:none;"></div>
     <div id="studio-report-footer" style="display:none;margin-top:14px;">
-      <button onclick="downloadStudioReport()" style="width:100%;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-        ⬇ Download as Excel
+      <button onclick="downloadStudioReport()" style="width:100%;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">
+        ⬇ Download Revenue Report
+      </button>
+      <button onclick="downloadGateList()" style="width:100%;padding:12px;background:rgba(46,158,96,0.12);color:#1a6b3a;border:1px solid rgba(46,158,96,0.3);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        📋 Download Gate List
       </button>
     </div>
   </div>
@@ -1762,21 +1765,26 @@ async function openStudioReport(eid){
   document.getElementById('studio-report-footer').style.display='none';
   document.getElementById('studio-modal').classList.add('show');
   try{
-    const[{data:members},{data:bookings}]=await Promise.all([
+    const[{data:members},{data:bookings},{data:foodOrders}]=await Promise.all([
       sb.from('kh_event_members').select('mobile,name,studio,free_qty').eq('event_id',eid),
-      sb.from('kh_bookings').select('booker_mobile,seat_count,amount,payment_status,status')
-        .eq('event_id',eid).not('status','in','("cancelled","draft")')
+      sb.from('kh_bookings').select('id,booker_mobile,seat_count,seat_keys,amount,payment_status,status,gate_scanned_at,food_scanned_at')
+        .eq('event_id',eid).not('status','in','("cancelled","draft")'),
+      sb.from('kh_food_orders').select('booker_mobile,total_amount').eq('event_id',eid).eq('status','confirmed')
     ]);
     // Build booking lookup by mobile
     const bkMap={};
     (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
+    // Build food order lookup by mobile (sum amounts)
+    const foodMap={};
+    (foodOrders||[]).forEach(f=>{foodMap[f.booker_mobile]=(foodMap[f.booker_mobile]||0)+(f.total_amount||0);});
     // Aggregate by studio
     const studios={};
     (members||[]).forEach(m=>{
       const st=m.studio||'(No Studio)';
-      if(!studios[st])studios[st]={studio:st,total:0,booked:0,freeSeats:0,paidSeats:0,revenue:0,rows:[]};
+      if(!studios[st])studios[st]={studio:st,total:0,booked:0,freeSeats:0,paidSeats:0,revenue:0,foodRevenue:0,rows:[]};
       studios[st].total++;
       const bk=bkMap[m.mobile];
+      const fr=foodMap[m.mobile]||0;
       if(bk){
         studios[st].booked++;
         const fq=m.free_qty||2;
@@ -1785,15 +1793,16 @@ async function openStudioReport(eid){
         studios[st].paidSeats+=paidS;
         studios[st].revenue+=bk.amount||0;
       }
-      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0});
+      studios[st].foodRevenue+=fr;
+      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0,foodRev:fr,ticketNo:bk?'TKT-'+bk.id.slice(0,8).toUpperCase():'',seatsList:bk&&bk.seat_keys?(bk.seat_keys||[]).join(', '):'',gateScanned:bk?!!bk.gate_scanned_at:false,foodScanned:bk?!!bk.food_scanned_at:false});
     });
     studioReportData=Object.values(studios);
     // Render report
     const body=document.getElementById('studio-report-body');
-    let totalRev=0,totalPaid=0,totalBooked=0,totalMembers=0;
+    let totalRev=0,totalPaid=0,totalBooked=0,totalMembers=0,totalFood=0;
     let html='';
     studioReportData.forEach(st=>{
-      totalRev+=st.revenue; totalPaid+=st.paidSeats; totalBooked+=st.booked; totalMembers+=st.total;
+      totalRev+=st.revenue; totalPaid+=st.paidSeats; totalBooked+=st.booked; totalMembers+=st.total; totalFood+=st.foodRevenue;
       html+=`
       <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">${st.studio}</div>
@@ -1816,10 +1825,49 @@ async function openStudioReport(eid){
           </div>
         </div>
         <div style="margin-top:10px;padding:10px 12px;background:rgba(200,134,10,0.08);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-size:12px;font-weight:600;color:var(--muted);">Revenue from paid seats</div>
+          <div style="font-size:12px;font-weight:600;color:var(--muted);">Ticket Revenue</div>
           <div style="font-size:16px;font-weight:700;color:var(--accent);">₹${fmt(st.revenue)}</div>
         </div>
+        <div style="margin-top:6px;padding:10px 12px;background:rgba(200,80,20,0.08);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);">Food Revenue</div>
+          <div style="font-size:16px;font-weight:700;color:#c84010;">₹${fmt(st.foodRevenue)}</div>
+        </div>
+        <div style="margin-top:6px;padding:10px 12px;background:rgba(200,134,10,0.12);border:1px solid rgba(200,134,10,0.25);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:12px;font-weight:700;color:var(--text);">Total Revenue</div>
+          <div style="font-size:17px;font-weight:800;color:var(--accent);">₹${fmt(st.revenue+st.foodRevenue)}</div>
+        </div>
         <div style="font-size:11px;color:var(--muted);margin-top:8px;">${st.total-st.booked} member${st.total-st.booked!==1?'s':''} yet to book</div>
+        <div style="margin-top:12px;overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.05);">
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;white-space:nowrap;">Ticket No.</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Name</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Seats</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Gate</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Food</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${st.rows.filter(r=>r.booked).map(r=>`
+                <tr style="border-top:1px solid var(--border);">
+                  <td style="padding:5px 6px;color:var(--accent);font-weight:700;white-space:nowrap;">${r.ticketNo}</td>
+                  <td style="padding:5px 6px;color:var(--text);">${r.name||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${r.seatsList||'—'}</td>
+                  <td style="padding:5px 6px;text-align:center;font-size:14px;">${r.gateScanned?'✅':'□'}</td>
+                  <td style="padding:5px 6px;text-align:center;font-size:14px;">${r.foodScanned?'✅':'□'}</td>
+                </tr>`).join('')}
+              ${st.rows.filter(r=>!r.booked).map(r=>`
+                <tr style="border-top:1px solid var(--border);opacity:0.4;">
+                  <td style="padding:5px 6px;color:var(--muted);">—</td>
+                  <td style="padding:5px 6px;color:var(--muted);">${r.name||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);">not booked</td>
+                  <td style="padding:5px 6px;text-align:center;">□</td>
+                  <td style="padding:5px 6px;text-align:center;">□</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>`;
     });
     // Grand total
@@ -1828,13 +1876,32 @@ async function openStudioReport(eid){
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Total members</span><strong>${totalMembers}</strong></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Booked so far</span><strong style="color:var(--green);">${totalBooked}</strong></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Total paid seats</span><strong>${totalPaid}</strong></div>
-      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid rgba(200,134,10,0.2);"><span>Total revenue</span><span style="color:var(--accent);">₹${fmt(totalRev)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Ticket Revenue</span><strong style="color:var(--accent);">₹${fmt(totalRev)}</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Food Revenue</span><strong style="color:#c84010;">₹${fmt(totalFood)}</strong></div>
+      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid rgba(200,134,10,0.2);"><span>Grand Total Revenue</span><span style="color:var(--accent);">₹${fmt(totalRev+totalFood)}</span></div>
     </div>`;
     body.innerHTML=html;
     document.getElementById('studio-report-loading').style.display='none';
     body.style.display='block';
     document.getElementById('studio-report-footer').style.display='block';
   }catch(err){document.getElementById('studio-report-loading').textContent='Error: '+err.message;}
+}
+
+function downloadGateList(){
+  if(!studioReportData)return;
+  const ev=allEvents.find(e=>e.event.id===studioReportEventId);
+  const evName=ev?ev.event.name:'Event';
+  const wb=XLSX.utils.book_new();
+  const rows=[['Ticket No.','Name','Mobile','Studio','Seats','Gate Entry ✓','Food Collected ✓']];
+  studioReportData.forEach(st=>{
+    st.rows.filter(r=>r.booked).forEach(r=>{
+      rows.push([r.ticketNo||'',r.name,r.mobile,st.studio,r.seatsList||'',r.gateScanned?'✓':'',r.foodScanned?'✓':'']);
+    });
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:22},{wch:14},{wch:20},{wch:20},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws,'Gate List');
+  XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Gate_List.xlsx');
 }
 
 function closeStudioModal(e){
@@ -1848,26 +1915,26 @@ function downloadStudioReport(){
   const evName=ev?ev.event.name:'Event';
   const wb=XLSX.utils.book_new();
   // Summary sheet
-  const summaryRows=[['Studio','Members','Booked','Yet to Book','Free Seats','Paid Seats','Revenue (₹)']];
-  let totals=['TOTAL',0,0,0,0,0,0];
+  const summaryRows=[['Studio','Members','Booked','Yet to Book','Free Seats','Paid Seats','Ticket Revenue (₹)','Food Revenue (₹)','Total Revenue (₹)']];
+  let totals=['TOTAL',0,0,0,0,0,0,0,0];
   studioReportData.forEach(st=>{
-    summaryRows.push([st.studio,st.total,st.booked,st.total-st.booked,st.freeSeats,st.paidSeats,st.revenue]);
+    summaryRows.push([st.studio,st.total,st.booked,st.total-st.booked,st.freeSeats,st.paidSeats,st.revenue,st.foodRevenue,st.revenue+st.foodRevenue]);
     totals[1]+=st.total;totals[2]+=st.booked;totals[3]+=st.total-st.booked;
-    totals[4]+=st.freeSeats;totals[5]+=st.paidSeats;totals[6]+=st.revenue;
+    totals[4]+=st.freeSeats;totals[5]+=st.paidSeats;totals[6]+=st.revenue;totals[7]+=st.foodRevenue;totals[8]+=st.revenue+st.foodRevenue;
   });
   summaryRows.push(totals);
   const ws1=XLSX.utils.aoa_to_sheet(summaryRows);
-  ws1['!cols']=[{wch:30},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:14}];
+  ws1['!cols']=[{wch:30},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws1,'Summary');
   // Detail sheet — all members with booking status
-  const detailRows=[['Studio','Name','Mobile','Booked','Total Seats','Amount Paid (₹)']];
+  const detailRows=[['Ticket No.','Studio','Name','Mobile','Seats','Ticket Amount (₹)','Food Amount (₹)','Gate Entry','Food Collected']];
   studioReportData.forEach(st=>{
     st.rows.forEach(r=>{
-      detailRows.push([st.studio,r.name,r.mobile,r.booked?'Yes':'No',r.seats||'',r.paid||0]);
+      detailRows.push([r.ticketNo||'',st.studio,r.name,r.mobile,r.seatsList||r.seats||'',r.paid||0,r.foodRev||0,r.gateScanned?'✓':'',r.foodScanned?'✓':'']);
     });
   });
   const ws2=XLSX.utils.aoa_to_sheet(detailRows);
-  ws2['!cols']=[{wch:30},{wch:22},{wch:14},{wch:8},{wch:12},{wch:16}];
+  ws2['!cols']=[{wch:14},{wch:22},{wch:20},{wch:14},{wch:20},{wch:18},{wch:16},{wch:12},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws2,'Member Details');
   XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Studio_Report.xlsx');
 }
