@@ -340,9 +340,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div style="background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#128c7e;line-height:1.7;margin-bottom:14px;">
       ℹ️ Recipient opens the link → enters your email + today's 6-digit code → camera locked to their role.
       <div style="margin-top:8px;padding:10px;background:#fff;border-radius:8px;border:1px dashed rgba(37,211,102,0.4);text-align:center;">
-        <div style="font-size:11px;color:#888;margin-bottom:4px;">Today's scanner access code</div>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">Today's scanner login code — send this to checker</div>
         <div id="scanner-otp-display" style="font-size:28px;font-family:monospace;font-weight:700;letter-spacing:8px;color:#1a1a1a;">——————</div>
-        <div style="font-size:10px;color:#aaa;margin-top:4px;">Changes at midnight · Share only with your team</div>
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">Changes at midnight</div>
+      </div>
+      <div style="margin-top:8px;padding:10px;background:#fff3cd;border-radius:8px;border:1px dashed #f0a500;text-align:center;">
+        <div style="font-size:11px;color:#a05000;font-weight:700;margin-bottom:4px;">⚠️ SUPERVISOR OVERRIDE CODE — DO NOT SHARE</div>
+        <div id="scanner-override-display" style="font-size:28px;font-family:monospace;font-weight:700;letter-spacing:8px;color:#7a3800;">——————</div>
+        <div style="font-size:10px;color:#a05000;margin-top:4px;">Use only to allow re-entry when scanner shows "Already Used" · Keep to yourself</div>
       </div>
     </div>
 
@@ -1171,6 +1176,11 @@ async function computeScannerCode(evId){
   const hash=await _sha256hex(evId+'|'+today+'|kh_scan_auth_2026');
   return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
 }
+async function computeOverrideCode(evId){
+  const today=new Date().toLocaleDateString('en-CA');
+  const hash=await _sha256hex(evId+'|'+today+'|kh_override_supervisor_2026');
+  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
+}
 
 async function openSendScanner(eid){
   scannerSendEventId = eid;
@@ -1179,9 +1189,11 @@ async function openSendScanner(eid){
   document.getElementById('scanner-err-gate').style.display = 'none';
   document.getElementById('scanner-err-food').style.display = 'none';
   document.getElementById('scanner-otp-display').textContent = '……';
+  document.getElementById('scanner-override-display').textContent = '……';
   document.getElementById('scanner-send-modal').classList.add('show');
-  const code = await computeScannerCode(eid);
-  document.getElementById('scanner-otp-display').textContent = code;
+  const [loginCode, overrideCode] = await Promise.all([computeScannerCode(eid), computeOverrideCode(eid)]);
+  document.getElementById('scanner-otp-display').textContent = loginCode;
+  document.getElementById('scanner-override-display').textContent = overrideCode;
   setTimeout(()=>document.getElementById('scanner-phone-gate').focus(), 300);
 }
 
@@ -1789,7 +1801,7 @@ async function openStudioReport(eid){
   try{
     const[{data:members},{data:bookings},{data:foodOrders}]=await Promise.all([
       sb.from('kh_event_members').select('mobile,name,studio,free_qty').eq('event_id',eid),
-      sb.from('kh_bookings').select('id,booker_mobile,seat_count,seat_keys,amount,payment_status,status,gate_scanned_at,food_scanned_at')
+      sb.from('kh_bookings').select('id,booker_mobile,seat_count,seat_keys,amount,payment_status,status,entry_scanned_at,food_scanned_at')
         .eq('event_id',eid).not('status','in','("cancelled","draft")'),
       sb.from('kh_food_orders').select('booker_mobile,total_amount').eq('event_id',eid).eq('status','confirmed')
     ]);
@@ -1816,7 +1828,7 @@ async function openStudioReport(eid){
         studios[st].revenue+=bk.amount||0;
       }
       studios[st].foodRevenue+=fr;
-      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0,foodRev:fr,ticketNo:bk?'TKT-'+bk.id.slice(0,8).toUpperCase():'',seatsList:bk&&bk.seat_keys?(bk.seat_keys||[]).join(', '):'',gateScanned:bk?!!bk.gate_scanned_at:false,foodScanned:bk?!!bk.food_scanned_at:false});
+      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0,foodRev:fr,ticketNo:bk?'TKT-'+bk.id.slice(0,8).toUpperCase():'',seatsList:bk&&bk.seat_keys?(bk.seat_keys||[]).join(', '):'',gateScanned:bk?!!bk.entry_scanned_at:false,foodScanned:bk?!!bk.food_scanned_at:false});
     });
     studioReportData=Object.values(studios);
     // Render report

@@ -218,7 +218,7 @@ canvas{display:none;}
     </div>
 
     <div class="override-box" id="override-box" style="display:none;">
-      <p>⚠️ This ticket was already scanned. Enter today's 6-digit access code to override and allow entry.</p>
+      <p>⚠️ This ticket was already scanned. Enter today's <strong>supervisor override code</strong> (from organiser dashboard — different from the login code) to allow entry.</p>
       <div class="override-pin-row">
         <input class="override-pin-input" id="override-pin" type="password" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="6-digit code" style="letter-spacing:4px;">
         <button class="override-submit" onclick="doOverride()">Allow</button>
@@ -256,10 +256,17 @@ async function _sha256hex(s){
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
 }
 
-// Daily OTP code (unchanged from live)
+// Login code — sent to gate/food checker via WhatsApp
 async function computeOtpCode(evId){
   const today=new Date().toLocaleDateString('en-CA');
   const hash=await _sha256hex(evId+'|'+today+'|kh_scan_auth_2026');
+  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
+}
+
+// Override code — DIFFERENT salt, shown only in organiser dashboard, never sent to checker
+async function computeOverrideCode(evId){
+  const today=new Date().toLocaleDateString('en-CA');
+  const hash=await _sha256hex(evId+'|'+today+'|kh_override_supervisor_2026');
   return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
 }
 
@@ -782,7 +789,7 @@ function closeResult() {
 // ── OVERRIDE (unchanged from live) ────────────────────────
 async function doOverride() {
   const entered  = document.getElementById('override-pin').value.trim();
-  const expected = await computeOtpCode(eventId);
+  const expected = await computeOverrideCode(eventId);
   const errEl    = document.getElementById('override-err');
   if (entered !== expected) {
     errEl.textContent = 'Incorrect code.';
