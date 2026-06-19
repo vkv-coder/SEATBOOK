@@ -1081,11 +1081,14 @@ function downloadTicketPDF(){
   doc.setFillColor(255,255,255);doc.rect(0,39,W,pdfH-20,'F');
   // QR
   if(qrDataUrl)doc.addImage(qrDataUrl,'PNG',W-34,42,28,28);
-  doc.setTextColor(136,136,136);doc.setFontSize(4.5);doc.setFont('helvetica','normal');doc.text(ticketData.bookingId.slice(0,20)+'...',W-34,72,{maxWidth:28});
+  const pdfTktNo='TKT-'+(ticketData.bookingId||'').slice(0,8).toUpperCase();
+  doc.setTextColor(136,136,136);doc.setFontSize(5);doc.setFont('helvetica','normal');doc.text(pdfTktNo,W-34,72,{maxWidth:28});
+  // Ticket No
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.text('TICKET NO.',6,46);doc.setTextColor(200,134,10);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(pdfTktNo,6,51);
   // Name
-  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.text('NAME',6,46);doc.setTextColor(26,26,26);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(ticketData.bookerName,6,51);
+  doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');doc.text('NAME',6,55);doc.setTextColor(26,26,26);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(ticketData.bookerName,6,60);
   // Seats (skip for open events)
-  let yPos=59;
+  let yPos=68;
   if(!ticketData.isOpen){
     doc.setTextColor(136,136,136);doc.setFontSize(6);doc.setFont('helvetica','normal');doc.text('SEATS',6,yPos);
     doc.setTextColor(26,26,26);doc.setFontSize(9);doc.setFont('helvetica','bold');
