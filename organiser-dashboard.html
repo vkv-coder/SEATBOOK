@@ -491,6 +491,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
+<!-- ── FOOD ORDERS REPORT MODAL ── -->
+<div class="modal-overlay" id="food-report-modal" onclick="closeFoodReport(event)">
+  <div class="modal-panel" style="max-height:92vh;overflow-y:auto;padding-bottom:40px;">
+    <button class="modal-close" onclick="closeFoodReport()">×</button>
+    <div class="modal-title">🍽 Food Orders Report</div>
+    <div class="modal-sub" id="food-report-event-name" style="margin-bottom:12px;"></div>
+    <div id="food-report-loading" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Loading…</div>
+    <div id="food-report-summary" style="display:none;margin-bottom:12px;"></div>
+    <div id="food-report-body" style="display:none;overflow-x:auto;"></div>
+    <div id="food-report-footer" style="display:none;margin-top:14px;">
+      <button onclick="downloadFoodReport()"
+        style="width:100%;padding:12px;background:#c84010;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        ⬇ Download Food Report (.xlsx)
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ── STUDIO REVENUE REPORT MODAL ── -->
 <div class="modal-overlay" id="studio-modal" onclick="closeStudioModal(event)">
   <div class="modal-panel" style="max-height:90vh;overflow-y:auto;padding-bottom:40px;">
@@ -852,7 +870,8 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="toggleBooking('${eid}',this)"><div class="qa-icon">${event.status==='active'?'🔒':'🔓'}</div><div class="qa-label">${event.status==='active'?'Close booking':'Open booking'}</div></button>
       <button class="qa-btn" onclick="openComplimentary('${eid}')" style="grid-column:span 2;background:rgba(46,158,96,0.07);border-color:rgba(46,158,96,0.2);"><div class="qa-icon">🎟</div><div class="qa-label" style="color:var(--green);">Complimentary Tickets</div></button>
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
-      <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="grid-column:span 2;background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Pre-booking Setup</div></button>
+      <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Setup</div></button>
+      <button class="qa-btn" onclick="openFoodReport('${eid}')" style="background:rgba(220,80,30,0.12);border-color:rgba(220,80,30,0.3);"><div class="qa-icon">📋</div><div class="qa-label" style="color:#c84010;">Food Report</div></button>
       ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Members</div></button><button class="qa-btn" onclick="openStudioReport('${eid}')" style="background:rgba(124,58,237,0.07);border-color:rgba(124,58,237,0.2);"><div class="qa-icon">📊</div><div class="qa-label" style="color:#7c3aed;">Studio Report</div></button>`:''}
     </div>
 
@@ -1981,6 +2000,170 @@ function downloadGateList(){
 function closeStudioModal(e){
   if(e&&e.target!==document.getElementById('studio-modal'))return;
   document.getElementById('studio-modal').classList.remove('show');
+}
+
+// ── FOOD ORDERS REPORT ─────────────────────────────────────
+let foodReportData=null;
+let foodReportEventId=null;
+
+function closeFoodReport(e){
+  if(e&&e.target!==document.getElementById('food-report-modal'))return;
+  document.getElementById('food-report-modal').classList.remove('show');
+}
+
+async function openFoodReport(eid){
+  foodReportEventId=eid;
+  foodReportData=null;
+  const ev=allEvents.find(e=>e.event.id===eid);
+  document.getElementById('food-report-event-name').textContent=ev?ev.event.name:'';
+  document.getElementById('food-report-loading').style.display='block';
+  document.getElementById('food-report-summary').style.display='none';
+  document.getElementById('food-report-body').style.display='none';
+  document.getElementById('food-report-footer').style.display='none';
+  document.getElementById('food-report-modal').classList.add('show');
+  try{
+    const [{data:orders},{data:bookings},{data:members}]=await Promise.all([
+      sb.from('kh_food_orders').select('id,booker_mobile,paid_item_name,free_item_name,quantity,total_amount,status,booking_id')
+        .eq('event_id',eid).eq('status','confirmed').order('created_at',{ascending:true}),
+      sb.from('kh_bookings').select('id,booker_mobile,booker_name,food_scanned_at')
+        .eq('event_id',eid).not('status','in','("cancelled","draft")'),
+      sb.from('kh_event_members').select('mobile,name,studio').eq('event_id',eid)
+    ]);
+    // Build lookups
+    const bkMap={};
+    (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
+    const memMap={};
+    (members||[]).forEach(m=>{memMap[m.mobile]={name:m.name,studio:m.studio};});
+
+    foodReportData=(orders||[]).map(o=>{
+      const bk=bkMap[o.booker_mobile]||null;
+      const mem=memMap[o.booker_mobile]||null;
+      return{
+        orderId:o.id,bookingId:bk?bk.id:null,
+        name:mem?mem.name:(bk?bk.booker_name:o.booker_mobile),
+        mobile:o.booker_mobile,
+        studio:mem?mem.studio:'—',
+        itemName:o.paid_item_name||'—',
+        freeItem:o.free_item_name||'—',
+        qty:o.quantity||1,
+        amount:o.total_amount||0,
+        collected:bk?!!bk.food_scanned_at:false
+      };
+    });
+
+    // Summary stats
+    const totalOrders=foodReportData.length;
+    const totalQty=foodReportData.reduce((s,r)=>s+r.qty,0);
+    const totalAmt=foodReportData.reduce((s,r)=>s+r.amount,0);
+    const collected=foodReportData.filter(r=>r.collected).length;
+    const pending=totalOrders-collected;
+
+    document.getElementById('food-report-summary').innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        <div style="background:rgba(200,64,16,0.08);border:1px solid rgba(200,64,16,0.2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#c84010;">${totalOrders}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Orders</div>
+        </div>
+        <div style="background:rgba(200,64,16,0.08);border:1px solid rgba(200,64,16,0.2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:#c84010;">${totalQty}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Total Qty</div>
+        </div>
+        <div style="background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.2);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:var(--green);">${collected}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Collected</div>
+        </div>
+        <div style="background:rgba(244,162,97,0.1);border:1px solid rgba(244,162,97,0.3);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:22px;font-weight:800;color:var(--amber);">${pending}</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Pending</div>
+        </div>
+      </div>
+      <div style="background:rgba(200,64,16,0.06);border:1px solid rgba(200,64,16,0.15);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:600;">Total Food Revenue</span>
+        <span style="font-size:18px;font-weight:800;color:#c84010;">₹${fmt(totalAmt)}</span>
+      </div>`;
+    document.getElementById('food-report-summary').style.display='block';
+
+    // Build table
+    let rows='';
+    foodReportData.forEach((r,i)=>{
+      rows+=`<tr style="border-top:1px solid var(--border);">
+        <td style="padding:5px 8px;color:var(--muted);font-size:11px;">${i+1}</td>
+        <td style="padding:5px 8px;color:var(--text);white-space:nowrap;">${esc(r.name)}</td>
+        <td style="padding:5px 8px;color:var(--muted);font-size:11px;">${esc(r.mobile)}</td>
+        <td style="padding:5px 8px;color:var(--muted);font-size:11px;white-space:nowrap;">${esc(r.studio)}</td>
+        <td style="padding:5px 8px;color:var(--text);white-space:nowrap;">${esc(r.itemName)}</td>
+        <td style="padding:5px 8px;color:var(--muted);font-size:11px;white-space:nowrap;">${esc(r.freeItem)}</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:#c84010;">${r.qty}</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:700;color:var(--accent);">₹${fmt(r.amount)}</td>
+        <td style="padding:5px 8px;text-align:center;">
+          <button id="fcbtn-${r.bookingId||i}" onclick="manualFoodCollect('${r.bookingId||''}',this)"
+            style="border:none;background:none;cursor:pointer;font-size:18px;padding:2px;line-height:1;"
+            title="Tap to mark food collected">${r.collected?'🟧':'⬜'}</button>
+        </td>
+      </tr>`;
+    });
+
+    document.getElementById('food-report-body').innerHTML=`
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px;">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.05);">
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">#</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">Name</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">Mobile</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">Club</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">Food Item</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:left;">Free Item</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:center;">Qty</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:right;">Amt (₹)</th>
+            <th style="padding:6px 8px;color:var(--muted);font-weight:600;text-align:center;">Collected</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    document.getElementById('food-report-body').style.display='block';
+    document.getElementById('food-report-loading').style.display='none';
+    document.getElementById('food-report-footer').style.display='block';
+  }catch(err){
+    document.getElementById('food-report-loading').textContent='Error: '+err.message;
+  }
+}
+
+async function manualFoodCollect(bookingId, btn){
+  if(!bookingId){ showToast('No booking linked to this order'); return; }
+  const already=btn.textContent.trim()==='🟧';
+  if(already){
+    if(!confirm('Already marked collected. Clear this mark?')) return;
+    btn.textContent='…'; btn.disabled=true;
+    await sb.from('kh_bookings').update({food_scanned_at:null}).eq('id',bookingId);
+    btn.textContent='⬜'; btn.disabled=false;
+    return;
+  }
+  btn.textContent='…'; btn.disabled=true;
+  const{error}=await sb.from('kh_bookings')
+    .update({food_scanned_at:new Date().toISOString()}).eq('id',bookingId);
+  if(error){ showToast('Error: '+error.message); btn.textContent='⬜'; btn.disabled=false; return; }
+  btn.textContent='🟧'; btn.disabled=false;
+  showToast('Food marked collected');
+}
+
+function downloadFoodReport(){
+  if(!foodReportData||!foodReportData.length){ showToast('No food orders to download'); return; }
+  const ev=allEvents.find(e=>e.event.id===foodReportEventId);
+  const evName=ev?ev.event.name:'Event';
+  const wb=XLSX.utils.book_new();
+  const rows=[['#','Name','Mobile','Club/Studio','Food Item','Free Item','Qty','Amount (₹)','Food Collected']];
+  foodReportData.forEach((r,i)=>{
+    rows.push([i+1,r.name,r.mobile,r.studio,r.itemName,r.freeItem,r.qty,r.amount,r.collected?'✓':'']);
+  });
+  // Totals row
+  const totalQty=foodReportData.reduce((s,r)=>s+r.qty,0);
+  const totalAmt=foodReportData.reduce((s,r)=>s+r.amount,0);
+  const totalCollected=foodReportData.filter(r=>r.collected).length;
+  rows.push(['','TOTAL','','','','',totalQty,totalAmt,totalCollected+'/'+foodReportData.length+' collected']);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:4},{wch:22},{wch:14},{wch:22},{wch:24},{wch:18},{wch:6},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Food Orders');
+  XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Food_Report.xlsx');
 }
 
 function downloadStudioReport(){
