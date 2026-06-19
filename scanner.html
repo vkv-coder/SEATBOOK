@@ -166,6 +166,12 @@ canvas{display:none;}
 
 <!-- SCREEN: SCANNER -->
 <div class="screen" id="screen-scan">
+  <!-- Mode toggle -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button id="mode-gate-btn" onclick="setMode('gate')" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:#000;border:2px solid #fff;">🚪 Gate Entry</button>
+    <button id="mode-food-btn" onclick="setMode('food')" style="flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#888;border:2px solid #333;">🍽 Food</button>
+  </div>
+
   <!-- Day selector (shown only for multi-day events) -->
   <div class="day-bar" id="day-bar">
     <div class="day-bar-label">Scanning for day:</div>
@@ -233,8 +239,9 @@ const eventId = params.get('event');
 let eventData = null;
 let currentBooking = null;
 let scanning  = true;
-let eventTotalDays = 1;   // NEW
-let currentDay = 1;        // NEW — which day the scanner is operating on
+let eventTotalDays = 1;
+let currentDay = 1;
+let scanMode = 'gate';
 
 const OTP_KEY = 'kh_otp_' + eventId;
 
@@ -391,6 +398,21 @@ function setCurrentDay(d) {
   document.querySelectorAll('.day-chip').forEach((c, i) => c.classList.toggle('active', i + 1 === d));
 }
 
+function setMode(m) {
+  scanMode = m;
+  const g = document.getElementById('mode-gate-btn');
+  const f = document.getElementById('mode-food-btn');
+  if (m === 'gate') {
+    g.style.cssText = 'flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:#000;border:2px solid #fff;';
+    f.style.cssText = 'flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#888;border:2px solid #333;';
+    document.getElementById('scan-hint').textContent = 'Point camera at the QR code on the ticket';
+  } else {
+    f.style.cssText = 'flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:#c84010;color:#fff;border:2px solid #c84010;';
+    g.style.cssText = 'flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#888;border:2px solid #333;';
+    document.getElementById('scan-hint').textContent = 'Scan ticket QR to mark food collected';
+  }
+}
+
 // ── CAMERA (unchanged from live) ──────────────────────────
 async function requestCamera() {
   const btn    = document.querySelector('.cam-start-btn');
@@ -476,22 +498,33 @@ async function processBooking(bookingId) {
   document.getElementById('scan-status').textContent = 'Checking ticket…';
   try {
     const { data: bk, error } = await sb.from('kh_bookings')
-      .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden')
+      .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden, food_scanned_at')
       .eq('id', bookingId).single();
 
     if (error || !bk) { showResult('invalid', null, bookingId); return; }
     if (bk.event_id !== eventId) { showResult('wrong-event', bk, bookingId); return; }
     if (bk.status !== 'confirmed') { showResult('not-confirmed', bk, bookingId); return; }
 
+    // ── FOOD MODE ──
+    if (scanMode === 'food') {
+      if (bk.food_scanned_at) { showResult('food-already', bk, bookingId); return; }
+      const { data: upd, error: fErr } = await sb.from('kh_bookings')
+        .update({ food_scanned_at: new Date().toISOString() })
+        .eq('id', bookingId).is('food_scanned_at', null).select().single();
+      if (fErr || !upd) { showResult('food-already', bk, bookingId); return; }
+      showResult('food-valid', upd, bookingId);
+      return;
+    }
+
     if (eventTotalDays <= 1) {
-      // ── SINGLE-DAY logic (unchanged from live) ──
+      // ── SINGLE-DAY gate logic ──
       if (bk.entry_scanned_at) { showResult('already-used', bk, bookingId); return; }
       const { data: updated, error: upErr } = await sb.from('kh_bookings')
         .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: 1 })
         .eq('id', bookingId).is('entry_scanned_at', null).select().single();
       if (upErr || !updated) {
         const { data: refetch } = await sb.from('kh_bookings')
-          .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden')
+          .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden, food_scanned_at')
           .eq('id', bookingId).single();
         showResult('already-used', refetch, bookingId); return;
       }
@@ -586,6 +619,25 @@ function showResult(type, bk, rawId, attendedDays) {
     nextBtn.className = 'action-btn danger';
     nextBtn.textContent = 'Reject & Scan Next';
     nextBtn.onclick = () => closeResult();
+  } else if (type === 'food-valid') {
+    icon.textContent  = '🍽';
+    title.className   = 'result-title ok';
+    title.textContent = 'HAND OVER FOOD';
+    sub.textContent   = 'Pre-booking confirmed. Give the order now.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
+    if (bk && bk.food_scanned_at) {
+      card.innerHTML += '<div style="margin-top:10px;padding:8px 12px;background:#1a2a1a;border-radius:8px;font-size:12px;color:#1db954;">✅ Food marked collected at ' + formatTime(bk.food_scanned_at) + '</div>';
+    }
+  } else if (type === 'food-already') {
+    icon.textContent  = '⛔';
+    title.className   = 'result-title fail';
+    title.textContent = 'FOOD ALREADY CLAIMED';
+    const ft = bk && bk.food_scanned_at ? formatTime(bk.food_scanned_at) : 'earlier';
+    sub.textContent   = 'Food was collected at ' + ft + '. Do not give again.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
+    nextBtn.className   = 'action-btn danger';
+    nextBtn.textContent = 'Reject & Scan Next';
+    nextBtn.onclick     = () => closeResult();
   } else if (type === 'wrong-event') {
     icon.textContent  = '⛔';
     title.textContent = 'WRONG EVENT';
