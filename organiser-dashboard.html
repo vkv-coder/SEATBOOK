@@ -1803,14 +1803,19 @@ async function openStudioReport(eid){
       sb.from('kh_event_members').select('mobile,name,studio,free_qty').eq('event_id',eid),
       sb.from('kh_bookings').select('id,booker_mobile,seat_count,seat_keys,amount,payment_status,status,entry_scanned_at,food_scanned_at')
         .eq('event_id',eid).not('status','in','("cancelled","draft")'),
-      sb.from('kh_food_orders').select('booker_mobile,total_amount').eq('event_id',eid).eq('status','confirmed')
+      sb.from('kh_food_orders').select('booker_mobile,paid_item_name,quantity,total_amount').eq('event_id',eid).eq('status','confirmed')
     ]);
     // Build booking lookup by mobile
     const bkMap={};
     (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
-    // Build food order lookup by mobile (sum amounts)
+    // Build food order lookup by mobile
     const foodMap={};
-    (foodOrders||[]).forEach(f=>{foodMap[f.booker_mobile]=(foodMap[f.booker_mobile]||0)+(f.total_amount||0);});
+    (foodOrders||[]).forEach(f=>{
+      if(!foodMap[f.booker_mobile]) foodMap[f.booker_mobile]={amount:0,itemName:f.paid_item_name||'',qty:0};
+      foodMap[f.booker_mobile].amount+=(f.total_amount||0);
+      foodMap[f.booker_mobile].qty+=(f.quantity||0);
+      if(!foodMap[f.booker_mobile].itemName) foodMap[f.booker_mobile].itemName=f.paid_item_name||'';
+    });
     // Aggregate by studio
     const studios={};
     (members||[]).forEach(m=>{
@@ -1818,17 +1823,19 @@ async function openStudioReport(eid){
       if(!studios[st])studios[st]={studio:st,total:0,booked:0,freeSeats:0,paidSeats:0,revenue:0,foodRevenue:0,rows:[]};
       studios[st].total++;
       const bk=bkMap[m.mobile];
-      const fr=foodMap[m.mobile]||0;
+      const fd=foodMap[m.mobile]||null;
+      const fr=fd?fd.amount:0;
+      const fq=m.free_qty||2;
+      const freeSeatCount=bk?Math.min(bk.seat_count||0,fq):0;
+      const paidSeatCount=bk?Math.max(0,(bk.seat_count||0)-fq):0;
       if(bk){
         studios[st].booked++;
-        const fq=m.free_qty||2;
-        const paidS=Math.max(0,(bk.seat_count||0)-fq);
-        studios[st].freeSeats+=Math.min(bk.seat_count||0,fq);
-        studios[st].paidSeats+=paidS;
+        studios[st].freeSeats+=freeSeatCount;
+        studios[st].paidSeats+=paidSeatCount;
         studios[st].revenue+=bk.amount||0;
       }
       studios[st].foodRevenue+=fr;
-      studios[st].rows.push({name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,paid:bk?bk.amount:0,foodRev:fr,ticketNo:bk?'TKT-'+bk.id.slice(0,8).toUpperCase():'',seatsList:bk&&bk.seat_keys?(bk.seat_keys||[]).join(', '):'',gateScanned:bk?!!bk.entry_scanned_at:false,foodScanned:bk?!!bk.food_scanned_at:false});
+      studios[st].rows.push({bookingId:bk?bk.id:null,name:m.name,mobile:m.mobile,booked:!!bk,seats:bk?bk.seat_count:0,freeSeatCount,paidSeatCount,paid:bk?bk.amount:0,foodRev:fr,foodItemName:fd?fd.itemName:'',foodQty:fd?fd.qty:0,ticketNo:bk?'TKT-'+bk.id.slice(0,8).toUpperCase():'',seatsList:bk&&bk.seat_keys?(bk.seat_keys||[]).join(', '):'',gateScanned:bk?!!bk.entry_scanned_at:false,foodScanned:bk?!!bk.food_scanned_at:false});
     });
     studioReportData=Object.values(studios);
     // Render report
@@ -1872,32 +1879,44 @@ async function openStudioReport(eid){
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:8px;">${st.total-st.booked} member${st.total-st.booked!==1?'s':''} yet to book</div>
         <div style="margin-top:12px;overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:560px;">
             <thead>
               <tr style="background:rgba(255,255,255,0.05);">
                 <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;white-space:nowrap;">Ticket No.</th>
                 <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Name</th>
-                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Seats</th>
-                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Gate</th>
-                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Food</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Seat Nos.</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Free</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Paid</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Food Ordered</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">🚪Gate</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">🍽Food</th>
               </tr>
             </thead>
             <tbody>
               ${st.rows.filter(r=>r.booked).map(r=>`
                 <tr style="border-top:1px solid var(--border);">
-                  <td style="padding:5px 6px;color:var(--accent);font-weight:700;white-space:nowrap;">${r.ticketNo}</td>
-                  <td style="padding:5px 6px;color:var(--text);">${r.name||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--accent);font-weight:700;white-space:nowrap;font-size:10px;">${r.ticketNo}</td>
+                  <td style="padding:5px 6px;color:var(--text);white-space:nowrap;">${r.name||'—'}</td>
                   <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${r.seatsList||'—'}</td>
-                  <td style="padding:5px 6px;text-align:center;font-size:14px;">${r.gateScanned?'✅':'□'}</td>
-                  <td style="padding:5px 6px;text-align:center;font-size:14px;">${r.foodScanned?'✅':'□'}</td>
+                  <td style="padding:5px 6px;text-align:center;color:var(--green);font-weight:700;">${r.freeSeatCount||0}</td>
+                  <td style="padding:5px 6px;text-align:center;color:var(--accent);font-weight:700;">${r.paidSeatCount||0}</td>
+                  <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${r.foodItemName?r.foodItemName+' ×'+r.foodQty+' — ₹'+r.foodRev:'—'}</td>
+                  <td style="padding:5px 6px;text-align:center;">
+                    <button id="gbtn-${r.bookingId}" onclick="manualScan('${r.bookingId}','gate',this)"
+                      style="border:none;background:none;cursor:pointer;font-size:18px;padding:2px;line-height:1;"
+                      title="Tap to mark gate entry">${r.gateScanned?'✅':'⬜'}</button>
+                  </td>
+                  <td style="padding:5px 6px;text-align:center;">
+                    <button id="fbtn-${r.bookingId}" onclick="manualScan('${r.bookingId}','food',this)"
+                      style="border:none;background:none;cursor:pointer;font-size:18px;padding:2px;line-height:1;"
+                      title="Tap to mark food collected">${r.foodScanned?'🟧':'⬜'}</button>
+                  </td>
                 </tr>`).join('')}
               ${st.rows.filter(r=>!r.booked).map(r=>`
                 <tr style="border-top:1px solid var(--border);opacity:0.4;">
                   <td style="padding:5px 6px;color:var(--muted);">—</td>
                   <td style="padding:5px 6px;color:var(--muted);">${r.name||'—'}</td>
-                  <td style="padding:5px 6px;color:var(--muted);">not booked</td>
-                  <td style="padding:5px 6px;text-align:center;">□</td>
-                  <td style="padding:5px 6px;text-align:center;">□</td>
+                  <td colspan="6" style="padding:5px 6px;color:var(--muted);font-size:10px;">not booked</td>
                 </tr>`).join('')}
             </tbody>
           </table>
@@ -1919,6 +1938,27 @@ async function openStudioReport(eid){
     body.style.display='block';
     document.getElementById('studio-report-footer').style.display='block';
   }catch(err){document.getElementById('studio-report-loading').textContent='Error: '+err.message;}
+}
+
+async function manualScan(bookingId, type, btn){
+  if(!bookingId) return;
+  const already = btn.textContent.trim()==='✅' || btn.textContent.trim()==='🟧';
+  if(already){
+    if(!confirm('Already marked. Clear this mark?')) return;
+    const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
+    btn.textContent='…'; btn.disabled=true;
+    await sb.from('kh_bookings').update({[col]:null}).eq('id',bookingId);
+    btn.textContent='⬜'; btn.disabled=false;
+    return;
+  }
+  btn.textContent='…'; btn.disabled=true;
+  const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
+  const {error} = await sb.from('kh_bookings')
+    .update({[col]:new Date().toISOString()}).eq('id',bookingId);
+  if(error){ showToast('Error: '+error.message); btn.textContent='⬜'; btn.disabled=false; return; }
+  btn.textContent = type==='food' ? '🟧' : '✅';
+  btn.disabled=false;
+  showToast(type==='food' ? 'Food marked collected' : 'Gate entry marked');
 }
 
 function downloadGateList(){
@@ -1960,15 +2000,21 @@ function downloadStudioReport(){
   const ws1=XLSX.utils.aoa_to_sheet(summaryRows);
   ws1['!cols']=[{wch:30},{wch:10},{wch:10},{wch:12},{wch:12},{wch:12},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb,ws1,'Summary');
-  // Detail sheet — all members with booking status
-  const detailRows=[['Ticket No.','Studio','Name','Mobile','Seats','Ticket Amount (₹)','Food Amount (₹)','Gate Entry','Food Collected']];
+  // Detail sheet — all members with full booking info
+  const detailRows=[['Studio/Club','Name','Mobile','Ticket No.','Seat Numbers','Free Seats','Paid Seats','Ticket Amt (₹)','Food Item','Food Qty','Food Amt (₹)','Total Paid (₹)','Gate Entry','Food Collected']];
   studioReportData.forEach(st=>{
     st.rows.forEach(r=>{
-      detailRows.push([r.ticketNo||'',st.studio,r.name,r.mobile,r.seatsList||r.seats||'',r.paid||0,r.foodRev||0,r.gateScanned?'✓':'',r.foodScanned?'✓':'']);
+      detailRows.push([
+        st.studio,r.name,r.mobile,r.ticketNo||'',
+        r.seatsList||'',r.freeSeatCount||0,r.paidSeatCount||0,
+        r.paid||0,r.foodItemName||'',r.foodQty||0,r.foodRev||0,
+        (r.paid||0)+(r.foodRev||0),
+        r.gateScanned?'✓':'',r.foodScanned?'✓':''
+      ]);
     });
   });
   const ws2=XLSX.utils.aoa_to_sheet(detailRows);
-  ws2['!cols']=[{wch:14},{wch:22},{wch:20},{wch:14},{wch:20},{wch:18},{wch:16},{wch:12},{wch:14}];
+  ws2['!cols']=[{wch:22},{wch:20},{wch:14},{wch:14},{wch:24},{wch:10},{wch:10},{wch:14},{wch:20},{wch:10},{wch:12},{wch:14},{wch:11},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws2,'Member Details');
   XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Studio_Report.xlsx');
 }
