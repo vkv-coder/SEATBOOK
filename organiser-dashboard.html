@@ -360,10 +360,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
       <div id="scanner-err-gate" style="color:var(--red);font-size:12px;margin-top:4px;display:none;"></div>
     </div>
-    <button class="wa-btn" onclick="doSendScanner('gate')" style="margin-bottom:14px;">
+    <a id="scanner-wa-gate" href="#" target="_blank" class="wa-btn" onclick="return doSendScanner('gate')" style="margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.117 1.535 5.845L.057 23.998l6.304-1.654A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 01-4.99-1.368l-.358-.213-3.742.981 1.001-3.65-.234-.375A9.797 9.797 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
       Send 🚪 Gate Scanner Link
-    </button>
+    </a>
+    <div id="scanner-sent-gate" style="display:none;font-size:12px;color:var(--green);text-align:center;margin-bottom:12px;">✓ WhatsApp opened for gate checker</div>
 
     <!-- Food stall -->
     <div class="field-group" style="margin-bottom:8px;">
@@ -374,12 +375,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
       <div id="scanner-err-food" style="color:var(--red);font-size:12px;margin-top:4px;display:none;"></div>
     </div>
-    <button class="wa-btn" onclick="doSendScanner('food')" style="background:#c84010;margin-bottom:14px;">
+    <a id="scanner-wa-food" href="#" target="_blank" class="wa-btn" onclick="return doSendScanner('food')" style="background:#c84010;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.117 1.535 5.845L.057 23.998l6.304-1.654A11.934 11.934 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 01-4.99-1.368l-.358-.213-3.742.981 1.001-3.65-.234-.375A9.797 9.797 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
       Send 🍽 Food Scanner Link
-    </button>
+    </a>
+    <div id="scanner-sent-food" style="display:none;font-size:12px;color:var(--green);text-align:center;margin-bottom:12px;">✓ WhatsApp opened for food stall</div>
 
-    <button onclick="closeSendScanner()" style="width:100%;padding:12px;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer;">Cancel</button>
+    <button onclick="closeSendScanner()" style="width:100%;padding:12px;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer;margin-top:4px;">Done</button>
   </div>
 </div>
 
@@ -1209,6 +1211,10 @@ async function openSendScanner(eid){
   document.getElementById('scanner-err-food').style.display = 'none';
   document.getElementById('scanner-otp-display').textContent = '……';
   document.getElementById('scanner-override-display').textContent = '……';
+  document.getElementById('scanner-sent-gate').style.display = 'none';
+  document.getElementById('scanner-sent-food').style.display = 'none';
+  document.getElementById('scanner-wa-gate').href = '#';
+  document.getElementById('scanner-wa-food').href = '#';
   document.getElementById('scanner-send-modal').classList.add('show');
   const [loginCode, overrideCode] = await Promise.all([computeScannerCode(eid), computeOverrideCode(eid)]);
   document.getElementById('scanner-otp-display').textContent = loginCode;
@@ -1222,15 +1228,17 @@ function closeSendScanner(e){
 }
 
 function doSendScanner(mode){
-  const inputId = mode === 'food' ? 'scanner-phone-food' : 'scanner-phone-gate';
-  const errId   = mode === 'food' ? 'scanner-err-food'   : 'scanner-err-gate';
+  const inputId  = mode === 'food' ? 'scanner-phone-food'  : 'scanner-phone-gate';
+  const errId    = mode === 'food' ? 'scanner-err-food'    : 'scanner-err-gate';
+  const sentId   = mode === 'food' ? 'scanner-sent-food'   : 'scanner-sent-gate';
+  const linkId   = mode === 'food' ? 'scanner-wa-food'     : 'scanner-wa-gate';
   const phone = document.getElementById(inputId).value.replace(/\s/g,'').trim();
   const errEl = document.getElementById(errId);
   errEl.style.display = 'none';
   if(!/^\d{10}$/.test(phone)){
     errEl.textContent = 'Enter a valid 10-digit mobile number.';
     errEl.style.display = 'block';
-    return;
+    return false;
   }
   const ev = allEvents.find(e=>e.event.id===scannerSendEventId);
   const evName = ev ? ev.event.name : 'Event';
@@ -1240,9 +1248,9 @@ function doSendScanner(mode){
   const roleStep  = mode === 'food' ? 'Scan customer QR to mark food collected' : 'Scan customer QR to allow gate entry';
   const msg = `*Khursilo ${roleLabel} — ${evName}*\n\nOpen this link in your phone browser:\n${scannerUrl}\n\n*Today's 6-digit access code: ${otpCode}*\n\n*Steps:*\n1. Open the link\n2. Enter organiser email + access code\n3. ${roleStep}\n\n_Code changes daily. Do not share publicly._`;
   const waUrl = 'https://wa.me/91' + phone + '?text=' + encodeURIComponent(msg);
-  window.open(waUrl, '_blank');
-  document.getElementById('scanner-send-modal').classList.remove('show');
-  showToast('WhatsApp opened — press Send to deliver');
+  document.getElementById(linkId).href = waUrl;
+  document.getElementById(sentId).style.display = 'block';
+  return true;
 }
 
 // ── UTILS ──

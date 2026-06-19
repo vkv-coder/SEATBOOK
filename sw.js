@@ -1,7 +1,7 @@
-// Khursilo Service Worker v1
+// Khursilo Service Worker v3
 // Enables PWA install prompt and basic offline shell
 
-const CACHE_NAME = 'khursilo-v1';
+const CACHE_NAME = 'khursilo-v3';
 const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
