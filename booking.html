@@ -1360,18 +1360,15 @@ async function verifyMember(){
   if(mob.length!==10){errEl.textContent='Please enter a valid 10-digit mobile number.';errEl.style.display='block';return;}
   btn.textContent='Checking…';btn.disabled=true;
   try{
-    console.log('verifyMember: eventId=',eventId,'mob=',mob);
     const{data:rows,error:mErr}=await sb.rpc('verify_event_member',{p_event_id:eventId,p_mobile:mob});
     const member=rows&&rows.length>0?rows[0]:null;
-    console.log('member result:',member,'error:',mErr);
     if(mErr||!member){
       errEl.textContent='Your mobile number is not registered for this event. Please contact the organiser.';
       errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
     }
     // Block only if already confirmed
-    const{data:confirmed,error:cErr}=await sb.from('kh_bookings').select('id')
+    const{data:confirmed}=await sb.from('kh_bookings').select('id')
       .eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').maybeSingle();
-    console.log('confirmed result:',confirmed,'error:',cErr);
     if(confirmed){
       errEl.textContent='You have already claimed your tickets for this event. Your ticket was sent via WhatsApp.';
       errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
