@@ -1199,10 +1199,6 @@ async function computeOverrideCode(evId){
 
 async function openSendScanner(eid){
   scannerSendEventId = eid;
-  document.getElementById('scanner-phone-gate').value = '';
-  document.getElementById('scanner-phone-food').value = '';
-  document.getElementById('scanner-err-gate').style.display = 'none';
-  document.getElementById('scanner-err-food').style.display = 'none';
   document.getElementById('scanner-otp-display').textContent = '……';
   document.getElementById('scanner-override-display').textContent = '……';
   document.getElementById('scanner-sent-gate').style.display = 'none';
@@ -1215,7 +1211,6 @@ async function openSendScanner(eid){
   const [loginCode, overrideCode] = await Promise.all([computeScannerCode(eid), computeOverrideCode(eid)]);
   document.getElementById('scanner-otp-display').textContent = loginCode;
   document.getElementById('scanner-override-display').textContent = overrideCode;
-  setTimeout(()=>document.getElementById('scanner-phone-gate').focus(), 300);
 }
 
 function closeSendScanner(e){
