@@ -600,6 +600,7 @@ let hallCache = {};        // hall_id → hall name
 
 // ── UTILS ──
 function fmt(n){ return Number(n||0).toLocaleString('en-IN'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return dt.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
 function fmtTime(t){ if(!t) return ''; try{ const [h,m]=t.split(':'); const hr=parseInt(h); const ampm=hr>=12?'PM':'AM'; return ((hr%12)||12)+':'+m+' '+ampm; }catch(e){return t;} }
 function timeAgo(ts){ if(!ts) return ''; const diff=(Date.now()-new Date(ts))/1000; if(diff<60) return 'just now'; if(diff<3600) return Math.floor(diff/60)+'m ago'; if(diff<86400) return Math.floor(diff/3600)+'h ago'; return Math.floor(diff/86400)+'d ago'; }
