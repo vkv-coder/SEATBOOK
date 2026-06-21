@@ -437,7 +437,7 @@ async function loadEvent(){
   try{
     const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single();
     if(evErr)throw evErr;
-    if(ev.status==='draft'){showError('This event is not yet open for booking.');return;}
+    if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
     eventData=ev;
 
     // ── Compute total days (NEW) ──
