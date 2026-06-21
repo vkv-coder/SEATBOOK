@@ -2000,14 +2000,14 @@ function downloadGateList(){
   const ev=allEvents.find(e=>e.event.id===studioReportEventId);
   const evName=ev?ev.event.name:'Event';
   const wb=XLSX.utils.book_new();
-  const rows=[['Ticket No.','Name','Mobile','Studio','Seats','Gate Entry ✓','Food Collected ✓']];
+  const rows=[['Ticket No.','Name','Mobile','Studio','Seats','Gate Entry ✓']];
   studioReportData.forEach(st=>{
     st.rows.filter(r=>r.booked).forEach(r=>{
-      rows.push([r.ticketNo||'',r.name,r.mobile,st.studio,r.seatsList||'',r.gateScanned?'✓':'',r.foodScanned?'✓':'']);
+      rows.push([r.ticketNo||'',r.name,r.mobile,st.studio,r.seatsList||'',r.gateScanned?'✓':'']);
     });
   });
   const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:14},{wch:22},{wch:14},{wch:20},{wch:20},{wch:14},{wch:16}];
+  ws['!cols']=[{wch:14},{wch:22},{wch:14},{wch:20},{wch:20},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws,'Gate List');
   XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Gate_List.xlsx');
 }
