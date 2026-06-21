@@ -1836,7 +1836,7 @@ async function openStudioReport(eid){
     const[{data:members},{data:bookings},{data:foodOrders}]=await Promise.all([
       sb.from('kh_event_members').select('mobile,name,studio,free_qty').eq('event_id',eid),
       sb.from('kh_bookings').select('id,booker_mobile,seat_count,seat_keys,amount,payment_status,status,entry_scanned_at,food_scanned_at')
-        .eq('event_id',eid).not('status','in','("cancelled","draft")'),
+        .eq('event_id',eid).neq('status','cancelled').neq('status','draft'),
       sb.from('kh_food_orders').select('booker_mobile,paid_item_name,quantity,total_amount').eq('event_id',eid).eq('status','confirmed')
     ]);
     // Build booking lookup by mobile
@@ -2041,7 +2041,7 @@ async function openFoodReport(eid){
       sb.from('kh_food_orders').select('id,booker_mobile,paid_item_name,free_item_name,quantity,total_amount,status,booking_id')
         .eq('event_id',eid).eq('status','confirmed').order('created_at',{ascending:true}),
       sb.from('kh_bookings').select('id,booker_mobile,booker_name,food_scanned_at')
-        .eq('event_id',eid).not('status','in','("cancelled","draft")'),
+        .eq('event_id',eid).neq('status','cancelled').neq('status','draft'),
       sb.from('kh_event_members').select('mobile,name,studio').eq('event_id',eid)
     ]);
     // Build lookups
