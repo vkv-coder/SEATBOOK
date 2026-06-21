@@ -1875,7 +1875,7 @@ async function openStudioReport(eid){
     // Render report
     const body=document.getElementById('studio-report-body');
     let totalRev=0,totalPaid=0,totalBooked=0,totalMembers=0,totalFood=0;
-    let html=`<div style="font-size:11px;color:var(--muted);padding:6px 0 10px;">DEBUG — Members fetched: ${(members||[]).length} | Bookings fetched: ${(bookings||[]).length} | Sample booking mobile: ${bookings&&bookings[0]?bookings[0].booker_mobile:'none'} | Sample member mobile: ${members&&members[0]?members[0].mobile:'none'}</div>`;
+    let html='';
     studioReportData.forEach(st=>{
       totalRev+=st.revenue; totalPaid+=st.paidSeats; totalBooked+=st.booked; totalMembers+=st.total; totalFood+=st.foodRevenue;
       html+=`
@@ -1918,6 +1918,8 @@ async function openStudioReport(eid){
               <tr style="background:rgba(255,255,255,0.05);">
                 <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;white-space:nowrap;">Ticket No.</th>
                 <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Name</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Mobile</th>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Club</th>
                 <th style="text-align:left;padding:5px 6px;color:var(--muted);font-weight:600;">Seat Nos.</th>
                 <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Free</th>
                 <th style="text-align:center;padding:5px 6px;color:var(--muted);font-weight:600;">Paid</th>
@@ -1931,6 +1933,8 @@ async function openStudioReport(eid){
                 <tr style="border-top:1px solid var(--border);">
                   <td style="padding:5px 6px;color:var(--accent);font-weight:700;white-space:nowrap;font-size:10px;">${r.ticketNo}</td>
                   <td style="padding:5px 6px;color:var(--text);white-space:nowrap;">${r.name||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${r.mobile||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${st.studio||'—'}</td>
                   <td style="padding:5px 6px;color:var(--muted);white-space:nowrap;">${r.seatsList||'—'}</td>
                   <td style="padding:5px 6px;text-align:center;color:var(--green);font-weight:700;">${r.freeSeatCount||0}</td>
                   <td style="padding:5px 6px;text-align:center;color:var(--accent);font-weight:700;">${r.paidSeatCount||0}</td>
@@ -1950,6 +1954,8 @@ async function openStudioReport(eid){
                 <tr style="border-top:1px solid var(--border);opacity:0.4;">
                   <td style="padding:5px 6px;color:var(--muted);">—</td>
                   <td style="padding:5px 6px;color:var(--muted);">${r.name||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);">${r.mobile||'—'}</td>
+                  <td style="padding:5px 6px;color:var(--muted);">${st.studio||'—'}</td>
                   <td colspan="6" style="padding:5px 6px;color:var(--muted);font-size:10px;">not booked</td>
                 </tr>`).join('')}
             </tbody>
