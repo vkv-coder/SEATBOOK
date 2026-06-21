@@ -1841,7 +1841,7 @@ async function openStudioReport(eid){
     ]);
     // Build booking lookup by mobile
     const bkMap={};
-    (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
+    (bookings||[]).forEach(b=>{bkMap[String(b.booker_mobile).trim()]=b;});
     // Build food order lookup by mobile
     const foodMap={};
     (foodOrders||[]).forEach(f=>{
@@ -1856,8 +1856,8 @@ async function openStudioReport(eid){
       const st=m.studio||'(No Studio)';
       if(!studios[st])studios[st]={studio:st,total:0,booked:0,freeSeats:0,paidSeats:0,revenue:0,foodRevenue:0,rows:[]};
       studios[st].total++;
-      const bk=bkMap[m.mobile];
-      const fd=foodMap[m.mobile]||null;
+      const bk=bkMap[String(m.mobile).trim()];
+      const fd=foodMap[String(m.mobile).trim()]||null;
       const fr=fd?fd.amount:0;
       const fq=m.free_qty||2;
       const freeSeatCount=bk?Math.min(bk.seat_count||0,fq):0;
@@ -2046,13 +2046,13 @@ async function openFoodReport(eid){
     ]);
     // Build lookups
     const bkMap={};
-    (bookings||[]).forEach(b=>{bkMap[b.booker_mobile]=b;});
+    (bookings||[]).forEach(b=>{bkMap[String(b.booker_mobile).trim()]=b;});
     const memMap={};
-    (members||[]).forEach(m=>{memMap[m.mobile]={name:m.name,studio:m.studio};});
+    (members||[]).forEach(m=>{memMap[String(m.mobile).trim()]={name:m.name,studio:m.studio};});
 
     foodReportData=(orders||[]).map(o=>{
-      const bk=bkMap[o.booker_mobile]||null;
-      const mem=memMap[o.booker_mobile]||null;
+      const bk=bkMap[String(o.booker_mobile).trim()]||null;
+      const mem=memMap[String(o.booker_mobile).trim()]||null;
       return{
         orderId:o.id,bookingId:bk?bk.id:null,
         name:mem?mem.name:(bk?bk.booker_name:o.booker_mobile),
