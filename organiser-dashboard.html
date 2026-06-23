@@ -879,7 +879,8 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
       <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Setup</div></button>
       <button class="qa-btn" onclick="openFoodReport('${eid}')" style="background:rgba(220,80,30,0.12);border-color:rgba(220,80,30,0.3);"><div class="qa-icon">📋</div><div class="qa-label" style="color:#c84010;">Food Report</div></button>
-      ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Members</div></button><button class="qa-btn" onclick="openStudioReport('${eid}')" style="background:rgba(124,58,237,0.07);border-color:rgba(124,58,237,0.2);"><div class="qa-icon">📊</div><div class="qa-label" style="color:#7c3aed;">Studio Report</div></button>`:''}
+      ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Members</div></button>`:''}
+      ${(event.mode==='member_booking'||event.mode==='open_paid')?`<button class="qa-btn" onclick="openStudioReport('${eid}')" style="background:rgba(124,58,237,0.07);border-color:rgba(124,58,237,0.2);"><div class="qa-icon">📊</div><div class="qa-label" style="color:#7c3aed;">Studio Report</div></button>`:''}
     </div>
 
     <div style="padding:8px 16px 4px;">
