@@ -131,13 +131,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <img id="ev-banner-img" class="event-banner-img" src="" alt="" loading="lazy">
 </div>
 <!-- FOOD PROMO BANNER — shown when event has active food items -->
-<div id="food-promo-bar" style="display:none;margin:0 0 0 0;background:linear-gradient(135deg,#c84010,#e05520);padding:10px 16px;display:none;align-items:center;gap:10px;">
+<div id="food-promo-bar" style="display:none;margin:0;background:linear-gradient(135deg,#c84010,#e05520);padding:10px 16px;display:none;align-items:center;gap:10px;cursor:pointer;" onclick="window.location.href=window.location.pathname+'?event='+new URLSearchParams(window.location.search).get('event')+'&food=1'">
   <div style="font-size:20px;flex-shrink:0;">🍽</div>
   <div style="flex:1;">
     <div style="font-size:13px;font-weight:700;color:#fff;" id="fpb-name">—</div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:1px;" id="fpb-sub">—</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:1px;" id="fpb-sub">No ticket needed · Book food separately</div>
   </div>
-  <div style="background:rgba(255,255,255,0.2);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">PRE-BOOK</div>
+  <div style="background:rgba(255,255,255,0.2);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">Book Food →</div>
 </div>
 <div class="sec-tabs-wrap" id="sec-tabs">
   <button class="sec-tab active" data-sec="ALL" onclick="filterSection('ALL',this)">All seats</button>
@@ -231,6 +231,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Mobile number</label><input id="open-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" autocomplete="tel" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
     <div style="margin-bottom:20px;"><label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Email <span style="font-weight:400;color:#bbb;font-size:11px;">(optional — for booking confirmation)</span></label><input id="open-email" type="email" placeholder="your@email.com" autocomplete="email" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></div>
     <button id="open-book-btn" onclick="bookOpenEntry()" style="width:100%;padding:14px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--rsm);font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Book Now →</button>
+  </div>
+</div>
+
+<!-- FOOD-ONLY BOOKING PANEL -->
+<div id="food-only-panel" style="display:none;padding:16px 16px 100px;">
+  <div style="background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:18px;margin-bottom:14px;">
+    <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:6px;" id="fo-ev-name">—</div>
+    <div style="font-size:12px;color:#777;margin-bottom:3px;" id="fo-ev-date">📅 —</div>
+    <div style="font-size:12px;color:#777;" id="fo-ev-venue">📍 —</div>
+  </div>
+  <div id="fo-food-card" style="display:none;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-radius:12px;padding:18px;margin-bottom:14px;color:#fff;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#c8860a;margin-bottom:8px;">FOOD PRE-BOOKING</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px;" id="fo-paid-name">—</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:12px;">+ <span id="fo-free-name">—</span> <span style="color:#4ade80;font-weight:600;">(FREE)</span></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <span style="font-size:13px;color:rgba(255,255,255,0.7);">Quantity:</span>
+      <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;">
+        <button onclick="foodOnlyQtyChange(-1)" style="width:34px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:#fff;">−</button>
+        <div id="fo-qty-display" style="width:28px;text-align:center;font-size:16px;font-weight:700;color:#fff;">1</div>
+        <button onclick="foodOnlyQtyChange(1)" style="width:34px;height:32px;border:none;background:none;font-size:18px;cursor:pointer;color:#fff;">+</button>
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:700;color:#c8860a;" id="fo-total-display">Total: ₹0</div>
+  </div>
+  <div id="fo-no-food" style="display:none;background:rgba(200,64,16,0.07);border:1px solid rgba(200,64,16,0.2);border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;color:#c84010;text-align:center;">Food booking is not active for this event.</div>
+  <div style="background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:18px;margin-bottom:12px;">
+    <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;color:#777;display:block;margin-bottom:5px;">Your name</label><input id="fo-name" type="text" placeholder="Full name" autocomplete="name" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;"></div>
+    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;color:#777;display:block;margin-bottom:5px;">Mobile number</label><input id="fo-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;"></div>
+    <div id="fo-error" style="display:none;font-size:12px;color:#e53e3e;padding:8px 10px;background:#fff5f5;border-radius:6px;margin-bottom:10px;line-height:1.5;"></div>
+    <div id="fo-done" style="display:none;text-align:center;padding:14px;background:rgba(46,158,96,0.07);border:1px solid rgba(46,158,96,0.25);border-radius:10px;font-size:13px;color:#2e9e60;font-weight:600;line-height:1.8;"></div>
+    <button id="fo-pay-btn" onclick="bookFoodStandalone()" style="width:100%;padding:13px;background:linear-gradient(135deg,#c84010,#e05520);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">Book Food &amp; Pay →</button>
   </div>
 </div>
 
@@ -359,6 +390,8 @@ let isSSG=false,isSayaji=false,wantedSeatCount=1;
 let eventTotalDays=1;
 let isMemberBooking=false,memberMobile='',memberFreeQty=2;
 const MEMBER_PAID_PRICE=250;
+let isFoodOnly=new URL(location.href).searchParams.get('food')==='1';
+let foodOnlyQty=1,OPEN_PAID_PRICE=250;
 let eventFoodItem=null,inlineFoodQty=1;
 let realtimeChannel=null; // Supabase Realtime channel
 const params=new URLSearchParams(location.search);
@@ -438,6 +471,7 @@ async function loadEvent(){
     const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single();
     if(evErr)throw evErr;
     if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
+    if(ev.status==='closed'){showError('Booking is closed for this event.');return;}
     eventData=ev;
 
     // ── Compute total days (NEW) ──
@@ -496,6 +530,25 @@ async function loadEvent(){
 
     // ── Show cancellation policy (NEW) ──
     if (ev.cancellation_policy) showCancellationPolicy(ev.cancellation_policy);
+
+    // ── Food-only booking mode ──
+    if(isFoodOnly){
+      document.getElementById('loading-screen').style.display='none';
+      document.getElementById('map-wrap').style.display='none';
+      document.querySelector('.bottom-bar').style.display='none';
+      document.querySelector('.sec-tabs-wrap').style.display='none';
+      document.querySelector('.legend').style.display='none';
+      document.getElementById('ev-banner-wrap').style.display='none';
+      const fmtDt=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'—';
+      const tStr=ev.event_time?(' · '+ev.event_time.slice(0,5)):'';
+      document.getElementById('fo-ev-name').textContent=ev.name||'—';
+      document.getElementById('fo-ev-date').textContent='📅 '+fmtDt(ev.event_date)+tStr;
+      const foVenue=ev.hall_id&&hallLayout?hallLayout.name:(ev.description||'').split('\n')[0]||'—';
+      document.getElementById('fo-ev-venue').textContent='📍 '+foVenue;
+      document.getElementById('food-only-panel').style.display='block';
+      loadFoodOnlyPanel();
+      return;
+    }
 
     // ── Manual allocation (organiser issues tickets, no public booking) ──
     const isManualAlloc=(ev.mode==='manual_alloc');
@@ -589,7 +642,13 @@ async function loadEvent(){
       window._seatPriceMap=ev.seat_price_map;
     } else {
       const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
-      sections=layout.sections||[];
+      if(ev.mode==='open_paid'){
+        OPEN_PAID_PRICE=ev.ticket_price||250;
+        sections=(layout.sections||[]).map(s=>({...s,price:String(OPEN_PAID_PRICE)}));
+        if(!sections.length)sections=[{id:'_paid',name:'General Entry',color:'#2563eb',price:String(OPEN_PAID_PRICE)}];
+      } else {
+        sections=layout.sections||[];
+      }
     }
     await loadSeatStatus();
     buildSectionTabs();
@@ -744,7 +803,7 @@ function changeSeatCount(delta){const n=wantedSeatCount+delta;if(n<1||n>6)return
 function updateBottomBar(){
   const btn=document.getElementById('proceed-btn'),list=document.getElementById('sel-seats-list'),total=document.getElementById('sel-total');
   if(selectedSeats.length===0){list.textContent='Tap any seat to auto-select '+wantedSeatCount+' seat'+(wantedSeatCount>1?'s':'');total.textContent='';btn.disabled=true;btn.textContent='Tap a seat to begin';}
-  else{const labels=selectedSeats.map(s=>s.rowLabel+'-'+s.seatNum).join(', ');let dispText;if(isMemberBooking){const fC=Math.min(selectedSeats.length,memberFreeQty),pC=Math.max(0,selectedSeats.length-memberFreeQty);dispText=pC>0?fC+' Free + '+pC+' × ₹'+MEMBER_PAID_PRICE+' · ₹'+(pC*MEMBER_PAID_PRICE):fC+' × Free · ₹0';}else{const amt=selectedSeats.reduce((a,s)=>a+s.price,0);dispText=amt>0?'₹'+amt:'Free';}list.textContent=labels;total.textContent=dispText;btn.disabled=false;btn.textContent='Proceed →';}
+  else{const labels=selectedSeats.map(s=>s.rowLabel+'-'+s.seatNum).join(', ');let dispText;if(isMemberBooking){const fC=Math.min(selectedSeats.length,memberFreeQty),pC=Math.max(0,selectedSeats.length-memberFreeQty);dispText=pC>0?fC+' Free + '+pC+' × ₹'+MEMBER_PAID_PRICE+' · ₹'+(pC*MEMBER_PAID_PRICE):fC+' × Free · ₹0';}else if(eventData&&eventData.mode==='open_paid'){const t=selectedSeats.length*OPEN_PAID_PRICE;dispText=selectedSeats.length+' × ₹'+OPEN_PAID_PRICE+' · ₹'+t;}else{const amt=selectedSeats.reduce((a,s)=>a+s.price,0);dispText=amt>0?'₹'+amt:'Free';}list.textContent=labels;total.textContent=dispText;btn.disabled=false;btn.textContent='Proceed →';}
 }
 
 function showWarn(msg){const ex=document.getElementById('toast-warn');if(ex)ex.remove();const t=document.createElement('div');t.id='toast-warn';t.textContent=msg;t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#cc3333;color:#fff;font-size:13px;font-weight:600;padding:12px 22px;border-radius:20px;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,0.35);text-align:center;';document.body.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3000);}
@@ -983,8 +1042,9 @@ async function confirmBooking(){
   const btn=document.querySelector('.confirm-btn');btn.textContent='Processing…';btn.disabled=true;
   try{
     const seatKeys=selectedSeats.map(s=>s.seatKey);
-    const clientAmt=isMemberBooking?Math.max(0,seatKeys.length-memberFreeQty)*MEMBER_PAID_PRICE:selectedSeats.reduce((a,s)=>a+s.price,0);
+    const clientAmt=isMemberBooking?Math.max(0,seatKeys.length-memberFreeQty)*MEMBER_PAID_PRICE:eventData.mode==='open_paid'?seatKeys.length*OPEN_PAID_PRICE:selectedSeats.reduce((a,s)=>a+s.price,0);
     if(eventData.mode==='member_booking'){await saveMemberBooking(name,mobile,email,seatKeys,clientAmt);return;}
+    if(eventData.mode==='open_paid'){await saveOpenPaidBooking(name,mobile,email,seatKeys,clientAmt);return;}
     if(eventData.mode==='free'||eventData.mode==='open'){await saveFreeBooking(name,mobile,email,seatKeys,clientAmt);return;}
     if(eventData.payment_mode==='manual'){await saveManualBooking(name,mobile,seatKeys,clientAmt);return;}
     if(clientAmt===0){alert('Seat pricing is not configured for this event. Please contact the organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
@@ -1190,6 +1250,69 @@ async function saveFoodOrderInline(paymentId,total){
   document.getElementById('if-pay-btn').style.display='none';
   document.getElementById('if-qty-wrap').style.display='none';
   document.getElementById('if-done').style.display='block';
+}
+
+// ── Open-paid booking (₹OPEN_PAID_PRICE per seat, no free) ──
+async function saveOpenPaidBooking(name,mobile,email,seatKeys,amt){
+  const btn=document.querySelector('.confirm-btn');
+  try{
+    if(amt===0){alert('Price error. Contact organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
+    const rzpKey=organiserData&&organiserData.razorpay_key_id;
+    if(!rzpKey){alert('Payment not configured. Contact organiser.');btn.textContent='Confirm & Pay →';btn.disabled=false;return;}
+    if(bookingId){
+      const{error:updErr}=await sb.from('kh_bookings').update({booker_name:name,booker_mobile:mobile,booker_email:email||null,amount:amt,payment_status:'pending',status:'pending_payment'}).eq('id',bookingId).eq('status','held');
+      if(updErr)bookingId=null;
+    }
+    if(!bookingId){
+      const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:seatKeys.length,amount:amt,payment_status:'pending',status:'pending_payment',booking_type:'open_paid',created_at:new Date().toISOString()}).select().single();
+      if(error)throw error;
+      bookingId=booking.id;
+    }
+    const rzp=new Razorpay({key:rzpKey,amount:amt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,amt);}});
+    rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
+    rzp.open();
+    let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,email,seatKeys,amt);}},3000);
+  }catch(e){
+    alert('Error: '+(e.message||'Unknown'));btn.textContent='Confirm & Pay →';btn.disabled=false;
+  }
+}
+
+// ── Standalone food-only booking ──
+async function loadFoodOnlyPanel(){
+  const{data:fi}=await sb.from('kh_food_items').select('*').eq('event_id',eventId).eq('is_active',true).maybeSingle();
+  if(!fi){document.getElementById('fo-no-food').style.display='block';document.getElementById('fo-pay-btn').style.display='none';return;}
+  eventFoodItem=fi;
+  document.getElementById('fo-paid-name').textContent=fi.paid_item_name||'Food item';
+  document.getElementById('fo-free-name').textContent=fi.free_item_name||'Complimentary';
+  document.getElementById('fo-food-card').style.display='block';
+  updateFoodOnlyUI();
+}
+function foodOnlyQtyChange(delta){const n=foodOnlyQty+delta;if(n<1||n>20)return;foodOnlyQty=n;updateFoodOnlyUI();}
+function updateFoodOnlyUI(){if(!eventFoodItem)return;document.getElementById('fo-qty-display').textContent=foodOnlyQty;document.getElementById('fo-total-display').textContent='Total: ₹'+(eventFoodItem.paid_item_price*foodOnlyQty);}
+async function bookFoodStandalone(){
+  const name=document.getElementById('fo-name').value.trim();
+  const mobile=document.getElementById('fo-mobile').value.trim();
+  const errEl=document.getElementById('fo-error');errEl.style.display='none';
+  if(!name){errEl.textContent='Please enter your name.';errEl.style.display='block';return;}
+  if(!/^[0-9]{10}$/.test(mobile)){errEl.textContent='Enter a valid 10-digit mobile number.';errEl.style.display='block';return;}
+  if(!eventFoodItem){errEl.textContent='Food item not loaded. Please refresh.';errEl.style.display='block';return;}
+  const btn=document.getElementById('fo-pay-btn');btn.disabled=true;btn.textContent='Opening payment…';
+  const total=eventFoodItem.paid_item_price*foodOnlyQty;
+  const rzpKey=eventFoodItem.vendor_razorpay_key||(organiserData&&organiserData.razorpay_key_id);
+  if(!rzpKey){errEl.textContent='Payment not configured. Contact organiser.';errEl.style.display='block';btn.disabled=false;btn.textContent='Book Food & Pay →';return;}
+  btn.textContent='Opening payment…';
+  const rzp=new Razorpay({key:rzpKey,amount:total*100,currency:'INR',name:eventData?eventData.name:'Khursilo',description:eventFoodItem.paid_item_name+(eventFoodItem.free_item_name?' + '+eventFoodItem.free_item_name+' FREE':''),prefill:{name,contact:mobile},theme:{color:'#c84010'},modal:{ondismiss:()=>{btn.disabled=false;btn.textContent='Book Food & Pay →';}},handler:async(res)=>{await saveFoodOrderStandalone(res.razorpay_payment_id,name,mobile,total);}});
+  rzp.on('payment.failed',()=>{btn.disabled=false;btn.textContent='Book Food & Pay →';});
+  rzp.open();
+}
+async function saveFoodOrderStandalone(paymentId,name,mobile,total){
+  const{error}=await sb.from('kh_food_orders').insert({event_id:eventId,booking_id:null,booker_mobile:mobile,booker_name:name,paid_item_name:eventFoodItem.paid_item_name,free_item_name:eventFoodItem.free_item_name||null,quantity:foodOnlyQty,total_amount:total,razorpay_payment_id:paymentId,status:'confirmed',created_at:new Date().toISOString()});
+  if(error){alert('Could not save food order: '+error.message);return;}
+  document.getElementById('fo-pay-btn').style.display='none';
+  document.getElementById('fo-food-card').style.display='none';
+  const d=document.getElementById('fo-done');
+  d.innerHTML='✅ Food order confirmed!<br><span style="font-size:12px;font-weight:400;">'+name+' · '+mobile+'<br>'+eventFoodItem.paid_item_name+' × '+foodOnlyQty+(eventFoodItem.free_item_name?' + '+eventFoodItem.free_item_name+' × '+foodOnlyQty+' (FREE)':'')+'<br>Total paid: ₹'+total+'<br><br>Show this screen or your mobile number at the food stall on event day.</span>';
+  d.style.display='block';
 }
 
 // ── PDF with day boxes (NEW multi-day support) ──

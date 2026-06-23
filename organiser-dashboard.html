@@ -680,8 +680,13 @@ async function loadDashboard(){
   // 2. Fetch hall names for unique hall_ids
   const hallIds = [...new Set(events.map(e=>e.hall_id).filter(Boolean))];
   if(hallIds.length){
-    const {data:halls} = await sb.from('kh_halls').select('id,name').in('id', hallIds);
-    (halls||[]).forEach(h=>{ hallCache[h.id]=h.name; });
+    const {data:halls} = await sb.from('kh_halls').select('id,name,layout_json').in('id', hallIds);
+    (halls||[]).forEach(h=>{
+      const lj = typeof h.layout_json==='string' ? JSON.parse(h.layout_json) : (h.layout_json||{});
+      let sc = 0;
+      (lj.rows||[]).forEach(r=>{ if(r.type!=='row') return; (r.cells||[]).forEach(c=>{ if(c.sn && !['label','empty','aisle','gap','vgap','blocked'].includes(c.t||'')) sc++; }); });
+      hallCache[h.id] = { name: h.name, seatCount: sc };
+    });
   }
 
   // 3. Fetch all bookings for all these events in one query
@@ -729,6 +734,10 @@ function buildEventCard(event, bookings){
       });
     }catch(e){}
   }
+  // Fallback: use hall layout seat count for events without seat_price_map (e.g. member_booking)
+  if(totalSeats === 0 && event.hall_id && (hallCache[event.hall_id]||{}).seatCount) {
+    totalSeats = hallCache[event.hall_id].seatCount;
+  }
 
   // Revenue — sum amount where payment confirmed
   const confirmedBookings = bookings.filter(b=> b.payment_status==='confirmed' || b.status==='confirmed');
@@ -761,8 +770,8 @@ function buildEventCard(event, bookings){
       confirmedAmt: data.confirmedAmt
     }));
 
-  const bookedSeats = confirmed; // proxy: confirmed bookings
-  const pct = totalSeats > 0 ? Math.round((bookedSeats/totalSeats)*100) : (total>0?100:0);
+  const bookedSeats = confirmedBookings.reduce((s,b)=>s+(Number(b.seat_count)||0),0);
+  const pct = totalSeats > 0 ? Math.round((bookedSeats/totalSeats)*100) : 0;
 
   // Donut math (circumference of r=30 → 188.5)
   const CIRC = 188.5;
@@ -783,7 +792,7 @@ function buildEventCard(event, bookings){
     pillHtml = `<span class="status-pill upcoming">🗓 Upcoming</span>`;
   }
 
-  const hallName = hallCache[event.hall_id] || '';
+  const hallName = (hallCache[event.hall_id]||{}).name || '';
 
   // Revenue tier table HTML
   let revBarsHtml = '';
@@ -853,9 +862,10 @@ function buildEventCard(event, bookings){
         <div class="donut-center"><div class="donut-pct">${pct}%</div><div class="donut-lbl">filled</div></div>
       </div>
       <div class="occ-stats">
-        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Confirmed</div><div class="occ-stat-val">${confirmed}</div></div>
-        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div><div class="occ-stat-val">${pending}</div></div>
-        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div><div class="occ-stat-val">${totalSeats>0?Math.max(0,totalSeats-confirmed):'—'}</div></div>
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2e9e60;"></div>Seats booked</div><div class="occ-stat-val">${bookedSeats}</div></div>
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#2b6fd4;"></div>Members booked</div><div class="occ-stat-val">${confirmed}</div></div>
+        ${pending>0?`<div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#c8860a;"></div>Pending</div><div class="occ-stat-val">${pending}</div></div>`:''}
+        <div class="occ-stat-row"><div class="occ-stat-label"><div class="occ-dot" style="background:#f0eeea;border:1px solid #ddd;"></div>Available</div><div class="occ-stat-val">${totalSeats>0?Math.max(0,totalSeats-bookedSeats):'—'}</div></div>
         <div class="occ-stat-row"><div class="occ-stat-label" style="font-weight:500;color:var(--text);">Total bookings</div><div class="occ-stat-val">${total}</div></div>
       </div>
     </div>
