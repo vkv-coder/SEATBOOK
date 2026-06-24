@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -517,8 +518,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <button onclick="downloadStudioReport()" style="width:100%;padding:12px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">
         ⬇ Download Revenue Report
       </button>
-      <button onclick="downloadGateList()" style="width:100%;padding:12px;background:rgba(46,158,96,0.12);color:#1a6b3a;border:1px solid rgba(46,158,96,0.3);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+      <button onclick="downloadGateList()" style="width:100%;padding:12px;background:rgba(46,158,96,0.12);color:#1a6b3a;border:1px solid rgba(46,158,96,0.3);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">
         📋 Download Gate List
+      </button>
+      <button onclick="downloadSeatMap(studioReportEventId)" style="width:100%;padding:12px;background:rgba(249,115,22,0.10);color:#b45309;border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        🗺 Download Seat Map Layout (.xlsx)
       </button>
     </div>
   </div>
@@ -685,7 +689,7 @@ async function loadDashboard(){
       const lj = typeof h.layout_json==='string' ? JSON.parse(h.layout_json) : (h.layout_json||{});
       let sc = 0;
       (lj.rows||[]).forEach(r=>{ if(r.type!=='row') return; (r.cells||[]).forEach(c=>{ if(c.sn && !['label','empty','aisle','gap','vgap','blocked'].includes(c.t||'')) sc++; }); });
-      hallCache[h.id] = { name: h.name, seatCount: sc };
+      hallCache[h.id] = { name: h.name, seatCount: sc, layout: lj };
     });
   }
 
@@ -881,6 +885,7 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="openFoodReport('${eid}')" style="background:rgba(220,80,30,0.12);border-color:rgba(220,80,30,0.3);"><div class="qa-icon">📋</div><div class="qa-label" style="color:#c84010;">Food Report</div></button>
       ${event.mode==='member_booking'?`<button class="qa-btn" onclick="openMemberModal('${eid}')" style="background:rgba(74,144,210,0.07);border-color:rgba(74,144,210,0.2);"><div class="qa-icon">👥</div><div class="qa-label" style="color:#2b6fd4;">Upload Members</div></button>`:''}
       ${(event.mode==='member_booking'||event.mode==='open_paid')?`<button class="qa-btn" onclick="openStudioReport('${eid}')" style="background:rgba(124,58,237,0.07);border-color:rgba(124,58,237,0.2);"><div class="qa-icon">📊</div><div class="qa-label" style="color:#7c3aed;">Studio Report</div></button>`:''}
+      ${(event.hall_id&&(hallCache[event.hall_id]||{}).layout)?`<button class="qa-btn" onclick="downloadSeatMap('${eid}')" style="grid-column:span 2;background:rgba(249,115,22,0.08);border-color:rgba(249,115,22,0.25);"><div class="qa-icon">🗺</div><div class="qa-label" style="color:#b45309;">Download Seat Map (.xlsx)</div></button>`:''}
     </div>
 
     <div style="padding:8px 16px 4px;">
@@ -2027,6 +2032,224 @@ function downloadGateList(){
   ws['!cols']=[{wch:14},{wch:22},{wch:14},{wch:20},{wch:20},{wch:6},{wch:6},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws,'Gate List');
   XLSX.writeFile(wb,evName.replace(/\s+/g,'_')+'_Gate_List.xlsx');
+}
+
+async function downloadSeatMap(eid){
+  if(!eid)return;
+  const evObj=allEvents.find(e=>e.event.id===eid);
+  if(!evObj){showToast('Event not found');return;}
+  const ev=evObj.event;
+  const hall=hallCache[ev.hall_id];
+  if(!hall||!hall.layout||!(hall.layout.rows||[]).length){showToast('No seat layout found for this event');return;}
+
+  showToast('Generating seat map...');
+
+  // Build booked seat set from confirmed bookings
+  const booked=new Set();
+  (evObj.bookings||[]).filter(b=>b.status==='confirmed').forEach(b=>{
+    (b.seat_keys||[]).forEach(sk=>booked.add(sk));
+  });
+
+  const layout=hall.layout;
+  const rawRows=layout.rows||[];
+  const sections=layout.sections||[];
+
+  // Separate seat rows; detect hgap positions
+  const seatRows=[];
+  const hgapAfterIdx=new Set();
+  rawRows.forEach(r=>{
+    if(r.type==='hgap'){if(seatRows.length)hgapAfterIdx.add(seatRows.length-1);}
+    else if(r.type==='row')seatRows.push(r);
+  });
+  // Reverse so stage is at bottom
+  seatRows.reverse();
+
+  const maxCells=Math.max(...seatRows.map(r=>(r.cells||[]).length));
+
+  // Column layout: label | seats (centered) | label
+  const LCOL=1, SSTART=2, SEND=SSTART+maxCells-1, RCOL=SEND+1, TOTAL=RCOL;
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='SeatBook';
+  wb.created=new Date();
+
+  const ws=wb.addWorksheet('Seat Map',{
+    pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.4,right:0.4,top:0.4,bottom:0.4}}
+  });
+
+  // Column widths
+  ws.getColumn(LCOL).width=4.5;
+  ws.getColumn(RCOL).width=4.5;
+  for(let c=SSTART;c<=SEND;c++) ws.getColumn(c).width=3.8;
+
+  const thin={style:'thin',color:{argb:'FFCBD5E1'}};
+  const aisleColor='FFE5E7EB';
+  const bookedColor='FFF97316'; // orange
+  const labelColor='FF1E293B';
+
+  let cur=1;
+
+  // Title
+  ws.getRow(cur).height=26;
+  const tc=ws.getRow(cur).getCell(LCOL);
+  tc.value=`${ev.name||'Event'} — Hall Seat Map`;
+  tc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1E293B'}};
+  tc.font={bold:true,size:12,color:{argb:'FFFFFFFF'}};
+  tc.alignment={horizontal:'left',vertical:'middle'};
+  ws.mergeCells(cur,LCOL,cur,TOTAL); cur++;
+
+  // Legend row
+  ws.getRow(cur).height=16;
+  const lc=ws.getRow(cur).getCell(LCOL);
+  lc.value=`  BOOKED (${booked.size} seats) = Orange fill     AVAILABLE = White     AISLE = Grey (no number)`;
+  lc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF8FAFC'}};
+  lc.font={size:8.5,color:{argb:'FF334155'}};
+  lc.alignment={horizontal:'left',vertical:'middle'};
+  ws.mergeCells(cur,LCOL,cur,TOTAL); cur++;
+
+  // Small spacer
+  ws.getRow(cur).height=4; cur++;
+
+  // Seat rows
+  let prevSec=null;
+  seatRows.forEach((row,ri)=>{
+    const label=row.label||'';
+    const cells=row.cells||[];
+    const n=cells.length;
+    const leftPad=Math.floor((maxCells-n)/2); // center each row
+
+    // Section divider
+    const rowSec=(cells.find(c=>c.t==='seat'&&c.secId)||{}).secId;
+    if(rowSec&&rowSec!==prevSec){
+      const secObj=sections.find(s=>s.id===rowSec||s.name===rowSec);
+      const secName=secObj?secObj.name:rowSec;
+      ws.getRow(cur).height=14;
+      const sc=ws.getRow(cur).getCell(LCOL);
+      sc.value=`— ${secName} —`;
+      sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE2E8F0'}};
+      sc.font={bold:true,size:8,color:{argb:'FF475569'}};
+      sc.alignment={horizontal:'center',vertical:'middle'};
+      ws.mergeCells(cur,LCOL,cur,TOTAL); cur++;
+      prevSec=rowSec;
+    }
+
+    const xrow=ws.getRow(cur);
+    xrow.height=20;
+
+    // Left label
+    const ll=xrow.getCell(LCOL);
+    ll.value=label;
+    ll.font={bold:true,size:9,color:{argb:labelColor}};
+    ll.alignment={horizontal:'center',vertical:'middle'};
+
+    // Fill all seat columns with blank background first
+    for(let c=SSTART;c<=SEND;c++){
+      xrow.getCell(c).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFAFAFA'}};
+    }
+
+    // Seat cells with centering offset
+    cells.forEach((cell,ci)=>{
+      const col=SSTART+leftPad+ci;
+      if(col<SSTART||col>SEND) return;
+      const xc=xrow.getCell(col);
+      const t=cell.t||'';
+      const sn=cell.sn;
+
+      if(t==='seat'&&sn){
+        const sk=`${label}-${sn}`;
+        if(booked.has(sk)){
+          xc.value=String(sn);
+          xc.fill={type:'pattern',pattern:'solid',fgColor:{argb:bookedColor}};
+          xc.font={bold:true,size:8,color:{argb:'FFFFFFFF'}};
+          xc.border={top:thin,left:thin,bottom:thin,right:thin};
+          xc.alignment={horizontal:'center',vertical:'middle'};
+        } else {
+          xc.value=String(sn);
+          xc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFFFF'}};
+          xc.font={size:8,color:{argb:'FF374151'}};
+          xc.border={top:thin,left:thin,bottom:thin,right:thin};
+          xc.alignment={horizontal:'center',vertical:'middle'};
+        }
+      } else if(t==='vgap'||t==='aisle'||t==='gap'){
+        xc.value='';
+        xc.fill={type:'pattern',pattern:'solid',fgColor:{argb:aisleColor}};
+        xc.border={};
+      }
+    });
+
+    // Right label
+    const rl=xrow.getCell(RCOL);
+    rl.value=label;
+    rl.font={bold:true,size:9,color:{argb:labelColor}};
+    rl.alignment={horizontal:'center',vertical:'middle'};
+
+    cur++;
+  });
+
+  // Stage bar
+  cur++;
+  ws.getRow(cur).height=24;
+  const stc=ws.getRow(cur).getCell(LCOL);
+  stc.value='S  T  A  G  E';
+  stc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1E293B'}};
+  stc.font={bold:true,size:12,color:{argb:'FFFFFFFF'}};
+  stc.alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(cur,LCOL,cur,TOTAL);
+
+  // Second sheet: booked list sorted by seat
+  const ws2=wb.addWorksheet('Booked List');
+  ws2.getColumn(1).width=9;
+  ws2.getColumn(2).width=24;
+  ws2.getColumn(3).width=14;
+  ws2.getColumn(4).width=10;
+
+  const hdrFill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1E293B'}};
+  const hdr2=ws2.getRow(1);
+  hdr2.height=18;
+  ['Seat','Name','Mobile','Amount'].forEach((h,i)=>{
+    const c=hdr2.getCell(i+1);
+    c.value=h; c.fill=hdrFill;
+    c.font={bold:true,size:10,color:{argb:'FFFFFFFF'}};
+    c.alignment={horizontal:'center',vertical:'middle'};
+  });
+
+  // Flatten confirmed bookings to per-seat rows
+  const seatList=[];
+  (evObj.bookings||[]).filter(b=>b.status==='confirmed').forEach(b=>{
+    (b.seat_keys||[]).forEach(sk=>seatList.push({sk,name:b.booker_name||'',mob:b.booker_mobile||'',amt:b.amount||0}));
+  });
+  seatList.sort((a,b)=>{
+    const [ar,an]=[a.sk.split('-')[0],parseInt(a.sk.split('-')[1])||0];
+    const [br,bn]=[b.sk.split('-')[0],parseInt(b.sk.split('-')[1])||0];
+    return ar<br?-1:ar>br?1:an-bn;
+  });
+  const altFill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F9FF'}};
+  const whtFill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFFFF'}};
+  seatList.forEach((s,i)=>{
+    const r=ws2.getRow(i+2);
+    r.height=15;
+    const fill=i%2===0?altFill:whtFill;
+    [s.sk,s.name,s.mob,s.amt?`Rs.${s.amt}`:'Free'].forEach((v,ci)=>{
+      const c=r.getCell(ci+1);
+      c.value=v; c.fill=fill;
+      c.font={size:9};
+      c.alignment={horizontal:ci===0?'center':'left',vertical:'middle'};
+    });
+  });
+
+  try{
+    const buf=await wb.xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=(ev.name||'Event').replace(/\s+/g,'_')+'_Seat_Map.xlsx';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Seat map downloaded');
+  }catch(err){
+    console.error('Seat map error',err);
+    showToast('Error generating seat map: '+err.message);
+  }
 }
 
 function closeStudioModal(e){
