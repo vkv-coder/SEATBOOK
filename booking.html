@@ -993,6 +993,7 @@ function buildDayBoxes(totalDays){
 }
 
 async function handlePaymentSuccess(payId,name,mobile,email,seatKeys,amt){
+  if(bookingConfirmed)return;
   await sb.from('kh_bookings').update({status:'confirmed',payment_status:'paid',razorpay_payment_id:payId}).eq('id',bookingId);
   selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';s.svgG.style.cursor='not-allowed';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
   bookingConfirmed=true;clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,amt);
@@ -1175,9 +1176,9 @@ function copyTicketLink(){
 async function loadEventFoodItem(){
   if(eventFoodItem)return;
   const today=new Date();today.setHours(0,0,0,0);
-  const evDate=eventData?new Date(eventData.event_date+'T00:00:00'):null;
-  if(evDate)evDate.setHours(0,0,0,0);
-  if(evDate&&evDate<=today)return;
+  const evLastDate=eventData?new Date((eventData.to_date||eventData.event_date)+'T00:00:00'):null;
+  if(evLastDate)evLastDate.setHours(0,0,0,0);
+  if(evLastDate&&evLastDate<=today)return;
   const{data:fi}=await sb.from('kh_food_items').select('*').eq('event_id',eventId).eq('is_active',true).maybeSingle();
   if(!fi)return;
   eventFoodItem=fi;
@@ -1225,7 +1226,7 @@ async function bookFoodInline(){
   if(!bookingId)bookingId=document.getElementById('if-pay-btn')?.dataset?.bid;
   if(!bookingId){
     const mob=(ticketData&&ticketData.bookerMobile)||memberMobile;
-    if(mob){const{data:bk}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').maybeSingle();if(bk)bookingId=bk.id;}
+    if(mob){const{data:bks}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').order('created_at',{ascending:false}).limit(1);if(bks&&bks[0])bookingId=bks[0].id;}
   }
   if(!bookingId){alert('Session expired. Please open your ticket link and try again from there.');return;}
   const btn=document.getElementById('if-pay-btn');
@@ -1459,6 +1460,9 @@ async function bookOpenEntry(){
   if(!/^[0-9]{10}$/.test(mobile)){alert('Enter a valid 10-digit mobile number');return;}
   const btn=document.getElementById('open-book-btn');btn.textContent='Booking…';btn.disabled=true;
   try{
+    // Block duplicate registrations from the same mobile
+    const{data:dup}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mobile).eq('status','confirmed').maybeSingle();
+    if(dup){alert('You have already registered for this event. Please check your WhatsApp for the ticket link.');btn.textContent='Book Now →';btn.disabled=false;return;}
     if(eventData.payment_mode==='manual'&&eventData.ticket_price>0){
       await saveManualBooking(name,mobile,[],eventData.ticket_price*openQty,openQty);
       btn.textContent='Book Now →';btn.disabled=false;return;

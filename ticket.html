@@ -539,9 +539,9 @@ function updateStaffPanel(){
   const gSt=document.getElementById('gate-scan-status');
   const fSt=document.getElementById('food-scan-status');
   if(!gBtn)return;
-  if(bookingData.gate_scanned_at){
+  if(bookingData.entry_scanned_at){
     gBtn.style.background='#cc3333';gBtn.textContent='⚠️ Already Entered — Gate';
-    gSt.textContent='Entered at '+fmtTs(bookingData.gate_scanned_at);gSt.style.color='var(--red)';
+    gSt.textContent='Entered at '+fmtTs(bookingData.entry_scanned_at);gSt.style.color='var(--red)';
   }else{
     gBtn.style.background='#1a6b3a';gBtn.textContent='🚪 Mark Gate Entry';
     gSt.textContent='Not yet scanned at gate';gSt.style.color='var(--muted)';
@@ -556,11 +556,11 @@ function updateStaffPanel(){
 }
 
 async function markScan(type){
-  const field=type==='gate'?'gate_scanned_at':'food_scanned_at';
+  const field=type==='gate'?'entry_scanned_at':'food_scanned_at';
   const label=type==='gate'?'gate entry':'food collection';
   // Re-fetch fresh state from DB before marking
-  const{data:fresh}=await sb.from('kh_bookings').select('gate_scanned_at,food_scanned_at').eq('id',bookingId).single();
-  if(fresh){bookingData.gate_scanned_at=fresh.gate_scanned_at;bookingData.food_scanned_at=fresh.food_scanned_at;}
+  const{data:fresh}=await sb.from('kh_bookings').select('entry_scanned_at,food_scanned_at').eq('id',bookingId).single();
+  if(fresh){bookingData.entry_scanned_at=fresh.entry_scanned_at;bookingData.food_scanned_at=fresh.food_scanned_at;}
   const currentVal=fresh?fresh[field]:null;
   if(currentVal){
     showScanPopup('warn',label,currentVal);
