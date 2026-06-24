@@ -1,3 +1,5 @@
 node_modules/
 package-lock.json
 _gen_hall_*.mjs
+# Backend Apps Script — contains LIVE Razorpay secret + service keys. Never commit (repo is public via Pages).
+gas-script-complete.js

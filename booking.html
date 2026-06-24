@@ -903,9 +903,10 @@ async function releaseHold(){
       .update({status:'cancelled'})
       .eq('id',idToRelease)
       .in('status',['held','pending_payment']);
-    // Delete after 3 seconds (cleanup)
+    // Delete after 3 seconds (cleanup) — but ONLY if still cancelled/held.
+    // Guards against deleting a row the Razorpay webhook just re-confirmed (race).
     setTimeout(async()=>{
-      await sb.from('kh_bookings').delete().eq('id',idToRelease);
+      await sb.from('kh_bookings').delete().eq('id',idToRelease).in('status',['cancelled','held']);
     },3000);
   }catch(e){ console.warn('Release hold error:',e.message); }
 }
@@ -1080,8 +1081,12 @@ async function confirmBooking(){
       if(error)throw error;
       bookingId=booking.id;
     }
-    const rzp=new Razorpay({key:rzpKey,amount:totalAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}});
+    const rzp=new Razorpay({key:rzpKey,amount:totalAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),notes:{booking_id:bookingId,event_id:eventId},prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);releaseHold();}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}});
     rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
+    // Stop the 5-min hold countdown so it can't cancel this row while payment is in progress.
+    // The seat stays held until payment succeeds (handler) or the user dismisses the modal (ondismiss → releaseHold).
+    if(holdTimer)clearInterval(holdTimer);
+    {const tbEl=document.getElementById('timer-bar');if(tbEl)tbEl.style.display='none';}
     rzp.open();
     let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,email,seatKeys,totalAmt);}},3000);
   }catch(e){
@@ -1272,8 +1277,11 @@ async function saveOpenPaidBooking(name,mobile,email,seatKeys,amt){
       if(error)throw error;
       bookingId=booking.id;
     }
-    const rzp=new Razorpay({key:rzpKey,amount:amt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,amt);}});
+    const rzp=new Razorpay({key:rzpKey,amount:amt*100,currency:'INR',name:eventData.name||'Khursilo',description:seatKeys.join(', '),notes:{booking_id:bookingId,event_id:eventId},prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);releaseHold();}},handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,amt);}});
     rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description);btn.textContent='Confirm & Pay →';btn.disabled=false;});
+    // Stop the 5-min hold countdown so it can't cancel this row mid-payment.
+    if(holdTimer)clearInterval(holdTimer);
+    {const tbEl=document.getElementById('timer-bar');if(tbEl)tbEl.style.display='none';}
     rzp.open();
     let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();if(bk&&bk.razorpay_payment_id){clearInterval(window._ppt);await handlePaymentSuccess(bk.razorpay_payment_id,name,mobile,email,seatKeys,amt);}},3000);
   }catch(e){
@@ -1596,10 +1604,13 @@ async function saveMemberBooking(name,mobile,email,seatKeys,amt){
     key:rzpKey,amount:amt*100,currency:'INR',
     name:eventData.name||'Khursilo',description:'Seats: '+seatKeys.join(', '),
     prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},
-    modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);}},
+    modal:{ondismiss:()=>{btn.textContent='Confirm & Pay →';btn.disabled=false;if(window._ppt)clearInterval(window._ppt);releaseHold();}},
     handler:async(res)=>{if(window._ppt)clearInterval(window._ppt);await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,seatKeys,amt);}
   });
   rzp.on('payment.failed',(res)=>{if(window._ppt)clearInterval(window._ppt);alert('Payment failed: '+res.error.description+'\n\nYou can tap "Confirm & Pay" again to retry.');btn.textContent='Confirm & Pay →';btn.disabled=false;});
+  // Stop the 5-min hold countdown so it can't cancel this row mid-payment.
+  if(holdTimer)clearInterval(holdTimer);
+  {const tbEl=document.getElementById('timer-bar');if(tbEl)tbEl.style.display='none';}
   rzp.open();
   let pc=0;window._ppt=setInterval(async()=>{pc++;if(pc>60){clearInterval(window._ppt);return;}
     const{data:bk}=await sb.from('kh_bookings').select('razorpay_payment_id,status').eq('id',bookingId).single();
