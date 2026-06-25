@@ -135,7 +135,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
     <div style="font-size:32px;flex-shrink:0;">🍽</div>
     <div style="flex:1;">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px;">⏰ Limited — 2 Days Only!</div>
       <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.3;" id="fpb-name">—</div>
     </div>
   </div>
@@ -246,8 +245,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   </div>
   <div id="fo-food-card" style="display:none;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-radius:12px;padding:18px;margin-bottom:14px;color:#fff;">
     <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#c8860a;margin-bottom:8px;">FOOD PRE-BOOKING</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px;" id="fo-paid-name">—</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:12px;">+ <span id="fo-free-name">—</span> <span style="color:#4ade80;font-weight:600;">(FREE)</span></div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:12px;" id="fo-paid-name">—</div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
       <span style="font-size:13px;color:rgba(255,255,255,0.7);">Quantity:</span>
       <div style="display:flex;align-items:center;background:rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;">
@@ -353,13 +351,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <div style="background:linear-gradient(135deg,#c84010,#e05520);padding:14px 16px;">
         <div style="font-size:10px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Add to your booking</div>
         <div style="font-size:17px;font-weight:700;color:#fff;" id="if-name">—</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px;" id="if-free">—</div>
       </div>
       <div style="background:#1a0a00;padding:14px 16px;">
-        <div style="background:rgba(46,158,96,0.15);border:1px solid rgba(46,158,96,0.3);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="font-size:20px;">🍹</div>
-          <div style="font-size:12px;color:#4ade80;line-height:1.4;" id="if-mojito-txt">Mojito FREE with every pre-booking</div>
-        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div>
             <div style="font-size:22px;font-weight:700;color:#fff;" id="if-price">₹—</div>
@@ -1185,9 +1178,8 @@ async function loadEventFoodItem(){
   // Show promo bar on booking page
   const bar=document.getElementById('food-promo-bar');
   if(bar){
-    document.getElementById('fpb-name').textContent=fi.paid_item_name+(fi.free_item_name?' + '+fi.free_item_name+' FREE':'');
-    const freeWorth=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
-    document.getElementById('fpb-sub').textContent=(fi.free_item_name?fi.free_item_name+' FREE with every order · ':'')+' ₹'+fi.paid_item_price+' per person · No ticket needed · Pre-book before offer ends';
+    document.getElementById('fpb-name').textContent=fi.paid_item_name;
+    document.getElementById('fpb-sub').textContent='₹'+fi.paid_item_price+' per person · No ticket needed · Pre-book before offer ends';
     bar.style.display='flex';
     bar.style.flexDirection='column';
   }
@@ -1196,9 +1188,6 @@ function showInlineFoodCard(fi){
   const card=document.getElementById('inline-food-card');
   if(!card)return;
   document.getElementById('if-name').textContent=fi.paid_item_name;
-  document.getElementById('if-free').textContent=fi.free_item_name?'+ '+fi.free_item_name+' FREE with every order':'';
-  const fw=(fi.paid_item_original_price||0)-(fi.paid_item_price||0);
-  document.getElementById('if-mojito-txt').textContent=(fi.free_item_name||'Mojito')+' (worth ₹'+(fw>0?fw:60)+' at stall) FREE with every pre-booking';
   // Store booking ID in DOM so button can always find it
   const btn=document.getElementById('if-pay-btn');
   if(btn&&bookingId)btn.dataset.bid=bookingId;
@@ -1209,12 +1198,11 @@ function showInlineFoodCard(fi){
 function updateInlineFoodUI(){
   if(!eventFoodItem)return;
   const total=eventFoodItem.paid_item_price*inlineFoodQty;
-  const free=eventFoodItem.free_item_name||'Mojito';
   document.getElementById('if-qty').textContent=inlineFoodQty;
   document.getElementById('if-price').textContent='₹'+total;
   document.getElementById('if-pay-btn').textContent='Book Food — Pay ₹'+total+' →';
   const s=document.getElementById('if-summary');
-  if(s)s.innerHTML='<strong style="color:#fff">'+eventFoodItem.paid_item_name+'</strong> × '+inlineFoodQty+'<br>🍹 <strong style="color:#4ade80">'+free+'</strong> × '+inlineFoodQty+' <span style="color:#4ade80;font-weight:600;">(FREE)</span><br>Total: <strong style="color:#fff">₹'+total+'</strong>';
+  if(s)s.innerHTML='<strong style="color:#fff">'+eventFoodItem.paid_item_name+'</strong> × '+inlineFoodQty+'<br>Total: <strong style="color:#fff">₹'+total+'</strong>';
 }
 function foodInlineQtyChange(delta){
   const n=inlineFoodQty+delta;if(n<1||n>10)return;
@@ -1238,7 +1226,7 @@ async function bookFoodInline(){
   const rzp=new Razorpay({
     key:rzpKey,amount:total*100,currency:'INR',
     name:eventData?eventData.name:'Khursilo',
-    description:eventFoodItem.paid_item_name+(eventFoodItem.free_item_name?' + '+eventFoodItem.free_item_name+' FREE':''),
+    description:eventFoodItem.paid_item_name,
     prefill:{contact:mobile},theme:{color:'#c84010'},
     modal:{ondismiss:()=>{btn.disabled=false;updateInlineFoodUI();}},
     handler:async(res)=>{await saveFoodOrderInline(res.razorpay_payment_id,total);}
@@ -1251,7 +1239,7 @@ async function saveFoodOrderInline(paymentId,total){
     event_id:eventId,booking_id:bookingId,
     booker_mobile:ticketData&&ticketData.bookerMobile||'',
     paid_item_name:eventFoodItem.paid_item_name,
-    free_item_name:eventFoodItem.free_item_name||null,
+    free_item_name:null,
     quantity:inlineFoodQty,total_amount:total,
     razorpay_payment_id:paymentId,status:'confirmed',
     created_at:new Date().toISOString()
@@ -1296,7 +1284,6 @@ async function loadFoodOnlyPanel(){
   if(!fi){document.getElementById('fo-no-food').style.display='block';document.getElementById('fo-pay-btn').style.display='none';return;}
   eventFoodItem=fi;
   document.getElementById('fo-paid-name').textContent=fi.paid_item_name||'Food item';
-  document.getElementById('fo-free-name').textContent=fi.free_item_name||'Complimentary';
   document.getElementById('fo-food-card').style.display='block';
   updateFoodOnlyUI();
 }
@@ -1314,17 +1301,17 @@ async function bookFoodStandalone(){
   const rzpKey=eventFoodItem.vendor_razorpay_key||(organiserData&&organiserData.razorpay_key_id);
   if(!rzpKey){errEl.textContent='Payment not configured. Contact organiser.';errEl.style.display='block';btn.disabled=false;btn.textContent='Book Food & Pay →';return;}
   btn.textContent='Opening payment…';
-  const rzp=new Razorpay({key:rzpKey,amount:total*100,currency:'INR',name:eventData?eventData.name:'Khursilo',description:eventFoodItem.paid_item_name+(eventFoodItem.free_item_name?' + '+eventFoodItem.free_item_name+' FREE':''),prefill:{name,contact:mobile},theme:{color:'#c84010'},modal:{ondismiss:()=>{btn.disabled=false;btn.textContent='Book Food & Pay →';}},handler:async(res)=>{await saveFoodOrderStandalone(res.razorpay_payment_id,name,mobile,total);}});
+  const rzp=new Razorpay({key:rzpKey,amount:total*100,currency:'INR',name:eventData?eventData.name:'Khursilo',description:eventFoodItem.paid_item_name,prefill:{name,contact:mobile},theme:{color:'#c84010'},modal:{ondismiss:()=>{btn.disabled=false;btn.textContent='Book Food & Pay →';}},handler:async(res)=>{await saveFoodOrderStandalone(res.razorpay_payment_id,name,mobile,total);}});
   rzp.on('payment.failed',()=>{btn.disabled=false;btn.textContent='Book Food & Pay →';});
   rzp.open();
 }
 async function saveFoodOrderStandalone(paymentId,name,mobile,total){
-  const{error}=await sb.from('kh_food_orders').insert({event_id:eventId,booking_id:null,booker_mobile:mobile,booker_name:name,paid_item_name:eventFoodItem.paid_item_name,free_item_name:eventFoodItem.free_item_name||null,quantity:foodOnlyQty,total_amount:total,razorpay_payment_id:paymentId,status:'confirmed',created_at:new Date().toISOString()});
+  const{error}=await sb.from('kh_food_orders').insert({event_id:eventId,booking_id:null,booker_mobile:mobile,booker_name:name,paid_item_name:eventFoodItem.paid_item_name,free_item_name:null,quantity:foodOnlyQty,total_amount:total,razorpay_payment_id:paymentId,status:'confirmed',created_at:new Date().toISOString()});
   if(error){alert('Could not save food order: '+error.message);return;}
   document.getElementById('fo-pay-btn').style.display='none';
   document.getElementById('fo-food-card').style.display='none';
   const d=document.getElementById('fo-done');
-  d.innerHTML='✅ Food order confirmed!<br><span style="font-size:12px;font-weight:400;">'+name+' · '+mobile+'<br>'+eventFoodItem.paid_item_name+' × '+foodOnlyQty+(eventFoodItem.free_item_name?' + '+eventFoodItem.free_item_name+' × '+foodOnlyQty+' (FREE)':'')+'<br>Total paid: ₹'+total+'<br><br>Show this screen or your mobile number at the food stall on event day.</span>';
+  d.innerHTML='✅ Food order confirmed!<br><span style="font-size:12px;font-weight:400;">'+name+' · '+mobile+'<br>'+eventFoodItem.paid_item_name+' × '+foodOnlyQty+'<br>Total paid: ₹'+total+'<br><br>Show this screen or your mobile number at the food stall on event day.</span>';
   d.style.display='block';
 }
 

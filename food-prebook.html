@@ -60,14 +60,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .food-header-sub{font-size:12px;opacity:0.85;}
 .food-body{background:var(--card);padding:16px;}
 
-/* COMPLIMENTARY MOJITO BANNER */
-.mojito-banner{background:linear-gradient(135deg,rgba(46,158,96,0.15),rgba(46,158,96,0.08));border:1px solid rgba(46,158,96,0.3);border-radius:var(--rsm);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.mojito-icon{font-size:32px;flex-shrink:0;}
-.mojito-text{flex:1;}
-.mojito-title{font-size:13px;font-weight:700;color:var(--green);margin-bottom:2px;}
-.mojito-sub{font-size:11px;color:rgba(46,158,96,0.8);line-height:1.4;}
-.mojito-badge{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;flex-shrink:0;}
-
 /* PRICE ROW */
 .price-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .price-main{font-size:28px;font-weight:700;color:var(--text);}
@@ -171,16 +163,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="food-body">
 
-      <!-- Complimentary Mojito -->
-      <div class="mojito-banner">
-        <div class="mojito-icon">🍹</div>
-        <div class="mojito-text">
-          <div class="mojito-title">Complimentary Mojito</div>
-          <div class="mojito-sub">Mojito (worth ₹60 at stall) FREE with every pre-booking · One per ticket</div>
-        </div>
-        <div class="mojito-badge">FREE</div>
-      </div>
-
       <!-- Price & quantity -->
       <div class="price-row">
         <div>
@@ -200,7 +182,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
       <!-- Pay button -->
       <button class="pay-btn" id="pay-btn" onclick="bookFood()">Book Food & Pay →</button>
-      <div class="pay-note" id="pay-note">Advance payment · Secure via Razorpay<br>Mojito (worth ₹60 at stall) served FREE on event day</div>
+      <div class="pay-note" id="pay-note">Advance payment · Secure via Razorpay</div>
     </div>
   </div>
 
@@ -213,7 +195,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="confirmed-sub">Your food order is confirmed. Show this screen (or your ticket QR) at the food counter on event day.</div>
   <div class="confirmed-card">
     <div class="confirmed-row"><span class="conf-label">Item</span><span class="conf-val" id="conf-item">—</span></div>
-    <div class="confirmed-row"><span class="conf-label">Complimentary</span><span class="conf-val green" id="conf-free">🍹 Mojito × 1</span></div>
     <div class="confirmed-row"><span class="conf-label">Quantity</span><span class="conf-val" id="conf-qty">—</span></div>
     <div class="confirmed-row"><span class="conf-label">Amount paid</span><span class="conf-val" id="conf-amount">—</span></div>
     <div class="confirmed-row"><span class="conf-label">Name</span><span class="conf-val" id="conf-name">—</span></div>
@@ -305,16 +286,14 @@ async function init(){
   }
 
   // Show food item details
-  const freeName=fi.free_item_name||'Mojito';
   document.getElementById('food-item-name').textContent=fi.paid_item_name;
-  document.getElementById('food-item-sub').textContent='+ 1 '+freeName+' FREE with your order';
+  document.getElementById('food-item-sub').textContent='Available at the event';
 
   // Show existing order or food form
   if(existingOrder){
     document.getElementById('already-ordered').style.display='block';
-    const freeDesc=existingOrder.free_item_name?' + '+existingOrder.free_item_name+' × '+existingOrder.quantity+' (FREE)':'';
     document.getElementById('ao-detail').textContent=
-      existingOrder.paid_item_name+' × '+existingOrder.quantity+freeDesc+' · ₹'+existingOrder.total_amount;
+      existingOrder.paid_item_name+' × '+existingOrder.quantity+' · ₹'+existingOrder.total_amount;
     document.getElementById('food-card').style.display='none';
   } else {
     updateUI();
@@ -329,7 +308,6 @@ function updateUI(){
   const total=foodItem.paid_item_price*qty;
   const orig=foodItem.paid_item_original_price*qty;
   const saving=orig-total;
-  const freeName=foodItem.free_item_name||'Mojito';
 
   document.getElementById('qty-display').textContent=qty;
   document.getElementById('price-display').textContent='₹'+total;
@@ -337,7 +315,6 @@ function updateUI(){
   document.getElementById('price-saving').textContent=saving>0?'You save ₹'+saving:'';
   document.getElementById('order-summary').innerHTML=
     '<strong>'+foodItem.paid_item_name+'</strong> × '+qty+
-    '<br>🍹 <strong>'+freeName+'</strong> × '+qty+' <span style="color:var(--green);font-weight:600;">(FREE)</span>'+
     '<br>Total advance: <strong>₹'+total+'</strong>';
   document.getElementById('pay-btn').textContent='Book Food — Pay ₹'+total+' →';
 }
@@ -367,13 +344,12 @@ async function bookFood(){
 
   btn.textContent='Opening payment…';btn.disabled=true;
 
-  const freeName=foodItem.free_item_name||'Mojito';
   const rzp=new Razorpay({
     key:foodItem.vendor_razorpay_key,
     amount:total*100,
     currency:'INR',
     name:eventData.name||'Food Pre-booking',
-    description:foodItem.paid_item_name+' × '+qty+' + '+freeName+' × '+qty+' (FREE)',
+    description:foodItem.paid_item_name+' × '+qty,
     prefill:{name:bookingData.booker_name||'',contact:bookingData.booker_mobile||''},
     theme:{color:'#c84010'},
     modal:{ondismiss:()=>{btn.textContent='Book Food — Pay ₹'+total+' →';btn.disabled=false;}},
@@ -392,7 +368,6 @@ async function bookFood(){
 async function confirmOrder(paymentId){
   const btn=document.getElementById('pay-btn');
   const total=foodItem.paid_item_price*qty;
-  const freeName=foodItem.free_item_name||'Mojito';
 
   const{data,error}=await sb.from('kh_food_orders').insert({
     booking_id:bookingId,
@@ -401,7 +376,7 @@ async function confirmOrder(paymentId){
     booker_mobile:bookingData.booker_mobile||'',
     quantity:qty,
     paid_item_name:foodItem.paid_item_name,
-    free_item_name:freeName,
+    free_item_name:null,
     amount_per_unit:foodItem.paid_item_price,
     total_amount:total,
     razorpay_payment_id:paymentId||null,
@@ -418,7 +393,6 @@ async function confirmOrder(paymentId){
       'Guest: '+(bookingData.booker_name||'—')+'\n'+
       'Seat: '+seat+'\n\n'+
       '✅ '+foodItem.paid_item_name+' × '+qty+'\n'+
-      '🍹 '+freeName+' × '+qty+' (FREE)\n'+
       '💰 Paid: ₹'+total+'\n\n'+
       'Booking: '+bookingId.slice(0,8)+'…';
     window.open('https://wa.me/91'+foodItem.vendor_whatsapp+'?text='+encodeURIComponent(msg),'_blank');
@@ -427,7 +401,6 @@ async function confirmOrder(paymentId){
   // Show confirmation
   document.getElementById('main').classList.remove('show');
   document.getElementById('conf-item').textContent=foodItem.paid_item_name+' × '+qty;
-  document.getElementById('conf-free').textContent='🍹 '+freeName+' × '+qty;
   document.getElementById('conf-qty').textContent=qty;
   document.getElementById('conf-amount').textContent='₹'+total;
   document.getElementById('conf-name').textContent=bookingData.booker_name||'—';

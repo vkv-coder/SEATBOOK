@@ -159,7 +159,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div style="background:linear-gradient(135deg,#c84010 0%,#e05520 100%);color:#fff;padding:14px 16px;">
         <div style="font-size:11px;opacity:0.8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Advance offer · Today only</div>
         <div style="font-size:17px;font-weight:700;" id="food-combo-title">—</div>
-        <div style="font-size:12px;opacity:0.85;margin-top:3px;" id="food-free-badge">—</div>
       </div>
       <div style="padding:14px 16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -386,11 +385,7 @@ async function loadFoodSection(eventData){
   await loadPrevFoodOrders();
 
   // Populate UI
-  const freeLabel = fi.free_item_name ? fi.free_item_name+' FREE' : '';
-  document.getElementById('food-combo-title').textContent =
-    fi.paid_item_name + (fi.free_item_name ? ' + '+fi.free_item_name : '');
-  document.getElementById('food-free-badge').textContent =
-    fi.free_item_name ? '🎁 '+fi.free_item_name+' FREE with every order' : 'Advance price offer';
+  document.getElementById('food-combo-title').textContent = fi.paid_item_name;
   updateFoodUI();
   document.getElementById('food-section').style.display='block';
 }
@@ -407,10 +402,7 @@ function updateFoodUI(){
   document.getElementById('food-saving-display').textContent =
     saving>0 ? 'You save ₹'+saving : '';
 
-  const freeDesc = foodItem.free_item_name
-    ? foodItem.paid_item_name+' × '+foodQty+' + '+foodItem.free_item_name+' × '+foodQty+' (FREE)'
-    : foodItem.paid_item_name+' × '+foodQty;
-  document.getElementById('food-order-summary').textContent = freeDesc;
+  document.getElementById('food-order-summary').textContent = foodItem.paid_item_name+' × '+foodQty;
   document.getElementById('food-book-btn').textContent =
     total>0 ? 'Book Food — Pay ₹'+total+' →' : 'Book Food (Free) →';
 }
@@ -438,7 +430,7 @@ async function loadPrevFoodOrders(){
         <div style="font-size:13px;font-weight:700;">₹${o.total_amount}</div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px;">
-        ${o.paid_item_name} × ${o.quantity}${o.free_item_name?' + '+o.free_item_name+' × '+o.quantity+' (FREE)':''}
+        ${o.paid_item_name} × ${o.quantity}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:2px;">Show ticket QR at food stall — staff will scan & hand over</div></div>
     </div>`).join('');
@@ -468,7 +460,7 @@ async function bookFood(){
     amount: total * 100,
     currency: 'INR',
     name: 'Food Pre-booking',
-    description: foodItem.paid_item_name + (foodItem.free_item_name?' + '+foodItem.free_item_name+' (free)':'') + ' × '+foodQty,
+    description: foodItem.paid_item_name + ' × '+foodQty,
     prefill: {
       name: ticketData ? ticketData.bookerName : '',
       contact: ''
@@ -496,7 +488,7 @@ async function confirmFoodOrder(paymentId){
     booker_mobile: ticketData ? ticketData.bookerMobile : '',
     quantity: foodQty,
     paid_item_name: foodItem.paid_item_name,
-    free_item_name: foodItem.free_item_name||null,
+    free_item_name: null,
     amount_per_unit: foodItem.paid_item_price,
     total_amount: total,
     razorpay_payment_id: paymentId||null,
@@ -521,12 +513,11 @@ function notifyVendor(order){
   if(!foodItem||!foodItem.vendor_whatsapp) return;
   const ev = ticketData ? ticketData.eventName : 'Event';
   const guestName = ticketData ? ticketData.bookerName : 'Guest';
-  const freeDesc = order.free_item_name ? '\n🎁 '+order.free_item_name+' × '+order.quantity+' (FREE)' : '';
   const msg =
     '🍽 *New Food Order — '+ev+'*\n\n'+
     'Guest: '+guestName+'\n'+
     'Booking: '+bookingId.slice(0,8)+'…\n\n'+
-    '✅ '+order.paid_item_name+' × '+order.quantity+freeDesc+'\n'+
+    '✅ '+order.paid_item_name+' × '+order.quantity+'\n'+
     '💰 Paid: '+(order.total_amount>0?'₹'+order.total_amount:'FREE')+'\n\n'+
     'Ticket: khursilo.in/ticket.html?id='+bookingId;
   window.open('https://wa.me/91'+foodItem.vendor_whatsapp+'?text='+encodeURIComponent(msg),'_blank');
