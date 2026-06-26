@@ -517,11 +517,6 @@ async function loadEvent(){
     if(ev.organiser_id){
       const{data:org}=await sb.from('kh_organisers').select('razorpay_key_id,contact_1_name,contact_1_mobile,contact_2_name,contact_2_mobile,email_1').eq('id',ev.organiser_id).single();
       organiserData=org;
-      if(org&&org.contact_1_mobile){
-        const tel=org.contact_1_mobile.replace(/\D/g,'');
-        document.getElementById('ev-organiser').innerHTML='📞 <a href="tel:+91'+_e(tel)+'" style="color:var(--accent);text-decoration:none;font-weight:600;">'+_e(org.contact_1_name||'Organiser')+' · '+_e(org.contact_1_mobile)+'</a>';
-        document.getElementById('ev-organiser').style.display='block';
-      }
     }
 
     // ── Show cancellation policy (NEW) ──
