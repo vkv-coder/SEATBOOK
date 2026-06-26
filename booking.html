@@ -379,10 +379,11 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const SSG_HALL_ID='e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const SAYAJI_HALL_ID='5bde155b-4bf1-425b-b23d-7f2dc6e48a5a';
 const DINDAYAL_HALL_ID='2b5ca724-c8f1-42d5-9730-00229916618b';
+const HEMU_HALL_ID='6e4d80e5-1443-4e91-bf2a-485cc39c2058';
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null,bookingConfirmed=false;
-let isSSG=false,isSayaji=false,wantedSeatCount=1,isViewOnly=false;
+let isSSG=false,isSayaji=false,isHemu=false,wantedSeatCount=1,isViewOnly=false;
 let eventTotalDays=1;
 let isMemberBooking=false,memberMobile='',memberFreeQty=2;
 const MEMBER_PAID_PRICE=250;
@@ -645,11 +646,16 @@ async function loadEvent(){
     buildSectionTabs();
     isSSG=(ev.hall_id===SSG_HALL_ID);
     isSayaji=(ev.hall_id===SAYAJI_HALL_ID||ev.hall_id===DINDAYAL_HALL_ID);
+    isHemu=(ev.hall_id===HEMU_HALL_ID);
     document.getElementById('loading-screen').style.display='none';
     if(isSSG){buildSSGMap();}
     else if(isSayaji){
       const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
       buildSayajiMap(layout);
+    }
+    else if(isHemu){
+      const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
+      buildHemuMap(layout);
     }
     else{
       const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
@@ -776,6 +782,55 @@ function buildSayajiMap(layout){
   wrap.appendChild(svg);
   wrap.style.height='auto';
   svg.style.display='block';
+}
+
+// ── HEMU GADHVI SVG MAP ──────────────────────────────────────────────────────
+function buildHemuMap(layout){
+  const wrap=document.getElementById('ssg-map-wrap');wrap.style.display='block';
+  const rows=layout.rows||[];const ns='http://www.w3.org/2000/svg';
+  const SW=8,SH=6,SG=1.5,VGAP_W=14,EMPTY_W=SW+SG,RH=SH+3,HGAP_H=12,STAGE_H=28,PAD=8,LBL_W=14;
+  const secColors={};(layout.sections||[]).forEach(s=>{secColors[s.id]=s.color||'#4a90d9';});
+  function rowPxW(row){if(row.type!=='row')return 0;let w=0;(row.cells||[]).forEach(c=>{w+=(c.t==='vgap')?(VGAP_W+SG):EMPTY_W;});return w+LBL_W*2;}
+  let maxW=0;rows.forEach(r=>{maxW=Math.max(maxW,rowPxW(r));});
+  const SVG_W=maxW+10;
+  let totalH=PAD;rows.forEach(r=>{if(r.type==='hgap')totalH+=HGAP_H;else if(r.type==='row')totalH+=RH;});totalH+=STAGE_H+20;
+  const svg=document.createElementNS(ns,'svg');svg.setAttribute('width',SVG_W);svg.setAttribute('height',totalH);
+  function mk(tag,a,p){const e=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e;}
+  function lbl(x,y,s){const t=document.createElementNS(ns,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor','middle');t.setAttribute('dominant-baseline','central');t.setAttribute('font-size','7');t.setAttribute('font-weight','700');t.setAttribute('fill','#555');t.textContent=s;svg.appendChild(t);}
+  mk('rect',{width:SVG_W,height:totalH,fill:'#f7f6f4'},svg);window._ssgSeats={};
+  function drawSeat(x,y,rowLabel,sn,secId){
+    const key=rowLabel+'-'+String(sn).padStart(2,'0');
+    const status=seatStatusMap[key]||'available';
+    let sc=secColors[secId]||'#4a90d9',price=0;
+    if(window._seatPriceMap){const p=window._seatPriceMap[key];if(p==='X'||!p)return;price=p;const sec=sections.find(s=>parseInt(s.price)===p);if(sec)sc=sec.color||sec.colour||sc;}
+    const g=document.createElementNS(ns,'g');let fc='#fff',stc=sc,tc=sc;
+    if(status==='booked'){fc='#d0d0cc';stc='#aaa';tc='#999';}else if(status==='held'){fc='#f59e0b';stc='#d97706';tc='#fff';}
+    const r=mk('rect',{x,y,width:SW,height:SH,rx:1,fill:fc,stroke:stc,'stroke-width':'0.8'},g);
+    const nt=document.createElementNS(ns,'text');nt.setAttribute('x',x+SW/2);nt.setAttribute('y',y+SH/2);nt.setAttribute('text-anchor','middle');nt.setAttribute('dominant-baseline','central');nt.setAttribute('font-size','3.5');nt.setAttribute('fill',tc);nt.textContent=sn;g.appendChild(nt);
+    g._key=key;g._row=rowLabel;g._sn=String(sn);g._price=price;g._color=sc;g._status=status;g._r=r;g._nt=nt;
+    window._ssgSeats[key]=g;
+    if(status==='available'){g.style.cursor='pointer';g.addEventListener('click',()=>ssgClick(g));}else g.style.cursor='not-allowed';
+    svg.appendChild(g);
+  }
+  const renderRows=[...rows].reverse();let cy=PAD;
+  renderRows.forEach(row=>{
+    if(row.type==='hgap'){mk('rect',{x:LBL_W,y:cy+2,width:SVG_W-LBL_W*2,height:HGAP_H-4,rx:2,fill:'#90a4ae'},svg);cy+=HGAP_H;return;}
+    if(row.type!=='row')return;
+    const rowLabel=row.label,cells=row.cells||[];
+    let rowW=0;cells.forEach(c=>{rowW+=(c.t==='vgap')?(VGAP_W+SG):EMPTY_W;});
+    let cx=LBL_W+Math.max(0,(SVG_W-LBL_W*2-rowW)/2);
+    let firstX=null,lastX=null;
+    cells.forEach(cell=>{
+      if(cell.t==='seat'){drawSeat(cx,cy,rowLabel,cell.sn,cell.secId);if(firstX===null)firstX=cx;lastX=cx;cx+=EMPTY_W;}
+      else if(cell.t==='vgap'){mk('rect',{x:cx,y:cy,width:VGAP_W,height:SH,rx:1,fill:'#cfd8dc'},svg);cx+=VGAP_W+SG;}
+      else{cx+=EMPTY_W;}
+    });
+    if(rowLabel&&firstX!==null){lbl(LBL_W/2+Math.max(0,(SVG_W-LBL_W*2-rowW)/2)-2,cy+SH/2,rowLabel);lbl(lastX+SW+LBL_W/2+4,cy+SH/2,rowLabel);}
+    cy+=RH;
+  });
+  cy+=6;mk('rect',{x:SVG_W/2-90,y:cy,width:180,height:STAGE_H-4,rx:4,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
+  const st=document.createElementNS(ns,'text');st.setAttribute('x',SVG_W/2);st.setAttribute('y',cy+(STAGE_H-4)/2);st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');st.setAttribute('font-size','10');st.setAttribute('font-weight','700');st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
+  wrap.appendChild(svg);wrap.style.height='auto';svg.style.display='block';
 }
 
 function ssgClick(g){
