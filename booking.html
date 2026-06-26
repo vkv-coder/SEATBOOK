@@ -814,18 +814,19 @@ function buildHemuMap(layout){
   }
   const renderRows=[...rows].reverse();let cy=PAD;
   renderRows.forEach(row=>{
-    if(row.type==='hgap'){mk('rect',{x:LBL_W,y:cy+2,width:SVG_W-LBL_W*2,height:HGAP_H-4,rx:2,fill:'#90a4ae'},svg);cy+=HGAP_H;return;}
+    // Wide visible walkway bar
+    if(row.type==='hgap'){mk('rect',{x:4,y:cy+1,width:SVG_W-8,height:HGAP_H-2,rx:3,fill:'#78909c'},svg);cy+=HGAP_H;return;}
     if(row.type!=='row')return;
     const rowLabel=row.label,cells=row.cells||[];
-    let rowW=0;cells.forEach(c=>{rowW+=(c.t==='vgap')?(VGAP_W+SG):EMPTY_W;});
-    let cx=LBL_W+Math.max(0,(SVG_W-LBL_W*2-rowW)/2);
+    // LEFT-ALIGN: start from LBL_W — empty cells in layout_json already encode bowl shape
+    let cx=LBL_W;
     let firstX=null,lastX=null;
     cells.forEach(cell=>{
       if(cell.t==='seat'){drawSeat(cx,cy,rowLabel,cell.sn,cell.secId);if(firstX===null)firstX=cx;lastX=cx;cx+=EMPTY_W;}
       else if(cell.t==='vgap'){mk('rect',{x:cx,y:cy,width:VGAP_W,height:SH,rx:1,fill:'#cfd8dc'},svg);cx+=VGAP_W+SG;}
-      else{cx+=EMPTY_W;}
+      else{cx+=EMPTY_W;} // empty cell — skip space (bowl shape from layout_json)
     });
-    if(rowLabel&&firstX!==null){lbl(LBL_W/2+Math.max(0,(SVG_W-LBL_W*2-rowW)/2)-2,cy+SH/2,rowLabel);lbl(lastX+SW+LBL_W/2+4,cy+SH/2,rowLabel);}
+    if(rowLabel&&firstX!==null){lbl(firstX-8,cy+SH/2,rowLabel);lbl(lastX+SW+8,cy+SH/2,rowLabel);}
     cy+=RH;
   });
   cy+=6;mk('rect',{x:SVG_W/2-90,y:cy,width:180,height:STAGE_H-4,rx:4,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
