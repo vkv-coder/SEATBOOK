@@ -590,6 +590,66 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
+<!-- WALK-IN BOOKING MODAL -->
+<div class="modal-overlay" id="walkin-modal" onclick="closeWalkin(event)">
+  <div class="modal-panel" style="max-height:92vh;overflow-y:auto;padding-bottom:40px;">
+    <button class="modal-close" onclick="closeWalkin()">×</button>
+    <div class="modal-title">🚶 Walk-in Booking</div>
+    <div class="modal-sub" id="walkin-event-name" style="margin-bottom:16px;"></div>
+
+    <!-- STEP 1: FORM -->
+    <div id="walkin-step-form">
+      <div class="field-group">
+        <div class="field-label">Guest Name *</div>
+        <input class="input-field" type="text" id="walkin-name" placeholder="Full name" autocomplete="off" style="margin:0;">
+      </div>
+      <div class="field-group">
+        <div class="field-label">WhatsApp Number *</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 10px;font-size:14px;color:var(--muted);flex-shrink:0;">+91</div>
+          <input class="input-field" type="tel" id="walkin-mobile" placeholder="10-digit number" maxlength="10" inputmode="numeric" style="margin:0;flex:1;">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Seat Number(s) *</div>
+        <input class="input-field" type="text" id="walkin-seat" placeholder="e.g. B-12 or B-12, B-13" autocomplete="off" style="margin:0;">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Enter seat number manually. Separate multiple seats with comma.</div>
+      </div>
+      <div id="walkin-form-err" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;"></div>
+      <button onclick="submitWalkin()" id="walkin-submit-btn" style="width:100%;padding:14px;background:#2b6fd4;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">
+        Book & Generate QR →
+      </button>
+    </div>
+
+    <!-- STEP 2: QR + SEND -->
+    <div id="walkin-step-qr" style="display:none;text-align:center;">
+      <div style="background:rgba(43,111,212,0.07);border:1px solid rgba(43,111,212,0.2);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:#2b6fd4;margin-bottom:2px;">✓ Booking Confirmed</div>
+        <div style="font-size:12px;color:var(--muted);" id="walkin-confirm-label"></div>
+      </div>
+
+      <!-- QR CODE -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;display:inline-block;margin-bottom:16px;">
+        <div id="walkin-qr-box"></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;word-break:break-all;max-width:200px;" id="walkin-booking-id-label"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button onclick="saveWalkinQR()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);">
+          💾 Save QR
+        </button>
+        <button onclick="sendWalkinWhatsApp()" style="flex:1;padding:12px;background:#25D366;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          📲 Send WhatsApp
+        </button>
+      </div>
+
+      <button onclick="resetWalkin()" style="width:100%;padding:12px;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer;">
+        + Book Another Guest
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── CONFIG ──
 const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
@@ -879,6 +939,7 @@ function buildEventCard(event, bookings){
       <button class="qa-btn" onclick="downloadCSV('${eid}')"><div class="qa-icon">📥</div><div class="qa-label">Download CSV</div></button>
       <button class="qa-btn" onclick="shareLink('${eid}')"><div class="qa-icon">🔗</div><div class="qa-label">Share booking link</div></button>
       <button class="qa-btn" onclick="toggleBooking('${eid}',this)"><div class="qa-icon">${event.status==='active'?'🔒':'🔓'}</div><div class="qa-label">${event.status==='active'?'Close booking':'Open booking'}</div></button>
+      <button class="qa-btn" onclick="openWalkin('${eid}')" style="grid-column:span 2;background:rgba(43,111,212,0.07);border-color:rgba(43,111,212,0.2);"><div class="qa-icon">🚶</div><div class="qa-label" style="color:#2b6fd4;">Walk-in Booking</div></button>
       <button class="qa-btn" onclick="openComplimentary('${eid}')" style="grid-column:span 2;background:rgba(46,158,96,0.07);border-color:rgba(46,158,96,0.2);"><div class="qa-icon">🎟</div><div class="qa-label" style="color:var(--green);">Complimentary Tickets</div></button>
       <button class="qa-btn" onclick="openPendingPayments('${eid}')" style="grid-column:span 2;background:rgba(200,134,10,0.07);border-color:rgba(200,134,10,0.2);"><div class="qa-icon">💳</div><div class="qa-label" style="color:var(--accent);">Confirm Manual Payments</div></button>
       <button class="qa-btn" onclick="openFoodPanel('${eid}')" style="background:rgba(220,80,30,0.07);border-color:rgba(220,80,30,0.2);"><div class="qa-icon">🍽</div><div class="qa-label" style="color:#c84010;">Food Setup</div></button>
@@ -2530,6 +2591,126 @@ async function confirmManualPayment(bookingId){
     const bkLocal = evData.bookings.find(bk=>bk.id===bookingId);
     if(bkLocal){bkLocal.status='confirmed';bkLocal.payment_status='paid';}
   }
+}
+
+// ── WALK-IN BOOKING ──────────────────────────────────────
+let walkinEventId  = null;
+let walkinBookingId = null;
+let walkinMobile   = null;
+let walkinQRObj    = null;
+
+function openWalkin(eid) {
+  walkinEventId = eid;
+  const ev = allEvents.find(e => e.event.id === eid);
+  document.getElementById('walkin-event-name').textContent = ev ? ev.event.name : '';
+  resetWalkin();
+  document.getElementById('walkin-modal').classList.add('show');
+  setTimeout(() => document.getElementById('walkin-name').focus(), 300);
+}
+
+function closeWalkin(e) {
+  if (e && e.target !== document.getElementById('walkin-modal')) return;
+  document.getElementById('walkin-modal').classList.remove('show');
+}
+
+function resetWalkin() {
+  document.getElementById('walkin-step-form').style.display = 'block';
+  document.getElementById('walkin-step-qr').style.display  = 'none';
+  document.getElementById('walkin-form-err').style.display = 'none';
+  document.getElementById('walkin-name').value   = '';
+  document.getElementById('walkin-mobile').value = '';
+  document.getElementById('walkin-seat').value   = '';
+  document.getElementById('walkin-submit-btn').textContent = 'Book & Generate QR →';
+  document.getElementById('walkin-submit-btn').disabled = false;
+  document.getElementById('walkin-qr-box').innerHTML = '';
+  walkinBookingId = null;
+  walkinMobile = null;
+  walkinQRObj = null;
+}
+
+async function submitWalkin() {
+  const name   = document.getElementById('walkin-name').value.trim();
+  const mobile = document.getElementById('walkin-mobile').value.replace(/\D/g,'').trim();
+  const seatRaw = document.getElementById('walkin-seat').value.trim();
+  const errEl  = document.getElementById('walkin-form-err');
+  errEl.style.display = 'none';
+
+  if (!name)                       { errEl.textContent = 'Enter guest name.';            errEl.style.display='block'; return; }
+  if (!/^\d{10}$/.test(mobile))    { errEl.textContent = 'Enter valid 10-digit number.'; errEl.style.display='block'; return; }
+  if (!seatRaw)                    { errEl.textContent = 'Enter seat number.';            errEl.style.display='block'; return; }
+
+  const seatKeys = seatRaw.split(',').map(s => s.trim()).filter(Boolean);
+  const btn = document.getElementById('walkin-submit-btn');
+  btn.textContent = 'Creating booking…'; btn.disabled = true;
+
+  try {
+    const { data, error } = await sb.from('kh_bookings').insert({
+      event_id:       walkinEventId,
+      booker_name:    name,
+      booker_mobile:  mobile,
+      seat_keys:      seatKeys,
+      seat_count:     seatKeys.length,
+      amount:         0,
+      payment_status: 'walk-in',
+      status:         'confirmed',
+      booking_type:   'walk-in',
+      created_at:     new Date().toISOString()
+    }).select('id').single();
+
+    if (error) throw error;
+
+    walkinBookingId = data.id;
+    walkinMobile = mobile;
+
+    // Show QR step
+    document.getElementById('walkin-step-form').style.display = 'none';
+    document.getElementById('walkin-step-qr').style.display   = 'block';
+    document.getElementById('walkin-confirm-label').textContent =
+      name + ' · Seat ' + seatKeys.join(', ');
+    document.getElementById('walkin-booking-id-label').textContent =
+      'ID: ' + walkinBookingId.slice(0, 20) + '…';
+
+    // Generate QR
+    document.getElementById('walkin-qr-box').innerHTML = '';
+    walkinQRObj = new QRCode(document.getElementById('walkin-qr-box'), {
+      text:           walkinBookingId,
+      width:          200,
+      height:         200,
+      colorDark:      '#000000',
+      colorLight:     '#ffffff',
+      correctLevel:   QRCode.CorrectLevel.M
+    });
+
+    loadDashboard();
+
+  } catch(err) {
+    errEl.textContent = 'Error: ' + err.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Book & Generate QR →'; btn.disabled = false;
+  }
+}
+
+function saveWalkinQR() {
+  const canvas = document.querySelector('#walkin-qr-box canvas');
+  if (!canvas) { showToast('QR not ready yet'); return; }
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'walkin-ticket-' + (walkinBookingId || 'qr') + '.png';
+  a.click();
+}
+
+function sendWalkinWhatsApp() {
+  if (!walkinMobile || !walkinBookingId) return;
+  const ev = allEvents.find(e => e.event.id === walkinEventId);
+  const evName = ev ? ev.event.name : 'Event';
+  const nameVal = document.getElementById('walkin-confirm-label').textContent;
+  const msg =
+    `🎟 *${evName}* — Walk-in Ticket\n\n` +
+    `${nameVal}\n\n` +
+    `Your entry QR code has been saved on the organiser's phone and will be shown to you. ` +
+    `Please show it at the gate for entry.\n\n` +
+    `Booking ref: ${walkinBookingId.slice(0,8).toUpperCase()}`;
+  window.open('https://wa.me/91' + walkinMobile + '?text=' + encodeURIComponent(msg), '_blank');
 }
 </script>
 </body>
