@@ -1250,9 +1250,7 @@ function doSendScanner(mode){
   const inputs = document.getElementById('scanner-nums-' + mode).querySelectorAll('input');
   const ev = allEvents.find(e=>e.event.id===scannerSendEventId);
   const evName = ev ? ev.event.name : 'Event';
-  const scannerUrl = mode === 'food'
-    ? 'https://khursilo.in/food-scanner.html?event=' + scannerSendEventId
-    : 'https://khursilo.in/scanner.html?event=' + scannerSendEventId;
+  const scannerUrl = 'https://khursilo.in/scanner.html?event=' + scannerSendEventId + '&mode=' + mode;
   const otpCode = document.getElementById('scanner-otp-display').textContent;
   const roleLabel = mode === 'food' ? '🍽 Food Stall Scanner' : '🚪 Gate Entry Scanner';
   const roleStep  = mode === 'food' ? 'Scan customer QR to mark food collected' : 'Scan customer QR to allow gate entry';
