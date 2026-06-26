@@ -692,7 +692,7 @@ function buildSectionTabs(){
   sections.forEach(sec=>{
     if(!sec.name)return;
     const btn=document.createElement('button');btn.className='sec-tab';btn.dataset.sec=sec.id||sec.name;
-    btn.innerHTML=`<span class="tab-dot" style="background:${sec.color||sec.colour||'#888'}"></span>${sec.name}${sec.price?' ₹'+sec.price:''}`;
+    btn.innerHTML=`<span class="tab-dot" style="background:${sec.color||sec.colour||'#888'}"></span>${sec.name}${(!isHemu&&sec.price)?' ₹'+sec.price:''}`;
     btn.onclick=()=>filterSection(sec.id||sec.name,btn);wrap.appendChild(btn);
   });
 }
