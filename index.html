@@ -83,9 +83,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .event-name { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .event-meta { font-size: 11px; color: var(--muted); }
 .mode-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; margin-bottom:4px; letter-spacing:.3px; }
-.mode-badge.paid  { background:#fff3e0; color:#c8860a; border:1px solid #f0c070; }
-.mode-badge.free  { background:#e8f8f0; color:#1a7a45; border:1px solid #7dc9a0; }
-.mode-badge.open  { background:#e8f0ff; color:#2b5fcc; border:1px solid #90aef0; }
+.mode-badge.paid   { background:#fff3e0; color:#c8860a; border:1px solid #f0c070; }
+.mode-badge.free   { background:#e8f8f0; color:#1a7a45; border:1px solid #7dc9a0; }
+.mode-badge.open   { background:#e8f0ff; color:#2b5fcc; border:1px solid #90aef0; }
+.mode-badge.closed { background:#f5f5f5; color:#999;    border:1px solid #ddd; }
 .event-arrow { font-size: 18px; color: var(--muted); flex-shrink: 0; }
 .events-loading { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 0; }
 .events-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 24px 16px; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); line-height: 1.6; }
@@ -177,8 +178,8 @@ async function loadEvents() {
 
     const { data: events, error } = await sb
       .from('kh_events')
-      .select('id, name, event_date, event_time, hall_id, mode, image_url')
-      .in('status', ['live', 'published', 'active', 'open'])
+      .select('id, name, event_date, event_time, hall_id, mode, image_url, status')
+      .in('status', ['live', 'published', 'active', 'open', 'closed'])
       .gte('event_date', today)
       .order('event_date', { ascending: true })
       .limit(10);
@@ -210,7 +211,9 @@ async function loadEvents() {
         open:           { label: '🚪 Free · Open Entry', cls: 'open' },
         member_booking: { label: '👥 Members Only', cls: 'open' }
       };
-      const badge = modeMap[ev.mode] || { label: '💳 Paid', cls: 'paid' };
+      const badge = ev.status === 'closed'
+        ? { label: '🔒 Booking Closed', cls: 'closed' }
+        : (modeMap[ev.mode] || { label: '💳 Paid', cls: 'paid' });
       const card = document.createElement('a');
       card.className = 'event-card';
       card.href = 'booking.html?event=' + ev.id + '&v=22';

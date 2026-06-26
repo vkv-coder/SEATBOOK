@@ -467,7 +467,22 @@ async function loadEvent(){
     const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single();
     if(evErr)throw evErr;
     if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
-    if(ev.status==='closed'){showError('Booking is closed for this event.');return;}
+    if(ev.status==='closed'){
+      document.getElementById('ev-name').textContent = ev.name;
+      if(ev.image_url){
+        const bw=document.getElementById('ev-banner-wrap');
+        const bi=document.getElementById('ev-banner-img');
+        if(bw&&bi){ bi.src=ev.image_url; bi.alt=ev.name; bw.style.display='block'; }
+      }
+      const pageContent = document.querySelector('.page-content') || document.getElementById('booking-body') || document.body;
+      const closed = document.createElement('div');
+      closed.style.cssText='margin:24px;padding:20px 18px;background:#f9f9f9;border:1.5px solid #ddd;border-radius:14px;text-align:center;';
+      closed.innerHTML='<div style="font-size:36px;margin-bottom:10px;">🔒</div>' +
+        '<div style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:6px;">Booking is now closed</div>' +
+        '<div style="font-size:13px;color:#777;line-height:1.6;">Online booking for <strong>' + _e(ev.name) + '</strong> has ended.<br>For walk-in entry, contact the organiser at the venue.</div>';
+      document.body.appendChild(closed);
+      return;
+    }
     eventData=ev;
 
     // ── Compute total days (NEW) ──
