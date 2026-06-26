@@ -643,10 +643,10 @@ async function loadEvent(){
       }
     }
     await loadSeatStatus();
-    buildSectionTabs();
     isSSG=(ev.hall_id===SSG_HALL_ID);
     isSayaji=(ev.hall_id===SAYAJI_HALL_ID||ev.hall_id===DINDAYAL_HALL_ID);
     isHemu=(ev.hall_id===HEMU_HALL_ID);
+    buildSectionTabs();
     document.getElementById('loading-screen').style.display='none';
     if(isSSG){buildSSGMap();}
     else if(isSayaji){
