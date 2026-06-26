@@ -779,6 +779,8 @@ function buildSayajiMap(layout){
   cy+=6;mk('rect',{x:SVG_W/2-80,y:cy,width:160,height:STAGE_H-4,rx:4,fill:'#333',stroke:'#555','stroke-width':'1'},svg);
   const st=document.createElementNS(ns,'text');st.setAttribute('x',SVG_W/2);st.setAttribute('y',cy+(STAGE_H-4)/2);st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');st.setAttribute('font-size','10');st.setAttribute('font-weight','700');st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
   wrap.appendChild(svg);
+  wrap.style.height='auto';
+  svg.style.display='block';
 }
 
 function ssgClick(g){
