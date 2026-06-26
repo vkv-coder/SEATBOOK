@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Khursilo — Food Stall Scanner</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--green:#1db954;--red:#e63946;--amber:#f4a261;--orange:#e07b39;--bg:#0f0f0f;--card:#1a1a1a;--border:#2a2a2a;--text:#fff;--muted:#888;}
+body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow-x:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+.brand{font-size:13px;font-weight:700;color:var(--orange);letter-spacing:1px;text-transform:uppercase;}
+.ev-name{font-size:16px;font-weight:600;color:var(--text);min-height:20px;}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;flex:1;padding:24px 20px;}
+.screen.active{display:flex;}
+
+/* ── SETUP SCREEN ── */
+.setup-title{font-size:22px;font-weight:700;margin-bottom:8px;}
+.setup-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:28px;}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:20px 0;}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .2s;}
+.pin-dot.filled{background:var(--orange);border-color:var(--orange);}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
+.nk{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;font-size:22px;font-weight:600;text-align:center;cursor:pointer;user-select:none;transition:background .1s;}
+.nk:active{background:#2a2a2a;}
+.nk.del{font-size:16px;color:var(--muted);}
+.nk.empty{background:transparent;border:none;cursor:default;}
+.pin-label{font-size:13px;color:var(--muted);text-align:center;margin-bottom:4px;}
+.action-btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.3px;}
+.action-btn.primary{background:var(--text);color:#000;}
+.action-btn.danger{background:var(--red);color:#fff;}
+.action-btn.success{background:var(--orange);color:#fff;}
+.pin-error{color:var(--red);font-size:12px;text-align:center;margin-top:8px;min-height:18px;}
+
+/* ── SCANNER SCREEN ── */
+.scanner-wrap{position:relative;width:100%;border-radius:16px;overflow:hidden;background:#000;margin-bottom:16px;flex-shrink:0;height:300px;}
+.scanner-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.scan-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.scan-box{width:220px;height:220px;position:relative;}
+.scan-box::before,.scan-box::after{content:'';position:absolute;width:40px;height:40px;border-color:var(--orange);border-style:solid;opacity:.9;}
+.scan-box::before{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.scan-box::after{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.scan-box-b::before,.scan-box-b::after{content:'';position:absolute;width:40px;height:40px;border-color:var(--orange);border-style:solid;opacity:.9;}
+.scan-box-b::before{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.scan-box-b::after{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);animation:scanline 2s ease-in-out infinite;top:50%;}
+@keyframes scanline{0%,100%{top:10%}50%{top:90%}}
+.scan-hint{text-align:center;font-size:13px;color:var(--muted);line-height:1.6;}
+.scan-status{text-align:center;font-size:12px;color:var(--orange);font-weight:600;margin-top:6px;min-height:18px;}
+canvas{display:none;}
+.cam-start{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#000;z-index:5;}
+.cam-start-icon{font-size:48px;}
+.cam-start-btn{background:#fff;color:#000;border:none;border-radius:10px;padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.cam-start-btn:active{opacity:.8;}
+.cam-err{color:var(--red);font-size:12px;text-align:center;line-height:1.6;padding:0 20px;}
+
+/* ── RESULT OVERLAY ── */
+.result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-end;justify-content:center;}
+.result-overlay.show{display:flex;}
+.result-panel{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:28px 22px 36px;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.result-icon{font-size:56px;text-align:center;margin-bottom:12px;line-height:1;}
+.result-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;}
+.result-title.ok{color:var(--orange);}
+.result-title.fail{color:var(--red);}
+.result-title.warn{color:var(--amber);}
+.result-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
+.booking-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.bc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);}
+.bc-row:last-child{border-bottom:none;}
+.bc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.bc-val{font-size:14px;font-weight:600;color:var(--text);text-align:right;max-width:200px;}
+.override-box{background:#1a0a00;border:1px solid #5a2800;border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+.override-box p{font-size:12px;color:var(--amber);line-height:1.5;}
+.override-pin-row{display:flex;gap:8px;margin-top:10px;}
+.override-pin-input{flex:1;background:#0f0f0f;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:16px;color:var(--text);font-family:monospace;letter-spacing:4px;text-align:center;}
+.override-pin-input:focus{outline:none;border-color:var(--amber);}
+.override-submit{background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;}
+.override-err{font-size:11px;color:var(--red);margin-top:6px;}
+
+/* ── LOADING ── */
+.loading-screen{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.loading-screen.active{display:flex;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--muted);}
+
+/* ── ERROR SCREEN ── */
+.error-screen{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:30px;text-align:center;}
+.error-screen.active{display:flex;}
+.error-icon{font-size:40px;}
+.error-msg{font-size:14px;color:var(--muted);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">🍽 Khursilo · Food Stall</div>
+  <div class="ev-name" id="ev-name">Loading event…</div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-screen active" id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-txt">Loading event…</div>
+</div>
+
+<!-- ERROR -->
+<div class="error-screen" id="error-screen">
+  <div class="error-icon">⚠️</div>
+  <div class="error-msg" id="error-msg">Could not load event.</div>
+</div>
+
+<!-- SCREEN: PIN SETUP -->
+<div class="screen" id="screen-pin">
+  <div class="setup-title" id="pin-title">Set Supervisor PIN</div>
+  <div class="setup-sub" id="pin-sub">Choose a 4-digit PIN. You will need this to override any duplicate food scan. Share only with your supervisor.</div>
+  <div class="pin-label" id="pin-label">Enter PIN</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="numpad">
+    <div class="nk" onclick="nkPress('1')">1</div>
+    <div class="nk" onclick="nkPress('2')">2</div>
+    <div class="nk" onclick="nkPress('3')">3</div>
+    <div class="nk" onclick="nkPress('4')">4</div>
+    <div class="nk" onclick="nkPress('5')">5</div>
+    <div class="nk" onclick="nkPress('6')">6</div>
+    <div class="nk" onclick="nkPress('7')">7</div>
+    <div class="nk" onclick="nkPress('8')">8</div>
+    <div class="nk" onclick="nkPress('9')">9</div>
+    <div class="nk empty"></div>
+    <div class="nk" onclick="nkPress('0')">0</div>
+    <div class="nk del" onclick="nkDel()">⌫</div>
+  </div>
+  <div class="pin-error" id="pin-confirm-error"></div>
+</div>
+
+<!-- SCREEN: SCANNER -->
+<div class="screen" id="screen-scan">
+  <div class="scanner-wrap" id="scanner-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div class="cam-start" id="cam-start">
+      <div class="cam-start-icon">🍽</div>
+      <button class="cam-start-btn" onclick="requestCamera()">Tap to Start Camera</button>
+      <div class="cam-err" id="cam-err"></div>
+    </div>
+    <div class="scan-frame" id="scan-frame" style="display:none;">
+      <div class="scan-box">
+        <div class="scan-box-b"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+  </div>
+  <div class="scan-hint" id="scan-hint">Tap the button above to allow camera access</div>
+  <div class="scan-status" id="scan-status"></div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="result-overlay">
+  <div class="result-panel">
+    <div class="result-icon" id="res-icon">🍽</div>
+    <div class="result-title ok" id="res-title">FOOD GIVEN</div>
+    <div class="result-sub" id="res-sub">Ticket verified. Give food.</div>
+    <div class="booking-card" id="booking-card"></div>
+    <div class="override-box" id="override-box" style="display:none;">
+      <p>⚠️ Food was already given for this ticket. To allow again, enter the supervisor PIN.</p>
+      <div class="override-pin-row">
+        <input class="override-pin-input" id="override-pin" type="password" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="PIN">
+        <button class="override-submit" onclick="doOverride()">Allow</button>
+      </div>
+      <div class="override-err" id="override-err"></div>
+    </div>
+    <button class="action-btn success" id="res-next-btn" onclick="closeResult()">Scan Next Ticket</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const params  = new URLSearchParams(location.search);
+const eventId = params.get('event');
+let eventData = null;
+let pinBuffer = '';
+let pinStage  = 'set';
+let firstPin  = '';
+let currentBooking = null;
+let scanning  = true;
+
+const PIN_KEY = 'khursilo_food_pin_' + eventId;
+let wakeLock    = null;
+let activeStream = null;
+
+async function acquireWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(_) {}
+  }
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!wakeLock || wakeLock.released) acquireWakeLock();
+  if (activeStream) {
+    const track = activeStream.getVideoTracks()[0];
+    if (!track || track.readyState === 'ended') cameraInterrupted();
+  }
+});
+
+function cameraInterrupted() {
+  if (activeStream) { activeStream.getTracks().forEach(t => t.stop()); activeStream = null; }
+  const camStart = document.getElementById('cam-start');
+  if (camStart) {
+    camStart.style.display = 'flex';
+    document.getElementById('scan-frame').style.display = 'none';
+    document.getElementById('scan-hint').textContent = 'Tap the button above to restart camera';
+    const btn = document.querySelector('.cam-start-btn');
+    btn.textContent = 'Tap to Restart Camera';
+    btn.disabled = false;
+    document.getElementById('cam-err').innerHTML = '⚠️ Camera stopped (screen locked). Tap to restart.';
+  }
+}
+
+async function init() {
+  if (!eventId) { showError('No event ID in URL.<br>Use the link provided by Khursilo.'); return; }
+
+  const { data: ev, error } = await sb.from('kh_events')
+    .select('id, name, event_date, hall_id')
+    .eq('id', eventId).single();
+
+  if (error || !ev) { showError('Event not found or not accessible.'); return; }
+  eventData = ev;
+  document.getElementById('ev-name').textContent = ev.name;
+  document.getElementById('loading-screen').classList.remove('active');
+
+  const savedPin = localStorage.getItem(PIN_KEY);
+  if (savedPin) {
+    startScanner();
+  } else {
+    showScreen('screen-pin');
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showError(msg) {
+  document.getElementById('loading-screen').classList.remove('active');
+  document.getElementById('error-screen').classList.add('active');
+  document.getElementById('error-msg').innerHTML = msg;
+}
+
+// ── PIN NUMPAD ────────────────────────────────────────────
+function nkPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updateDots();
+  if (pinBuffer.length === 4) setTimeout(pinComplete, 200);
+}
+function nkDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-confirm-error').textContent = '';
+  updateDots();
+}
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('pd' + i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+function pinComplete() {
+  if (pinStage === 'set') {
+    firstPin = pinBuffer;
+    pinBuffer = '';
+    updateDots();
+    pinStage = 'confirm';
+    document.getElementById('pin-title').textContent = 'Confirm PIN';
+    document.getElementById('pin-sub').textContent = 'Enter the same PIN again to confirm.';
+    document.getElementById('pin-label').textContent = 'Confirm PIN';
+  } else {
+    if (pinBuffer === firstPin) {
+      localStorage.setItem(PIN_KEY, pinBuffer);
+      pinBuffer = ''; updateDots();
+      pinStage = 'set';
+      startScanner();
+    } else {
+      document.getElementById('pin-confirm-error').textContent = 'PINs do not match. Try again.';
+      pinBuffer = ''; firstPin = '';
+      pinStage = 'set';
+      document.getElementById('pin-title').textContent = 'Set Supervisor PIN';
+      document.getElementById('pin-sub').textContent = 'PINs did not match. Please set again.';
+      document.getElementById('pin-label').textContent = 'Enter PIN';
+      updateDots();
+    }
+  }
+}
+
+// ── CAMERA ────────────────────────────────────────────────
+function startScanner() {
+  showScreen('screen-scan');
+}
+
+async function requestCamera() {
+  const btn    = document.querySelector('.cam-start-btn');
+  const errEl  = document.getElementById('cam-err');
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+  btn.textContent = 'Starting camera…';
+  btn.disabled = true;
+  errEl.innerHTML = '';
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    errEl.innerHTML = 'Camera not supported.<br>Open this page in Chrome or Safari.';
+    btn.textContent = 'Try Again'; btn.disabled = false;
+    return;
+  }
+
+  let done = false;
+  const hangTimer = setTimeout(() => {
+    if (!done) {
+      done = true;
+      btn.textContent = 'Try Again'; btn.disabled = false;
+      errEl.innerHTML = '⏱ Camera took too long.<br>Reload the page and try again, or use Chrome.';
+    }
+  }, 12000);
+
+  try {
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    } catch(_) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+
+    if (done) { stream.getTracks().forEach(t => t.stop()); return; }
+    done = true;
+    clearTimeout(hangTimer);
+
+    video.muted       = true;
+    video.playsInline = true;
+    video.srcObject   = stream;
+
+    document.getElementById('cam-start').style.display  = 'none';
+    document.getElementById('scan-frame').style.display = 'flex';
+    document.getElementById('scan-hint').textContent    = 'Point camera at the QR code on the ticket';
+
+    for (let i = 0; i < 3; i++) {
+      try { await video.play(); break; } catch(_) {
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
+    await new Promise(resolve => {
+      if (video.readyState >= 2) { resolve(); return; }
+      video.addEventListener('playing',    resolve, { once: true });
+      video.addEventListener('canplay',    resolve, { once: true });
+      video.addEventListener('loadeddata', resolve, { once: true });
+      setTimeout(resolve, 5000);
+    });
+
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+
+    acquireWakeLock();
+
+    activeStream = stream;
+    stream.getVideoTracks().forEach(track => {
+      track.onended = () => cameraInterrupted();
+    });
+
+    requestAnimationFrame(() => scanFrame(video, canvas, ctx));
+
+  } catch(e) {
+    clearTimeout(hangTimer);
+    if (done) return;
+    done = true;
+    btn.textContent = 'Try Again'; btn.disabled = false;
+    if (e.name === 'NotAllowedError') {
+      errEl.innerHTML = '❌ Camera permission denied.<br>Tap the lock 🔒 in address bar → Camera → Allow → reload.';
+    } else if (e.name === 'NotFoundError') {
+      errEl.innerHTML = '❌ No camera found on this device.';
+    } else {
+      errEl.innerHTML = '❌ ' + e.message + '<br>Try reloading.';
+    }
+  }
+}
+
+let lastScanned = '';
+let lastScannedTime = 0;
+
+function scanFrame(video, canvas, ctx) {
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data && scanning) {
+      const val = code.data.trim();
+      const now = Date.now();
+      if (val !== lastScanned || now - lastScannedTime > 4000) {
+        lastScanned = val;
+        lastScannedTime = now;
+        scanning = false;
+        document.getElementById('scan-status').textContent = 'QR detected — checking…';
+        processBooking(val);
+      }
+    }
+  }
+  requestAnimationFrame(() => scanFrame(video, canvas, ctx));
+}
+
+// ── PROCESS BOOKING ───────────────────────────────────────
+async function processBooking(bookingId) {
+  document.getElementById('scan-status').textContent = 'Checking ticket…';
+
+  try {
+    const { data: bk, error } = await sb.from('kh_bookings')
+      .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, food_scanned_at, food_scan_count, food_overridden')
+      .eq('id', bookingId).single();
+
+    if (error || !bk) { showResult('invalid', null, bookingId); return; }
+    if (bk.event_id !== eventId) { showResult('wrong-event', bk, bookingId); return; }
+    if (bk.status !== 'confirmed') { showResult('not-confirmed', bk, bookingId); return; }
+
+    if (bk.food_scanned_at) {
+      showResult('already-given', bk, bookingId);
+      return;
+    }
+
+    // First time — mark food given atomically
+    const { data: updated, error: upErr } = await sb.from('kh_bookings')
+      .update({ food_scanned_at: new Date().toISOString(), food_scan_count: 1 })
+      .eq('id', bookingId)
+      .is('food_scanned_at', null)
+      .select().single();
+
+    if (upErr || !updated) {
+      const { data: refetch } = await sb.from('kh_bookings')
+        .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, food_scanned_at, food_scan_count, food_overridden')
+        .eq('id', bookingId).single();
+      showResult('already-given', refetch, bookingId);
+      return;
+    }
+
+    showResult('valid', updated, bookingId);
+
+  } catch(e) {
+    document.getElementById('scan-status').textContent = 'Network error — retrying…';
+    setTimeout(() => processBooking(bookingId), 2000);
+  }
+}
+
+// ── SHOW RESULT ───────────────────────────────────────────
+function showResult(type, bk, rawId) {
+  document.getElementById('scan-status').textContent = '';
+  currentBooking = bk;
+
+  const icon   = document.getElementById('res-icon');
+  const title  = document.getElementById('res-title');
+  const sub    = document.getElementById('res-sub');
+  const card   = document.getElementById('booking-card');
+  const ovrBox = document.getElementById('override-box');
+  const nextBtn= document.getElementById('res-next-btn');
+  ovrBox.style.display = 'none';
+  document.getElementById('override-err').textContent = '';
+  document.getElementById('override-pin').value = '';
+  nextBtn.className = 'action-btn success';
+  nextBtn.textContent = 'Scan Next Ticket';
+
+  if (type === 'valid') {
+    icon.textContent  = '🍽';
+    title.textContent = 'GIVE FOOD ✓';
+    title.className   = 'result-title ok';
+    sub.textContent   = 'First scan. Hand over food now.';
+    card.innerHTML    = buildCard(bk);
+  } else if (type === 'already-given') {
+    icon.textContent  = '⛔';
+    title.textContent = 'FOOD ALREADY GIVEN';
+    title.className   = 'result-title fail';
+    const t = bk && bk.food_scanned_at ? formatTime(bk.food_scanned_at) : 'earlier';
+    sub.textContent   = 'Food was already given at ' + t;
+    card.innerHTML    = bk ? buildCard(bk) : '<div style="padding:10px;color:#888;font-size:13px;">Booking ID: ' + rawId + '</div>';
+    ovrBox.style.display = 'block';
+    nextBtn.className = 'action-btn danger';
+    nextBtn.textContent = 'Reject & Scan Next';
+  } else if (type === 'wrong-event') {
+    icon.textContent  = '⛔';
+    title.textContent = 'WRONG EVENT';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'This ticket is for a different event.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
+  } else if (type === 'not-confirmed') {
+    icon.textContent  = '⛔';
+    title.textContent = 'BOOKING NOT CONFIRMED';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'Payment may be pending. Do not give food.';
+    card.innerHTML    = bk ? buildCard(bk) : '';
+  } else {
+    icon.textContent  = '❓';
+    title.textContent = 'INVALID QR CODE';
+    title.className   = 'result-title fail';
+    sub.textContent   = 'Ticket not found in system. Verify manually.';
+    card.innerHTML    = '<div style="padding:8px;font-size:11px;color:#888;word-break:break-all;">Scanned: ' + rawId + '</div>';
+  }
+
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+function buildCard(bk) {
+  if (!bk) return '';
+  const seats = Array.isArray(bk.seat_keys) ? bk.seat_keys.join(', ') : (bk.seat_keys || '—');
+  return `
+    <div class="bc-row"><span class="bc-lbl">Name</span><span class="bc-val">${bk.booker_name||'—'}</span></div>
+    <div class="bc-row"><span class="bc-lbl">Mobile</span><span class="bc-val">${bk.booker_mobile||'—'}</span></div>
+    <div class="bc-row"><span class="bc-lbl">Seats</span><span class="bc-val">${seats}</span></div>
+    <div class="bc-row"><span class="bc-lbl">Count</span><span class="bc-val">${bk.seat_count||'—'} person(s)</span></div>
+    <div class="bc-row"><span class="bc-lbl">Booking ID</span><span class="bc-val" style="font-size:10px;">${(bk.id||'').slice(0,18)}…</span></div>
+  `;
+}
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) +
+         ' on ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+function closeResult() {
+  document.getElementById('result-overlay').classList.remove('show');
+  document.getElementById('scan-status').textContent = '';
+  scanning = true;
+}
+
+// ── OVERRIDE ──────────────────────────────────────────────
+async function doOverride() {
+  const entered  = document.getElementById('override-pin').value.trim();
+  const savedPin = localStorage.getItem(PIN_KEY);
+  const errEl    = document.getElementById('override-err');
+
+  if (entered !== savedPin) {
+    errEl.textContent = 'Incorrect PIN.';
+    document.getElementById('override-pin').value = '';
+    return;
+  }
+
+  if (!currentBooking) return;
+  errEl.textContent = '';
+
+  try {
+    await sb.from('kh_bookings').update({
+      food_scanned_at: currentBooking.food_scanned_at || new Date().toISOString(),
+      food_scan_count: (currentBooking.food_scan_count || 0) + 1,
+      food_overridden: true
+    }).eq('id', currentBooking.id);
+
+    document.getElementById('res-icon').textContent = '✅';
+    document.getElementById('res-title').textContent = 'OVERRIDE — FOOD GIVEN';
+    document.getElementById('res-title').className = 'result-title warn';
+    document.getElementById('res-sub').textContent = 'Supervisor override applied. Log recorded.';
+    document.getElementById('override-box').style.display = 'none';
+    document.getElementById('res-next-btn').className = 'action-btn success';
+    document.getElementById('res-next-btn').textContent = 'Scan Next Ticket';
+  } catch(e) {
+    errEl.textContent = 'Network error. Try again.';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
