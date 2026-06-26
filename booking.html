@@ -382,7 +382,7 @@ const DINDAYAL_HALL_ID='2b5ca724-c8f1-42d5-9730-00229916618b';
 let eventData=null,hallLayout=null,organiserData=null,sections=[];
 let seatStatusMap={},selectedSeats=[],activeFilter='ALL';
 let holdTimer=null,holdSeconds=300,bookingId=null,ticketData=null,qrDataUrl=null,bookingConfirmed=false;
-let isSSG=false,isSayaji=false,wantedSeatCount=1;
+let isSSG=false,isSayaji=false,wantedSeatCount=1,isViewOnly=false;
 let eventTotalDays=1;
 let isMemberBooking=false,memberMobile='',memberFreeQty=2;
 const MEMBER_PAID_PRICE=250;
@@ -467,22 +467,7 @@ async function loadEvent(){
     const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single();
     if(evErr)throw evErr;
     if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
-    if(ev.status==='closed'){
-      document.getElementById('ev-name').textContent = ev.name;
-      if(ev.image_url){
-        const bw=document.getElementById('ev-banner-wrap');
-        const bi=document.getElementById('ev-banner-img');
-        if(bw&&bi){ bi.src=ev.image_url; bi.alt=ev.name; bw.style.display='block'; }
-      }
-      const pageContent = document.querySelector('.page-content') || document.getElementById('booking-body') || document.body;
-      const closed = document.createElement('div');
-      closed.style.cssText='margin:24px;padding:20px 18px;background:#f9f9f9;border:1.5px solid #ddd;border-radius:14px;text-align:center;';
-      closed.innerHTML='<div style="font-size:36px;margin-bottom:10px;">🔒</div>' +
-        '<div style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:6px;">Booking is now closed</div>' +
-        '<div style="font-size:13px;color:#777;line-height:1.6;">Online booking for <strong>' + _e(ev.name) + '</strong> has ended.<br>For walk-in entry, contact the organiser at the venue.</div>';
-      document.body.appendChild(closed);
-      return;
-    }
+    if(ev.status==='closed'){isViewOnly=true;}
     eventData=ev;
 
     // ── Compute total days (NEW) ──
@@ -677,10 +662,18 @@ async function loadEvent(){
       document.getElementById('hall-grid').style.display='flex';
       scaleGridMap();
     }
+    // ── View-only mode for closed events ──
+    if(isViewOnly){
+      document.querySelector('.bottom-bar').style.display='none';
+      const banner=document.createElement('div');
+      banner.style.cssText='background:#1a1a1a;color:#fff;text-align:center;padding:10px 14px;font-size:13px;font-weight:600;letter-spacing:.2px;';
+      banner.textContent='🔒 Booking is closed for this event';
+      document.getElementById('map-wrap').before(banner);
+    }
     // ── Start Realtime subscription for live seat updates ──
     startRealtimeSync();
     // ── Load food promo (non-blocking) ──
-    loadEventFoodItem();
+    if(!isViewOnly) loadEventFoodItem();
   }catch(e){console.error(e);showError('Could not load event. '+(e.message||''));}
 }
 
@@ -789,7 +782,7 @@ function buildSayajiMap(layout){
 }
 
 function ssgClick(g){
-  if(g._status!=='available')return;
+  if(isViewOnly||g._status!=='available')return;
   const row=g._row;
   const rowGs=Object.values(window._ssgSeats).filter(s=>s._row===row&&s._status==='available').sort((a,b)=>parseInt(a._sn)-parseInt(b._sn));
   const idx=rowGs.indexOf(g);if(idx===-1)return;
@@ -1481,6 +1474,7 @@ async function bookOpenEntry(){
 }
 
 function gridToggleSeat(el){
+  if(isViewOnly) return;
   const rowLabel=el.dataset.row,n=wantedSeatCount;
   const rowSeats=Array.from(document.querySelectorAll('.seat[data-row]')).filter(s=>s.dataset.row===rowLabel&&s.dataset.key&&!s.classList.contains('aisle')&&!s.classList.contains('blocked')&&!s.classList.contains('booked')&&!s.classList.contains('held')&&s.style.opacity!=='0');
   const ci=rowSeats.indexOf(el);if(ci===-1)return;
