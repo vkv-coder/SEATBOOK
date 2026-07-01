@@ -2,17 +2,19 @@
 var RELAY_URL = "https://script.google.com/macros/s/AKfycbxL74pGhZhcWKGH-ZClwmIPWFH-pDeMW8L9itOoy-sxoZext2reTSvy0amjhx193CNFyQ/exec";
 
 function reportError(message, source) {
-  try {
-    fetch(RELAY_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        page: window.location.pathname,
-        message: message,
-        source: source || "khursilo.in",
-        userAgent: navigator.userAgent
-      })
-    });
-  } catch (e) {}
+  fetch(RELAY_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      page: window.location.pathname,
+      message: message,
+      source: source || "khursilo.in",
+      userAgent: navigator.userAgent
+    })
+  }).then(function(res) {
+    console.log("Error reported, status:", res.status);
+  }).catch(function(err) {
+    console.log("Error reporting FAILED:", err);
+  });
 }
 
 window.onerror = function (msg, url, line) {
