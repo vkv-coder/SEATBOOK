@@ -1,5 +1,5 @@
 // ===== khursilo error monitor =====
-var RELAY_URL = "https://script.google.com/macros/s/AKfycbxL74pGhZhcWKGH-ZClwmIPWFH-pDeMW8L9itOoy-sxoZext2reTSvy0amjhx193CNFyQ/exec";
+var RELAY_URL = "https://script.google.com/macros/s/AKfycbwrfKSk0q6m65lml4FgIOCB-d8CfGBJ-QEgR9bBwiMYybj_veRyoX93zzZAPA_CRE-zbQ/exec";
 
 function khursiloLogError(message, source) {
   fetch(RELAY_URL, {
