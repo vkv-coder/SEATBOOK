@@ -1,7 +1,7 @@
 // ===== khursilo error monitor =====
 var RELAY_URL = "https://script.google.com/macros/s/AKfycbxL74pGhZhcWKGH-ZClwmIPWFH-pDeMW8L9itOoy-sxoZext2reTSvy0amjhx193CNFyQ/exec";
 
-function reportError(message, source) {
+function khursiloLogError(message, source) {
   fetch(RELAY_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -18,9 +18,9 @@ function reportError(message, source) {
 }
 
 window.onerror = function (msg, url, line) {
-  reportError(msg + " (line " + line + ")");
+  khursiloLogError(msg + " (line " + line + ")");
 };
 
 window.addEventListener("unhandledrejection", function (e) {
-  reportError("Promise error: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+  khursiloLogError("Promise error: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
 });
