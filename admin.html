@@ -384,8 +384,6 @@ const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// SHA-256 of '@khursilovkv2' — password never stored in plaintext
-const PASS_HASH = '3f8e37676bb4417db93b73fdef85f9c28b3f98a38e0e3ff3340be531a65c9530';
 const SSG_HALL_ID = 'e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const _TK = 'kh_adm_tk', _TX = 'kh_adm_tx';
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
@@ -400,16 +398,19 @@ let currentEvId = null;
 // XSS-safe escape for user data in innerHTML templates
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-async function _sha256(s){
-  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
-}
-
 // ── AUTH ──
 async function checkPass() {
   const p = document.getElementById('admin-pass').value;
-  const h = await _sha256(p);
-  if (h !== PASS_HASH) {
+  let valid = false;
+  try {
+    const res = await fetch('https://telegram-notify.unigoods2026.workers.dev/', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'checkSeatbookPin', pin: p})
+    });
+    const data = await res.json();
+    valid = !!data.valid;
+  } catch (e) { valid = false; }
+  if (!valid) {
     document.getElementById('pass-err').style.display = 'block';
     document.getElementById('admin-pass').value = '';
     document.getElementById('admin-pass').focus();
