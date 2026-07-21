@@ -643,10 +643,10 @@ async function loadEvent(){
       }
     }
     await loadSeatStatus();
-    buildSectionTabs();
     isSSG=(ev.hall_id===SSG_HALL_ID);
     isSayaji=(ev.hall_id===SAYAJI_HALL_ID||ev.hall_id===DINDAYAL_HALL_ID);
     isHemu=(ev.hall_id===HEMU_HALL_ID);
+    buildSectionTabs();
     document.getElementById('loading-screen').style.display='none';
     if(isSSG){buildSSGMap();}
     else if(isSayaji){
@@ -692,7 +692,7 @@ function buildSectionTabs(){
   sections.forEach(sec=>{
     if(!sec.name)return;
     const btn=document.createElement('button');btn.className='sec-tab';btn.dataset.sec=sec.id||sec.name;
-    btn.innerHTML=`<span class="tab-dot" style="background:${sec.color||sec.colour||'#888'}"></span>${sec.name}${sec.price?' ₹'+sec.price:''}`;
+    btn.innerHTML=`<span class="tab-dot" style="background:${sec.color||sec.colour||'#888'}"></span>${sec.name}${(!isHemu&&sec.price)?' ₹'+sec.price:''}`;
     btn.onclick=()=>filterSection(sec.id||sec.name,btn);wrap.appendChild(btn);
   });
 }
@@ -788,11 +788,12 @@ function buildSayajiMap(layout){
 function buildHemuMap(layout){
   const wrap=document.getElementById('ssg-map-wrap');wrap.style.display='block';
   const rows=layout.rows||[];const ns='http://www.w3.org/2000/svg';
-  const SW=8,SH=6,SG=1.5,VGAP_W=14,EMPTY_W=SW+SG,RH=SH+3,HGAP_H=12,STAGE_H=28,PAD=8,LBL_W=14;
+  const SW=8,SH=6,SG=1.5,VGAP_W=14,CELL=SW+SG,VCELL=VGAP_W+SG,RH=SH+3,HGAP_H=12,STAGE_H=28,PAD=8,LBL_W=14;
   const secColors={};(layout.sections||[]).forEach(s=>{secColors[s.id]=s.color||'#4a90d9';});
-  function rowPxW(row){if(row.type!=='row')return 0;let w=0;(row.cells||[]).forEach(c=>{w+=(c.t==='vgap')?(VGAP_W+SG):EMPTY_W;});return w+LBL_W*2;}
-  let maxW=0;rows.forEach(r=>{maxW=Math.max(maxW,rowPxW(r));});
-  const SVG_W=maxW+10;
+  // Content width = seats + vgaps ONLY (ignore empty padding cells)
+  function contentW(row){if(row.type!=='row')return 0;let w=0;(row.cells||[]).forEach(c=>{if(c.t==='seat')w+=CELL;else if(c.t==='vgap')w+=VCELL;});return w;}
+  let maxCW=0;rows.forEach(r=>{maxCW=Math.max(maxCW,contentW(r));});
+  const SVG_W=maxCW+LBL_W*2+10;
   let totalH=PAD;rows.forEach(r=>{if(r.type==='hgap')totalH+=HGAP_H;else if(r.type==='row')totalH+=RH;});totalH+=STAGE_H+20;
   const svg=document.createElementNS(ns,'svg');svg.setAttribute('width',SVG_W);svg.setAttribute('height',totalH);
   function mk(tag,a,p){const e=document.createElementNS(ns,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));if(p)p.appendChild(e);return e;}
@@ -814,17 +815,23 @@ function buildHemuMap(layout){
   }
   const renderRows=[...rows].reverse();let cy=PAD;
   renderRows.forEach(row=>{
-    // Wide visible walkway bar
     if(row.type==='hgap'){mk('rect',{x:4,y:cy+1,width:SVG_W-8,height:HGAP_H-2,rx:3,fill:'#78909c'},svg);cy+=HGAP_H;return;}
     if(row.type!=='row')return;
     const rowLabel=row.label,cells=row.cells||[];
-    // LEFT-ALIGN: start from LBL_W — empty cells in layout_json already encode bowl shape
-    let cx=LBL_W;
+    // Calculate content width (seats+vgaps only, skip empty)
+    const cw=contentW(row);
+    // Center content within SVG content area
+    let cx=LBL_W+5+Math.round((maxCW-cw)/2);
     let firstX=null,lastX=null;
     cells.forEach(cell=>{
-      if(cell.t==='seat'){drawSeat(cx,cy,rowLabel,cell.sn,cell.secId);if(firstX===null)firstX=cx;lastX=cx;cx+=EMPTY_W;}
-      else if(cell.t==='vgap'){mk('rect',{x:cx,y:cy,width:VGAP_W,height:SH,rx:1,fill:'#cfd8dc'},svg);cx+=VGAP_W+SG;}
-      else{cx+=EMPTY_W;} // empty cell — skip space (bowl shape from layout_json)
+      if(cell.t==='seat'){
+        drawSeat(cx,cy,rowLabel,cell.sn,cell.secId);
+        if(firstX===null)firstX=cx;lastX=cx;cx+=CELL;
+      } else if(cell.t==='vgap'){
+        mk('rect',{x:cx,y:cy,width:VGAP_W,height:SH,rx:1,fill:'#cfd8dc'},svg);
+        cx+=VCELL;
+      }
+      // empty cells: skip entirely — centering handles bowl shape
     });
     if(rowLabel&&firstX!==null){lbl(firstX-8,cy+SH/2,rowLabel);lbl(lastX+SW+8,cy+SH/2,rowLabel);}
     cy+=RH;
@@ -833,6 +840,7 @@ function buildHemuMap(layout){
   const st=document.createElementNS(ns,'text');st.setAttribute('x',SVG_W/2);st.setAttribute('y',cy+(STAGE_H-4)/2);st.setAttribute('text-anchor','middle');st.setAttribute('dominant-baseline','central');st.setAttribute('font-size','10');st.setAttribute('font-weight','700');st.setAttribute('fill','#fff');st.setAttribute('letter-spacing','2');st.textContent='◆  S T A G E  ◆';svg.appendChild(st);
   wrap.appendChild(svg);wrap.style.height='auto';svg.style.display='block';
 }
+
 
 function ssgClick(g){
   if(isViewOnly||g._status!=='available')return;
