@@ -45,6 +45,20 @@ with check (event_id in (
   )
 ));
 
+drop policy if exists organiser_manage_own_sections on kh_sections;
+create policy organiser_manage_own_sections on kh_sections
+for all to authenticated
+using (event_id in (
+  select id from kh_events where organiser_id = (
+    select id from kh_organisers where email_1 = (auth.jwt()->>'email') limit 1
+  )
+))
+with check (event_id in (
+  select id from kh_events where organiser_id = (
+    select id from kh_organisers where email_1 = (auth.jwt()->>'email') limit 1
+  )
+));
+
 -- Also found while fixing this: razorpay_key_secret was only column-
 -- restricted for anon earlier, not authenticated - meaning any logged-in
 -- organiser could still read every OTHER organiser's Razorpay secret via
