@@ -73,6 +73,15 @@
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -155,10 +164,7 @@ async function go(){
 
   // Save back
   s.textContent += '\nSaving to Supabase…';
-  const {error:e2} = await sb
-    .from('kh_halls')
-    .update({ layout_json: layout })
-    .eq('id', hall.id);
+  const {error:e2} = await adminWrite('update', 'kh_halls', { layout_json: layout }, {column:'id', value: hall.id});
 
   if(e2){
     s.textContent += '\nERROR saving: ' + e2.message;

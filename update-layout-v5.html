@@ -71,6 +71,15 @@
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -88,7 +97,7 @@ async function go(){
   const {data:h,error:e1}=await sb.from('kh_halls').select('layout_json').eq('id','5bde155b-4bf1-425b-b23d-7f2dc6e48a5a').single();
   if(e1){s.textContent='Error: '+e1.message;return;}
   const ex=typeof h.layout_json==='string'?JSON.parse(h.layout_json):h.layout_json;
-  const {error:e2}=await sb.from('kh_halls').update({layout_json:{...ex,rows:ROWS}}).eq('id','5bde155b-4bf1-425b-b23d-7f2dc6e48a5a');
+  const {error:e2}=await adminWrite('update','kh_halls',{layout_json:{...ex,rows:ROWS}},{column:'id',value:'5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'});
   s.textContent=e2?'Error: '+e2.message:'✅ v5 saved! 1031 seats with correct offsets.';
   s.style.color=e2?'red':'green';
 }

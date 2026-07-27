@@ -386,6 +386,18 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const SSG_HALL_ID = 'e17763ef-dda4-40e3-aef9-c41bcc93e7a3';
 const _TK = 'kh_adm_tk', _TX = 'kh_adm_tx';
+
+// kh_halls/kh_events/kh_organisers/kh_food_items/kh_sections/kh_event_members
+// no longer accept direct anon writes (RLS locked down) - these go through
+// the PIN-verified kh-admin-auth Edge Function instead.
+async function adminWrite(op, table, payload, filter){
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table, op, payload, filter})
+  });
+  return res.json();
+}
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
 
@@ -541,7 +553,7 @@ async function toggleOrgStatus() {
   const org = allOrgs.find(o => o.id === currentOrgId);
   if (!org) return;
   const newStatus = (org.status || 'pending').toLowerCase() === 'active' ? 'suspended' : 'ACTIVE';
-  const { error } = await sb.from('kh_organisers').update({ status: newStatus }).eq('id', currentOrgId);
+  const { error } = await adminWrite('update', 'kh_organisers', { status: newStatus }, {column:'id', value: currentOrgId});
   if (error) { alert('Error: ' + error.message); return; }
   closeModal('modal-org-detail');
   await loadOrgs();
@@ -558,7 +570,7 @@ async function addOrg() {
   if (!name || !mobile || !email) { alert('Name, mobile and email are required'); return; }
   if (!/^[0-9]{10}$/.test(mobile)) { alert('Enter valid 10-digit mobile'); return; }
 
-  const { error } = await sb.from('kh_organisers').insert({
+  const { error } = await adminWrite('insert', 'kh_organisers', {
     name, contact_1_name: contact, contact_1_mobile: mobile,
     email_1: email, event_type: type, status: 'ACTIVE'
   });
@@ -661,7 +673,7 @@ function openEvStatus(id) {
 }
 
 async function setEvStatus(newStatus) {
-  const { error } = await sb.from('kh_events').update({ status: newStatus }).eq('id', currentEvId);
+  const { error } = await adminWrite('update', 'kh_events', { status: newStatus }, {column:'id', value: currentEvId});
   if (error) { alert('Error: ' + error.message); return; }
   closeModal('modal-ev-status');
   await loadEvents();
@@ -677,8 +689,7 @@ async function applySSGTemplate(evId, evName) {
   if (!tmpl || !Object.keys(tmpl).length) {
     alert('No SSG price template found.\nUpload the filled Excel first via the Halls tab → Excel import.'); return;
   }
-  const { error: saveErr } = await sb.from('kh_events')
-    .update({ seat_price_map: tmpl }).eq('id', evId);
+  const { error: saveErr } = await adminWrite('update', 'kh_events', { seat_price_map: tmpl }, {column:'id', value: evId});
   if (saveErr) { alert('Error: ' + saveErr.message); return; }
   alert('✓ SSG pricing applied to "' + evName + '"!\n' + Object.keys(tmpl).length + ' seats priced.\nRefresh booking page to see effect.');
 }
@@ -936,8 +947,7 @@ async function importExcelLayout() {
     }
     layout.ssg_price_template = priceTemplate;
     const tCount = Object.keys(priceTemplate).length;
-    const { error: saveErr } = await sb.from('kh_halls')
-      .update({ layout_json: layout }).eq('id', hall.id);
+    const { error: saveErr } = await adminWrite('update', 'kh_halls', { layout_json: layout }, {column:'id', value: hall.id});
     document.getElementById('xl-saving').style.display = 'none';
     if (saveErr) {
       document.getElementById('xl-err').style.display = 'block';
@@ -956,8 +966,7 @@ async function importExcelLayout() {
         }
       }
     }
-    const { error: saveErr } = await sb.from('kh_halls')
-      .update({ layout_json: layout }).eq('id', hall.id);
+    const { error: saveErr } = await adminWrite('update', 'kh_halls', { layout_json: layout }, {column:'id', value: hall.id});
     document.getElementById('xl-saving').style.display = 'none';
     if (saveErr) {
       document.getElementById('xl-err').style.display = 'block';

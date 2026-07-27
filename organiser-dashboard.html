@@ -258,6 +258,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -1243,7 +1252,7 @@ async function toggleBooking(eid, btn){
   const currentStatus = ev.event.status;
   const newStatus = currentStatus==='active' ? 'closed' : 'active';
   if(!confirm(`${newStatus==='closed'?'Close':'Open'} booking for "${ev.event.name}"?`)) return;
-  const {error} = await sb.from('kh_events').update({status:newStatus}).eq('id',eid);
+  const {error} = await adminWrite('update','kh_events',{status:newStatus},{column:'id',value:eid});
   if(error){ showToast('Error: '+error.message); return; }
   ev.event.status = newStatus;
   showToast('Booking '+newStatus);
@@ -1260,7 +1269,7 @@ async function cancelEvent(eid){
     return;
   }
   if(!confirm(`Cancel "${ev.event.name}"?\n\nThis will close bookings and remove the event from the homepage. This cannot be undone.`)) return;
-  const {error} = await sb.from('kh_events').update({status:'closed'}).eq('id',eid);
+  const {error} = await adminWrite('update','kh_events',{status:'closed'},{column:'id',value:eid});
   if(error){ showToast('Error: '+error.message); return; }
   ev.event.status = 'closed';
   showToast('Event cancelled — removed from homepage.');
@@ -1285,7 +1294,7 @@ async function saveProfile(){
   const updates = { name:orgName, contact_1_name:contactName, contact_1_mobile:mobile };
   if(rzpKey) updates.razorpay_key_id=rzpKey;
   if(rzpSecret) updates.razorpay_key_secret=rzpSecret;
-  const {error} = await sb.from('kh_organisers').update(updates).eq('email_1',currentOrganiser.email_1);
+  const {error} = await adminWrite('update','kh_organisers',updates,{column:'email_1',value:currentOrganiser.email_1});
   btn.textContent='Save & go to dashboard →'; btn.disabled=false;
   if(error){ errEl.textContent='Save failed: '+error.message; errEl.style.display='block'; return; }
   currentOrganiser = {...currentOrganiser,...updates};
@@ -1519,9 +1528,9 @@ async function saveFoodItem(){
 
   let error;
   if(currentFoodItem){
-    ({error} = await sb.from('kh_food_items').update(payload).eq('id',currentFoodItem.id));
+    ({error} = await adminWrite('update','kh_food_items',payload,{column:'id',value:currentFoodItem.id}));
   } else {
-    ({error} = await sb.from('kh_food_items').insert(payload));
+    ({error} = await adminWrite('insert','kh_food_items',payload));
   }
 
   btn.textContent='Save Food Combo'; btn.disabled=false;
@@ -1535,7 +1544,7 @@ async function saveFoodItem(){
 async function toggleFoodActive(){
   if(!currentFoodItem) return;
   const newVal = !currentFoodItem.is_active;
-  const {error} = await sb.from('kh_food_items').update({is_active:newVal}).eq('id',currentFoodItem.id);
+  const {error} = await adminWrite('update','kh_food_items',{is_active:newVal},{column:'id',value:currentFoodItem.id});
   if(error){ showToast('Error: '+error.message); return; }
   showToast(newVal ? 'Food booking activated' : 'Food booking paused');
   await loadFoodItem();
@@ -1544,7 +1553,7 @@ async function toggleFoodActive(){
 async function deleteFoodItem(){
   if(!currentFoodItem) return;
   if(!confirm('Remove food combo for this event? Existing orders are not affected.')) return;
-  const {error} = await sb.from('kh_food_items').delete().eq('id',currentFoodItem.id);
+  const {error} = await adminWrite('delete','kh_food_items',null,{column:'id',value:currentFoodItem.id});
   if(error){ showToast('Error: '+error.message); return; }
   currentFoodItem=null;
   showToast('Food combo removed');
@@ -1955,10 +1964,10 @@ async function saveMemberList(){
   const btn=document.getElementById('member-save-btn');
   btn.textContent='Saving…';btn.disabled=true;
   try{
-    await sb.from('kh_event_members').delete().eq('event_id',memberEventId);
+    await adminWrite('delete','kh_event_members',null,{column:'event_id',value:memberEventId});
     for(let i=0;i<memberRows.length;i+=50){
       const batch=memberRows.slice(i,i+50).map(g=>({event_id:memberEventId,mobile:g.mobile,name:g.name,studio:g.studio||null,free_qty:2}));
-      const{error}=await sb.from('kh_event_members').insert(batch);
+      const{error}=await adminWrite('insert','kh_event_members',batch);
       if(error)throw error;
     }
     document.getElementById('member-step-preview').style.display='none';

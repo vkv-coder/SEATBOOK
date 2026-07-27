@@ -241,6 +241,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -1299,15 +1308,17 @@ async function publishEvent() {
       insertData.description = venue + (desc ? '\n' + desc : '');
     }
 
-    const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select().single();
-    if (evErr) throw evErr;
+    const { data: evRows, error: evErr } = await adminWrite('insert', 'kh_events', insertData);
+    if (evErr) throw new Error(evErr.message || JSON.stringify(evErr));
+    const ev = evRows && evRows[0];
+    if (!ev) throw new Error('Event was not created.');
     createdEventId = ev.id;
 
     // ── Upload event image if provided ──
     if (uploadedImageFile) {
       const imgUrl = await uploadEventImage(ev.id);
       if (imgUrl) {
-        await sb.from('kh_events').update({ image_url: imgUrl }).eq('id', ev.id);
+        await adminWrite('update', 'kh_events', { image_url: imgUrl }, {column:'id', value: ev.id});
       }
     }
 
@@ -1317,7 +1328,7 @@ async function publishEvent() {
         mode: eventMode === 'free' ? 'free' : 'paid', created_at: new Date().toISOString()
       }));
       if (sectionsToInsert.length > 0) {
-        const { error: secErr } = await sb.from('kh_sections').insert(sectionsToInsert);
+        const { error: secErr } = await adminWrite('insert', 'kh_sections', sectionsToInsert);
         if (secErr) console.warn('Sections insert error:', secErr);
       }
     }

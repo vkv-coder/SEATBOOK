@@ -71,6 +71,15 @@
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -111,10 +120,7 @@ async function updateLayout() {
   
   status.textContent = 'Updating layout (' + NEW_ROWS.length + ' rows, checking seats)...';
   
-  const { error: updateErr } = await sb
-    .from('kh_halls')
-    .update({ layout_json: updated })
-    .eq('id', '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a');
+  const { error: updateErr } = await adminWrite('update', 'kh_halls', { layout_json: updated }, {column:'id', value: '5bde155b-4bf1-425b-b23d-7f2dc6e48a5a'});
   
   if (updateErr) { 
     status.textContent = 'Error: ' + updateErr.message; 

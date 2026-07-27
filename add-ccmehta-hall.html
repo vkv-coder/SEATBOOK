@@ -73,6 +73,15 @@
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -172,23 +181,17 @@ async function go() {
   s.textContent = 'Step 1: Creating hall record…';
 
   // Create the hall row (name + city)
-  const {data: hall, error: e1} = await sb
-    .from('kh_halls')
-    .insert({name: 'CC Mehta Auditorium', city: 'Vadodara'})
-    .select()
-    .single();
+  const {data: hallRows, error: e1} = await adminWrite('insert', 'kh_halls', {name: 'CC Mehta Auditorium', city: 'Vadodara'});
+  const hall = hallRows && hallRows[0];
 
-  if (e1) {
-    s.innerHTML = '<span style="color:red">Error creating hall: ' + e1.message + '</span>';
+  if (e1 || !hall) {
+    s.innerHTML = '<span style="color:red">Error creating hall: ' + (e1 && e1.message || 'no row returned') + '</span>';
     return;
   }
 
   s.textContent = 'Step 2: Saving layout (' + (stalls+balcony) + ' seats)…';
 
-  const {error: e2} = await sb
-    .from('kh_halls')
-    .update({layout_json: layout})
-    .eq('id', hall.id);
+  const {error: e2} = await adminWrite('update', 'kh_halls', {layout_json: layout}, {column:'id', value: hall.id});
 
   if (e2) {
     s.innerHTML = '<span style="color:red">Error saving layout: ' + e2.message + '</span>';

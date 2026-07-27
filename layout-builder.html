@@ -184,6 +184,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     gate.style.display='none';
   };
 
+  window.adminWrite = async function(op, table, payload, filter){
+    var res = await fetch(GATE_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
+    });
+    return res.json();
+  };
+
   tryAutoLogin();
 })();
 </script>
@@ -769,7 +778,7 @@ function showSave(){
 async function doSave(){
   const data={hall:hallName,sections,rows,savedAt:new Date().toISOString()};
   if(currentHallId){
-    const {error}=await sb.from('kh_halls').update({layout_json:data}).eq('id',currentHallId);
+    const {error}=await adminWrite('update','kh_halls',{layout_json:data},{column:'id',value:currentHallId});
     if(error){alert('Supabase error: '+error.message);return;}
     closeModal('modal-save');alert('✓ Layout saved to Supabase!');
   } else {
