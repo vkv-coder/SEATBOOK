@@ -25,6 +25,22 @@ const WRITABLE_TABLES = new Set([
 ]);
 const ALLOWED_OPS = new Set(["insert", "update", "delete", "upsert"]);
 
+// Browser fetch() calls from khursilo.in are cross-origin to *.supabase.co,
+// so every response (including the OPTIONS preflight) needs these headers
+// or the browser silently blocks the request before it's ever sent.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+  });
+}
+
 async function tokenValid(supabaseAdmin: ReturnType<typeof createClient>, token: string | undefined) {
   if (!token) return false;
   const { data } = await supabaseAdmin
@@ -37,8 +53,11 @@ async function tokenValid(supabaseAdmin: ReturnType<typeof createClient>, token:
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+    return json({ error: "Method not allowed" }, 405);
   }
 
   let body: {
@@ -49,7 +68,7 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
+    return json({ error: "Invalid JSON body" }, 400);
   }
 
   const { action, pin, token, table, op, payload, filter } = body;
@@ -60,7 +79,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "login") {
     if (!pin) {
-      return new Response(JSON.stringify({ error: "pin required" }), { status: 400 });
+      return json({ error: "pin required" }, 400);
     }
     let pinValid = false;
     try {
@@ -71,11 +90,11 @@ Deno.serve(async (req: Request) => {
       });
       const data = await res.json();
       pinValid = !!data.valid;
-    } catch {
-      pinValid = false;
+    } catch (e) {
+      return json({ error: "Could not reach PIN verification service", detail: String(e) }, 502);
     }
     if (!pinValid) {
-      return new Response(JSON.stringify({ error: "Wrong PIN" }), { status: 401 });
+      return json({ error: "Wrong PIN" }, 401);
     }
 
     const newToken = crypto.randomUUID();
@@ -84,41 +103,32 @@ Deno.serve(async (req: Request) => {
       .from("kh_admin_tokens")
       .insert({ token: newToken, expires_at: expiresAt });
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return json({ error: error.message }, 500);
     }
-    return new Response(JSON.stringify({ token: newToken, expires_at: expiresAt }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ token: newToken, expires_at: expiresAt });
   }
 
   if (action === "verify") {
     const valid = await tokenValid(supabaseAdmin, token);
-    return new Response(JSON.stringify({ valid }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ valid });
   }
 
   if (action === "logout") {
     if (token) {
       await supabaseAdmin.from("kh_admin_tokens").delete().eq("token", token);
     }
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ ok: true });
   }
 
   if (action === "write") {
     if (!(await tokenValid(supabaseAdmin, token))) {
-      return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
+      return json({ error: "Not logged in" }, 401);
     }
     if (!table || !WRITABLE_TABLES.has(table)) {
-      return new Response(JSON.stringify({ error: "Unknown or disallowed table" }), { status: 400 });
+      return json({ error: "Unknown or disallowed table" }, 400);
     }
     if (!op || !ALLOWED_OPS.has(op)) {
-      return new Response(JSON.stringify({ error: "Unknown op" }), { status: 400 });
+      return json({ error: "Unknown op" }, 400);
     }
 
     let query;
@@ -137,11 +147,8 @@ Deno.serve(async (req: Request) => {
     }
 
     const { data, error } = await query;
-    return new Response(JSON.stringify({ data, error }), {
-      status: error ? 400 : 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return json({ data, error }, error ? 400 : 200);
   }
 
-  return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400 });
+  return json({ error: "Unknown action" }, 400);
 });
