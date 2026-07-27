@@ -2,6 +2,80 @@
 <html>
 <head><title>Update Hall Layout</title></head>
 <body>
+<style>
+#__adminGate{position:fixed;inset:0;z-index:99999;background:#f5f5f3;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+#__adminGate .gw{width:100%;max-width:380px;padding:24px;box-sizing:border-box;}
+#__adminGate .gl{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:4px;text-align:center;color:#1a1a1a;}
+#__adminGate .gs{font-size:12px;color:#777;margin-bottom:28px;text-align:center;}
+#__adminGate .gbdg{background:#1a1a1a;color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;}
+#__adminGate .gc{background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,0.08);padding:24px;}
+#__adminGate .gt{font-size:15px;font-weight:600;margin-bottom:4px;color:#1a1a1a;}
+#__adminGate .gd{font-size:12px;color:#777;margin-bottom:18px;}
+#__adminGate input{width:100%;background:#f0eeea;border:1px solid rgba(0,0,0,0.14);border-radius:8px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box;color:#1a1a1a;}
+#__adminGate button{width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+#__adminGate .ge{font-size:12px;color:#cc3333;margin-top:6px;display:none;}
+</style>
+<div id="__adminGate">
+  <div class="gw">
+    <div class="gl">Khursilo.</div>
+    <div class="gs"><span class="gbdg">ADMIN</span> Private access only</div>
+    <div class="gc">
+      <div class="gt">Admin login</div>
+      <div class="gd">This page is not linked anywhere. Enter password to continue.</div>
+      <input type="password" id="__gp" placeholder="Password" onkeydown="if(event.key==='Enter')__checkGate()">
+      <button onclick="__checkGate()">Login &rarr;</button>
+      <div class="ge" id="__ge">Incorrect password.</div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var _TK='kh_adm_tk', _TX='kh_adm_tx';
+  var gate = document.getElementById('__adminGate');
+  var _gsb = window.supabase.createClient(
+    'https://jqqnnkzozjskziaizajg.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
+  );
+
+  async function tryAutoLogin(){
+    var token = sessionStorage.getItem(_TK);
+    var exp = sessionStorage.getItem(_TX);
+    if(!token || !exp || new Date(exp) < new Date()){
+      sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX);
+      return;
+    }
+    var res = await _gsb.from('kh_admin_tokens')
+      .select('token').eq('token',token).gt('expires_at', new Date().toISOString()).maybeSingle();
+    if(res.error || res.data){ gate.style.display='none'; }
+  }
+
+  window.__checkGate = async function(){
+    var p = document.getElementById('__gp').value;
+    var valid = false;
+    try{
+      var res = await fetch('https://telegram-notify.unigoods2026.workers.dev/', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action:'checkSeatbookPin', pin:p})
+      });
+      var data = await res.json();
+      valid = !!data.valid;
+    }catch(e){ valid = false; }
+    if(!valid){
+      document.getElementById('__ge').style.display='block';
+      document.getElementById('__gp').value=''; document.getElementById('__gp').focus();
+      return;
+    }
+    var token = crypto.randomUUID();
+    var expIso = new Date(Date.now()+8*60*60*1000).toISOString();
+    sessionStorage.setItem(_TK, token); sessionStorage.setItem(_TX, expIso);
+    _gsb.from('kh_admin_tokens').insert({token, expires_at: expIso}).then(function(){});
+    gate.style.display='none';
+  };
+
+  tryAutoLogin();
+})();
+</script>
+
 <h2>Update Sayjirao Hall Layout</h2>
 <button onclick="updateLayout()" style="padding:12px 24px;font-size:16px;background:#2e9e60;color:white;border:none;border-radius:8px;cursor:pointer;">
   Update Layout in Supabase
