@@ -1056,7 +1056,19 @@ function buildDayBoxes(totalDays){
 
 async function handlePaymentSuccess(payId,name,mobile,email,seatKeys,amt){
   if(bookingConfirmed)return;
-  await sb.from('kh_bookings').update({status:'confirmed',payment_status:'paid',razorpay_payment_id:payId}).eq('id',bookingId);
+  // Booking confirmation is verified server-side against Razorpay's API
+  // before the database is updated - the client can no longer just claim
+  // "payment succeeded" directly (kh_bookings blocks that transition now).
+  const verifyRes = await fetch(`${SUPABASE_URL}/functions/v1/verify-razorpay-payment`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body: JSON.stringify({booking_id:bookingId, razorpay_payment_id:payId})
+  });
+  const verifyData = await verifyRes.json().catch(()=>({ok:false,error:'Could not reach verification service'}));
+  if(!verifyData.ok){
+    alert('Payment could not be verified: '+(verifyData.error||'unknown error')+'\n\nIf money was deducted, contact support with payment ID: '+payId);
+    return;
+  }
   selectedSeats.forEach(s=>{if(s.svgG){s.svgG._r.setAttribute('fill','#d0d0cc');s.svgG._r.setAttribute('stroke','#aaa');s.svgG._nt.setAttribute('fill','#999');s.svgG._status='booked';s.svgG.style.cursor='not-allowed';}const el=document.querySelector('[data-key="'+s.seatKey+'"]');if(el){el.classList.remove('selected','available');el.classList.add('booked');}});
   bookingConfirmed=true;clearInterval(holdTimer);document.getElementById('timer-bar').style.display='none';closeForm();await showSuccess(name,mobile,email,seatKeys,amt);
 }
