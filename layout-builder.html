@@ -138,6 +138,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <input type="password" id="__gp" placeholder="Password" onkeydown="if(event.key==='Enter')__checkGate()">
       <button onclick="__checkGate()">Login &rarr;</button>
       <div class="ge" id="__ge">Incorrect password.</div>
+      <div style="text-align:center;margin-top:14px;">
+        <span onclick="forgotGatePin()" style="font-size:12px;color:#777;cursor:pointer;text-decoration:underline;" id="__forgotLink">Forgot PIN?</span>
+      </div>
     </div>
   </div>
 </div>
@@ -191,6 +194,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table:table, op:op, payload:payload, filter:filter})
     });
     return res.json();
+  };
+
+  window.forgotGatePin = async function(){
+    var link = document.getElementById('__forgotLink');
+    link.textContent = 'Sending…';
+    link.style.pointerEvents = 'none';
+    try{
+      var res = await fetch(GATE_URL, {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+        body: JSON.stringify({action:'forgot'})
+      });
+      var data = await res.json();
+      link.textContent = data.sent ? 'Sent to Telegram ✓' : 'Could not send — check Telegram bot config';
+    }catch(e){
+      link.textContent = 'Could not send — try again';
+    }
+    setTimeout(function(){ link.textContent = 'Forgot PIN?'; link.style.pointerEvents = ''; }, 5000);
   };
 
   tryAutoLogin();
