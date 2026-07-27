@@ -401,33 +401,31 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 // ── AUTH ──
 async function checkPass() {
   const p = document.getElementById('admin-pass').value;
-  let valid = false;
+  let result = {};
   try {
-    const res = await fetch('https://telegram-notify.unigoods2026.workers.dev/', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({action: 'checkSeatbookPin', pin: p})
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
+      method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`},
+      body: JSON.stringify({action: 'login', pin: p})
     });
-    const data = await res.json();
-    valid = !!data.valid;
-  } catch (e) { valid = false; }
-  if (!valid) {
+    if (res.ok) result = await res.json();
+  } catch (e) {}
+  if (!result.token) {
     document.getElementById('pass-err').style.display = 'block';
     document.getElementById('admin-pass').value = '';
     document.getElementById('admin-pass').focus();
     return;
   }
-  const token = crypto.randomUUID();
-  const exp = new Date(Date.now() + 8*60*60*1000).toISOString();
-  sessionStorage.setItem(_TK, token);
-  sessionStorage.setItem(_TX, exp);
-  // Store server-side token (requires kh_admin_tokens table — see setup.sql)
-  sb.from('kh_admin_tokens').insert({token, expires_at: exp}).then(()=>{});
+  sessionStorage.setItem(_TK, result.token);
+  sessionStorage.setItem(_TX, result.expires_at);
   showScreen('screen-dash');
   loadAll();
 }
 function logout() {
   const tk = sessionStorage.getItem(_TK);
-  if(tk) sb.from('kh_admin_tokens').delete().eq('token',tk).then(()=>{});
+  if(tk) fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`},
+    body: JSON.stringify({action: 'logout', token: tk})
+  }).catch(()=>{});
   sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX);
   showScreen('screen-login');
   document.getElementById('admin-pass').value = '';
@@ -439,15 +437,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!token || !exp || new Date(exp) < new Date()) {
     sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX); return;
   }
-  const {data, error} = await sb.from('kh_admin_tokens')
-    .select('token').eq('token',token).gt('expires_at',new Date().toISOString()).maybeSingle();
-  if (error) {
-    // Table not set up yet (run setup.sql) — fall back to expiry-only check
-    showScreen('screen-dash'); loadAll();
-  } else if (data) {
-    showScreen('screen-dash'); loadAll();
-  }
-  // else: token not in DB → stay on login screen
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
+      method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}`},
+      body: JSON.stringify({action: 'verify', token})
+    });
+    const data = await res.json();
+    if (data.valid) { showScreen('screen-dash'); loadAll(); }
+  } catch(e) {}
+  // else: token not valid → stay on login screen
 });
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));

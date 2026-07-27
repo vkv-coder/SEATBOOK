@@ -32,10 +32,8 @@
 (function(){
   var _TK='kh_adm_tk', _TX='kh_adm_tx';
   var gate = document.getElementById('__adminGate');
-  var _gsb = window.supabase.createClient(
-    'https://jqqnnkzozjskziaizajg.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg'
-  );
+  var GATE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co/functions/v1/kh-admin-auth';
+  var GATE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 
   async function tryAutoLogin(){
     var token = sessionStorage.getItem(_TK);
@@ -44,31 +42,32 @@
       sessionStorage.removeItem(_TK); sessionStorage.removeItem(_TX);
       return;
     }
-    var res = await _gsb.from('kh_admin_tokens')
-      .select('token').eq('token',token).gt('expires_at', new Date().toISOString()).maybeSingle();
-    if(res.error || res.data){ gate.style.display='none'; }
+    try{
+      var res = await fetch(GATE_URL, {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+        body: JSON.stringify({action:'verify', token:token})
+      });
+      var data = await res.json();
+      if(data.valid){ gate.style.display='none'; }
+    }catch(e){}
   }
 
   window.__checkGate = async function(){
     var p = document.getElementById('__gp').value;
-    var valid = false;
+    var result = {};
     try{
-      var res = await fetch('https://telegram-notify.unigoods2026.workers.dev/', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({action:'checkSeatbookPin', pin:p})
+      var res = await fetch(GATE_URL, {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+GATE_KEY},
+        body: JSON.stringify({action:'login', pin:p})
       });
-      var data = await res.json();
-      valid = !!data.valid;
-    }catch(e){ valid = false; }
-    if(!valid){
+      if(res.ok) result = await res.json();
+    }catch(e){}
+    if(!result.token){
       document.getElementById('__ge').style.display='block';
       document.getElementById('__gp').value=''; document.getElementById('__gp').focus();
       return;
     }
-    var token = crypto.randomUUID();
-    var expIso = new Date(Date.now()+8*60*60*1000).toISOString();
-    sessionStorage.setItem(_TK, token); sessionStorage.setItem(_TX, expIso);
-    _gsb.from('kh_admin_tokens').insert({token, expires_at: expIso}).then(function(){});
+    sessionStorage.setItem(_TK, result.token); sessionStorage.setItem(_TX, result.expires_at);
     gate.style.display='none';
   };
 
