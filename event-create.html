@@ -865,10 +865,11 @@ window.addEventListener('load', async () => {
 async function loginWithSession(session) {
   const email = session.user.email;
   let org = null;
-  const { data: o1 } = await sb.from('kh_organisers').select('*').ilike('email_1', email).maybeSingle();
+  const ORG_COLS = 'id,name,contact_1_name,contact_1_mobile,contact_2_name,contact_2_mobile,email_1,email_2,event_type,status,razorpay_key_id,created_at,hall_id';
+  const { data: o1 } = await sb.from('kh_organisers').select(ORG_COLS).ilike('email_1', email).maybeSingle();
   if (o1) org = o1;
   if (!org) {
-    const { data: o2 } = await sb.from('kh_organisers').select('*').ilike('email_2', email).maybeSingle();
+    const { data: o2 } = await sb.from('kh_organisers').select(ORG_COLS).ilike('email_2', email).maybeSingle();
     if (o2) org = o2;
   }
   if (!org || org.status?.toLowerCase() !== 'active') {
