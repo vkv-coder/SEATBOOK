@@ -250,25 +250,9 @@ const OTP_KEY = 'kh_otp_' + eventId;
 // XSS-safe escape (from live version)
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// SHA-256 (unchanged from live)
-async function _sha256hex(s){
-  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
-}
-
-// Login code — sent to gate/food checker via WhatsApp
-async function computeOtpCode(evId){
-  const today=new Date().toLocaleDateString('en-CA');
-  const hash=await _sha256hex(evId+'|'+today+'|kh_scan_auth_2026');
-  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
-}
-
-// Override code — DIFFERENT salt, shown only in organiser dashboard, never sent to checker
-async function computeOverrideCode(evId){
-  const today=new Date().toLocaleDateString('en-CA');
-  const hash=await _sha256hex(evId+'|'+today+'|kh_override_supervisor_2026');
-  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
-}
+// Login/override codes are verified entirely server-side now (see
+// kh_verify_scanner_login / kh_verify_scanner_override RPCs) - this file
+// no longer computes or knows the salt at all.
 
 let wakeLock = null;
 let activeStream = null;
@@ -362,20 +346,13 @@ async function verifyOtp() {
   if (!email) { errEl.textContent = 'Enter organiser email.'; return; }
   if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Enter the 6-digit code from organiser dashboard.'; return; }
   btn.textContent = 'Verifying…'; btn.disabled = true;
-  const {data: evOrg} = await sb.from('kh_events')
-    .select('kh_organisers!organiser_id(email_1,email_2)')
-    .eq('id', eventId).maybeSingle();
-  const org = evOrg?.kh_organisers;
-  const e1  = (org?.email_1 || '').toLowerCase();
-  const e2  = (org?.email_2 || '').toLowerCase();
-  if (!e1 || (email !== e1 && email !== e2)) {
-    errEl.textContent = 'Email not registered for this event.';
-    btn.textContent = 'Activate Scanner →'; btn.disabled = false;
-    return;
-  }
-  const expected = await computeOtpCode(eventId);
-  if (code !== expected) {
-    errEl.textContent = 'Incorrect code. Check organiser dashboard for today\'s code.';
+  // Verification happens entirely server-side now (kh_verify_scanner_login
+  // RPC) - the code is never computed or checked in this file, so reading
+  // this page's source can no longer give anyone a working code for any
+  // event.
+  const { data: ok, error } = await sb.rpc('kh_verify_scanner_login', { p_event_id: eventId, p_email: email, p_code: code });
+  if (error || !ok) {
+    errEl.textContent = 'Incorrect email or code. Check organiser dashboard for today\'s code.';
     btn.textContent = 'Activate Scanner →'; btn.disabled = false;
     return;
   }
@@ -789,9 +766,11 @@ function closeResult() {
 // ── OVERRIDE (unchanged from live) ────────────────────────
 async function doOverride() {
   const entered  = document.getElementById('override-pin').value.trim();
-  const expected = await computeOverrideCode(eventId);
   const errEl    = document.getElementById('override-err');
-  if (entered !== expected) {
+  // Verified server-side now (kh_verify_scanner_override RPC) - same
+  // reasoning as the login code above.
+  const { data: ok, error } = await sb.rpc('kh_verify_scanner_override', { p_event_id: eventId, p_code: entered });
+  if (error || !ok) {
     errEl.textContent = 'Incorrect code.';
     document.getElementById('override-pin').value = '';
     return;

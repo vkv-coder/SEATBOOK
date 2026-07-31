@@ -1273,20 +1273,9 @@ async function logout(){
 // ── SEND SCANNER LINK ──
 let scannerSendEventId = null;
 
-async function _sha256hex(s){
-  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
-}
-async function computeScannerCode(evId){
-  const today=new Date().toLocaleDateString('en-CA');
-  const hash=await _sha256hex(evId+'|'+today+'|kh_scan_auth_2026');
-  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
-}
-async function computeOverrideCode(evId){
-  const today=new Date().toLocaleDateString('en-CA');
-  const hash=await _sha256hex(evId+'|'+today+'|kh_override_supervisor_2026');
-  return String(parseInt(hash.slice(0,8),16)%1000000).padStart(6,'0');
-}
+// Codes are generated server-side now (kh_get_scanner_codes RPC), gated
+// on the caller actually being an organiser of this event - this file no
+// longer knows the salt or computes anything itself.
 
 async function openSendScanner(eid){
   scannerSendEventId = eid;
@@ -1299,9 +1288,9 @@ async function openSendScanner(eid){
   addScannerNum('gate');
   addScannerNum('food');
   document.getElementById('scanner-send-modal').classList.add('show');
-  const [loginCode, overrideCode] = await Promise.all([computeScannerCode(eid), computeOverrideCode(eid)]);
-  document.getElementById('scanner-otp-display').textContent = loginCode;
-  document.getElementById('scanner-override-display').textContent = overrideCode;
+  const { data: codes, error } = await sb.rpc('kh_get_scanner_codes', { p_event_id: eid });
+  document.getElementById('scanner-otp-display').textContent = error ? '—' : codes.login_code;
+  document.getElementById('scanner-override-display').textContent = error ? '—' : codes.override_code;
 }
 
 function closeSendScanner(e){
