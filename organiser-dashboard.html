@@ -206,6 +206,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div style="margin-top:10px;background:#f0f7ff;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.6;">
         📧 You will receive an email from <strong>khursilo</strong> with subject <strong>"Your Magic Link"</strong>. Click <strong>"Log In"</strong> to access your dashboard.
       </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
+        <div style="font-size:11px;color:#E65100;font-weight:700;margin-bottom:4px;">🧪 Just looking? See the full organiser dashboard</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Sample event with bookings already in it — no signup needed.</div>
+        <button class="btn-primary" onclick="tryDemoLogin()" style="background:#455A64;width:100%;">Try Demo Dashboard</button>
+        <div style="margin-top:10px;">
+          <span style="font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;" onclick="toggleHowItWorks()">How does this work?</span>
+        </div>
+        <div id="how-it-works-panel" style="display:none;margin-top:10px;text-align:left;background:#f0f7ff;border-radius:8px;padding:12px;font-size:12px;color:#444;line-height:1.7;">
+          Guests browse and book seats for your event directly at your event's public link — no account needed on their side. This dashboard is where you, the organiser, manage everything: create/edit your event, see who's booked, manage food orders, and check people in at the gate on the day (via the scanner tool).
+        </div>
+      </div>
+
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
         <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:6px;">New organiser?</div>
         <a href="mailto:vkvcoder.support@gmail.com" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;">📧 vkvcoder.support@gmail.com</a>
@@ -687,6 +699,24 @@ window.addEventListener('load', async()=>{
   if(session && session.user) await loginWithSession(session);
 });
 
+function toggleHowItWorks(){
+  const p = document.getElementById('how-it-works-panel');
+  p.style.display = p.style.display==='none' ? 'block' : 'none';
+}
+async function tryDemoLogin(){
+  // Real Supabase Auth sign-in with known public demo credentials,
+  // then reuses the exact same loginWithSession() path a real magic-link
+  // login would - same pattern as the other apps' Try Demo buttons.
+  try {
+    fetch('https://telegram-notify.unigoods2026.workers.dev/', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ msg: '🎟️ Someone opened the Khursilo organiser demo dashboard.' })
+    }).catch(()=>{});
+    const { data, error } = await sb.auth.signInWithPassword({ email:'demo.organiser@anyapps.in', password:'KhursiloDemo-2026x!' });
+    if (error) { showErr('email-err', 'Demo unavailable right now.'); return; }
+    await loginWithSession(data.session);
+  } catch(e) { showErr('email-err', 'Demo unavailable right now.'); }
+}
 async function loginWithSession(session){
   const email = session.user.email;
   let org = null;
