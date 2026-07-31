@@ -1295,7 +1295,9 @@ async function bookFoodInline(){
   if(!bookingId)bookingId=document.getElementById('if-pay-btn')?.dataset?.bid;
   if(!bookingId){
     const mob=(ticketData&&ticketData.bookerMobile)||memberMobile;
-    if(mob){const{data:bks}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').order('created_at',{ascending:false}).limit(1);if(bks&&bks[0])bookingId=bks[0].id;}
+    // booker_mobile is a PII column (no longer in the anon SELECT grant) -
+    // this lookup goes through a SECURITY DEFINER RPC now.
+    if(mob){const{data:foundId}=await sb.rpc('kh_find_own_confirmed_booking',{p_event_id:eventId,p_mobile:mob});if(foundId)bookingId=foundId;}
   }
   if(!bookingId){alert('Session expired. Please open your ticket link and try again from there.');return;}
   const btn=document.getElementById('if-pay-btn');
@@ -1529,8 +1531,8 @@ async function bookOpenEntry(){
   const btn=document.getElementById('open-book-btn');btn.textContent='Booking…';btn.disabled=true;
   try{
     // Block duplicate registrations from the same mobile
-    const{data:dup}=await sb.from('kh_bookings').select('id').eq('event_id',eventId).eq('booker_mobile',mobile).eq('status','confirmed').maybeSingle();
-    if(dup){alert('You have already registered for this event. Please check your WhatsApp for the ticket link.');btn.textContent='Book Now →';btn.disabled=false;return;}
+    const{data:isDup}=await sb.rpc('kh_check_duplicate_booking',{p_event_id:eventId,p_mobile:mobile});
+    if(isDup){alert('You have already registered for this event. Please check your WhatsApp for the ticket link.');btn.textContent='Book Now →';btn.disabled=false;return;}
     if(eventData.payment_mode==='manual'&&eventData.ticket_price>0){
       await saveManualBooking(name,mobile,[],eventData.ticket_price*openQty,openQty);
       btn.textContent='Book Now →';btn.disabled=false;return;
@@ -1574,18 +1576,18 @@ async function verifyMember(){
       errEl.textContent='Your mobile number is not registered for this event. Please contact the organiser.';
       errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
     }
-    // Block only if already confirmed
-    const{data:confirmed}=await sb.from('kh_bookings').select('id')
-      .eq('event_id',eventId).eq('booker_mobile',mob).eq('status','confirmed').maybeSingle();
-    if(confirmed){
+    // Block only if already confirmed (booker_mobile is a PII column now,
+    // these lookups go through SECURITY DEFINER RPCs instead of a direct
+    // filtered SELECT)
+    const{data:isConfirmedDup}=await sb.rpc('kh_check_duplicate_booking',{p_event_id:eventId,p_mobile:mob});
+    if(isConfirmedDup){
       errEl.textContent='You have already claimed your tickets for this event. Your ticket was sent via WhatsApp.';
       errEl.style.display='block';btn.textContent='Check & Select Seats →';btn.disabled=false;return;
     }
     // If a previous payment was incomplete — cancel it and let them re-select
-    const{data:pendingBk}=await sb.from('kh_bookings').select('id')
-      .eq('event_id',eventId).eq('booker_mobile',mob).eq('status','pending_payment').maybeSingle();
-    if(pendingBk){
-      await sb.from('kh_bookings').update({status:'cancelled'}).eq('id',pendingBk.id);
+    const{data:pendingBkId}=await sb.rpc('kh_find_own_pending_booking',{p_event_id:eventId,p_mobile:mob});
+    if(pendingBkId){
+      await sb.from('kh_bookings').update({status:'cancelled'}).eq('id',pendingBkId);
       errEl.style.cssText='display:block;font-size:12px;color:#7a4f00;padding:8px 10px;background:#fffbeb;border-radius:6px;margin-bottom:10px;line-height:1.5;';
       errEl.textContent='Your previous payment was not completed. Please re-select your seats and try again.';
     }
