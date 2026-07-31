@@ -108,6 +108,23 @@ Deno.serve(async (req: Request) => {
     return json({ token: newToken, expires_at: expiresAt });
   }
 
+  if (action === "forgot") {
+    // Relays to the Worker, which has both SEATBOOK_ADMIN_PIN and the
+    // Telegram credentials - the PIN itself never comes back through this
+    // response, it only ever goes straight to Telegram.
+    try {
+      const res = await fetch("https://telegram-notify.unigoods2026.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "sendSeatbookPinReminder" }),
+      });
+      const data = await res.json();
+      return json({ sent: !!data.sent, error: data.error });
+    } catch (e) {
+      return json({ sent: false, error: String(e) }, 502);
+    }
+  }
+
   if (action === "verify") {
     const valid = await tokenValid(supabaseAdmin, token);
     return json({ valid });
