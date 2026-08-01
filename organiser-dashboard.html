@@ -691,6 +691,10 @@ function showToast(msg, duration=2500){
 
 // ── AUTH ──
 window.addEventListener('load', async()=>{
+  // Lets a direct link (?demo=1) jump straight into the demo dashboard,
+  // same as the "Try Demo Dashboard" button, for one-click demo access
+  // from anyapps.in.
+  if(new URLSearchParams(location.search).get('demo')==='1'){ await tryDemoLogin(); return; }
   const hash = window.location.hash;
   if(hash && hash.includes('access_token')){
     await new Promise(r=>setTimeout(r,500));
