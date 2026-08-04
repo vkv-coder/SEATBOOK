@@ -20,6 +20,7 @@ begin
         body := jsonb_build_object(
           'action', 'sendEmail',
           'to', NEW.email_1,
+          'fromName', 'Khursilo',
           'subject', 'Your Khursilo organiser account is approved',
           'html', '<p>Hi ' || coalesce(NEW.contact_1_name,'') || ',</p>'
             || '<p>Your organisation <b>' || coalesce(NEW.name,'') || '</b> has been approved on Khursilo. You can now log in and start selling tickets:</p>'

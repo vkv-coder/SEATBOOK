@@ -678,7 +678,7 @@ async function notifyEmail(to, subject, html){
     await fetch('https://telegram-notify.unigoods2026.workers.dev/', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({action: 'sendEmail', to: to, subject: subject, html: html})
+      body: JSON.stringify({action: 'sendEmail', to: to, subject: subject, html: html, fromName: 'Khursilo'})
     });
   } catch(e) {}
 }
