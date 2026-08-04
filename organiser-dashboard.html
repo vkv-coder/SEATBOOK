@@ -2085,7 +2085,8 @@ async function manualScan(bookingId, type, btn){
     if(!confirm('Already marked. Clear this mark?')) return;
     const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
     btn.textContent='…'; btn.disabled=true;
-    await sb.from('kh_bookings').update({[col]:null}).eq('id',bookingId);
+    const {error} = await sb.from('kh_bookings').update({[col]:null}).eq('id',bookingId);
+    if(error){ showToast('Error: '+error.message); btn.textContent = type==='food' ? '🟧' : '✅'; btn.disabled=false; return; }
     btn.textContent='⬜'; btn.disabled=false;
     return;
   }

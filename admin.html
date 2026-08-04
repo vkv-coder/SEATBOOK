@@ -393,13 +393,22 @@ const _TK = 'kh_adm_tk', _TX = 'kh_adm_tx';
 // kh_halls/kh_events/kh_organisers/kh_food_items/kh_sections/kh_event_members
 // no longer accept direct anon writes (RLS locked down) - these go through
 // the PIN-verified kh-admin-auth Edge Function instead.
+// Every caller destructures {error} from this and checks it before reporting
+// success - so this must never throw, or a network/non-JSON failure would
+// bypass that check entirely and leave the caller's UI silently stuck.
 async function adminWrite(op, table, payload, filter){
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
-    body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table, op, payload, filter})
-  });
-  return res.json();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/kh-admin-auth`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+      body: JSON.stringify({action:'write', token: sessionStorage.getItem(_TK), table, op, payload, filter})
+    });
+    const body = await res.json().catch(()=>null);
+    if (!res.ok) return { error: { message: (body && body.error) || ('Server error (status ' + res.status + ')') } };
+    return body || {};
+  } catch (e) {
+    return { error: { message: e.message } };
+  }
 }
 const AVATARBG = ['rgba(200,134,10,0.12)','rgba(43,111,212,0.1)','rgba(46,158,96,0.1)','rgba(124,58,237,0.1)'];
 const AVATARCOL = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed'];
