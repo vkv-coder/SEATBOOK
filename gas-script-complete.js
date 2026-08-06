@@ -8,10 +8,18 @@
 //  SETUP STEPS:
 //  1. Go to script.google.com → open your project
 //  2. Select all → delete → paste this file
-//  3. Add RAZORPAY_KEY_SECRET constant below (value you already have)
+//  3. Project Settings (gear icon) → Script Properties → Add property:
+//       key:   RAZORPAY_KEY_SECRET
+//       value: your Razorpay live key_secret (from Razorpay Dashboard →
+//              Settings → API Keys — regenerate it first if the old one
+//              was ever committed to git, then use the new value here)
 //  4. Save (Ctrl+S)
 //  5. Deploy → Manage deployments → pencil → New version → Deploy
 //  6. Same URL stays — no change needed anywhere else
+//
+//  The secret is read from Script Properties at runtime (see
+//  RAZORPAY_KEY_SECRET below) — it must NEVER be hardcoded as a
+//  constant in this file, since this repo is public on GitHub.
 //
 //  RAZORPAY WEBHOOK (one time setup):
 //  1. Razorpay Dashboard → Settings → Webhooks → Add New Webhook
@@ -31,7 +39,7 @@ const SUPABASE_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 
 const RAZORPAY_KEY_ID = 'rzp_live_T52Vevly5G6R3t';
-const RAZORPAY_KEY_SECRET = '***REDACTED-RAZORPAY-SECRET***';
+const RAZORPAY_KEY_SECRET = PropertiesService.getScriptProperties().getProperty('RAZORPAY_KEY_SECRET');
 
 const ADMIN_EMAIL = 'unigoods2026@gmail.com';
 
