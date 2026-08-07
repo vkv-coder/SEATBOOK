@@ -774,6 +774,7 @@ async function loadDashboard(){
   const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate()-7);
   const recentCutoff = sevenDaysAgo.toISOString().split('T')[0];
   let allEventsData = [];
+  let fetchErr = null;
   if(!showAll){
     const [r1, r2] = await Promise.all([
       sb.from('kh_events').select('*').eq('organiser_id', currentOrganiser.id)
@@ -783,14 +784,16 @@ async function loadDashboard(){
         .gte('event_date', recentCutoff)
         .order('event_date', {ascending: true})
     ]);
+    fetchErr = r1.error || r2.error || null;
     const seen = new Set();
     [...(r1.data||[]), ...(r2.data||[])].forEach(e=>{ if(!seen.has(e.id)){ seen.add(e.id); allEventsData.push(e); } });
     allEventsData.sort((a,b)=>a.event_date.localeCompare(b.event_date));
   } else {
     const r = await sb.from('kh_events').select('*').eq('organiser_id', currentOrganiser.id).order('event_date', {ascending: true});
     allEventsData = r.data || [];
+    fetchErr = r.error || null;
   }
-  const {data:events, error:evErr} = { data: allEventsData, error: null };
+  const {data:events, error:evErr} = { data: allEventsData, error: fetchErr };
 
   if(evErr || !events){
     body.innerHTML = '<div class="empty-card"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load events</div><div class="empty-sub">'+( evErr?.message||'Unknown error')+'</div></div>';

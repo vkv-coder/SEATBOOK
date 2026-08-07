@@ -1612,6 +1612,7 @@ async function loadMemberSeatMap(){
   document.querySelector('.sec-tabs-wrap').style.display='flex';
   document.querySelector('.legend').style.display='flex';
   document.querySelector('.bottom-bar').style.display='block';
+  try{
   const layout=typeof hallLayout.layout_json==='string'?JSON.parse(hallLayout.layout_json):hallLayout.layout_json;
   sections=layout.sections||[];
   await loadSeatStatus();
@@ -1621,6 +1622,7 @@ async function loadMemberSeatMap(){
   document.getElementById('hall-grid').style.display='flex';
   scaleGridMap();
   startRealtimeSync();
+  }catch(e){console.error(e);showError('Could not load seat map. '+(e.message||''));}
 }
 
 async function saveMemberBooking(name,mobile,email,seatKeys,amt){
