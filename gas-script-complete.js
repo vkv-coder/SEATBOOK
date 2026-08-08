@@ -43,6 +43,13 @@ const RAZORPAY_KEY_SECRET = PropertiesService.getScriptProperties().getProperty(
 
 const ADMIN_EMAIL = 'unigoods2026@gmail.com';
 
+// Bump this string any time this file changes, so a GET to the deployed web
+// app URL tells you whether the live deployment actually matches this repo
+// file — Apps Script never auto-deploys from git, a stale live version has
+// caused real bugs here before (e.g. the @example.com demo-email skip below
+// shipped in the repo well before it was actually live).
+const SCRIPT_VERSION = '2026-08-09-1';
+
 // ── MAIN ROUTER ────────────────────────────────────────────────
 function doPost(e) {
   try {
@@ -66,7 +73,7 @@ function doPost(e) {
 
 // ── GET — health check ─────────────────────────────────────────
 function doGet(e) {
-  return jsonResponse({ status: 'Khursilo email service running ✅', from: FROM_EMAIL });
+  return jsonResponse({ status: 'Khursilo email service running ✅', from: FROM_EMAIL, version: SCRIPT_VERSION });
 }
 
 // ══════════════════════════════════════════════════════════════
