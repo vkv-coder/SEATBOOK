@@ -48,7 +48,7 @@ const ADMIN_EMAIL = 'unigoods2026@gmail.com';
 // file — Apps Script never auto-deploys from git, a stale live version has
 // caused real bugs here before (e.g. the @example.com demo-email skip below
 // shipped in the repo well before it was actually live).
-const SCRIPT_VERSION = '2026-08-09-1';
+const SCRIPT_VERSION = '2026-08-09-2';
 
 // ── MAIN ROUTER ────────────────────────────────────────────────
 function doPost(e) {
@@ -290,8 +290,11 @@ function handleRazorpayWebhook(data) {
       '\nPayment ID: ' + paymentId +
       '\nBooking ID: ' + booking.id);
 
-    // Send confirmation email to booker
-    if (booking.booker_email && booking.booker_email.indexOf('@') !== -1) {
+    // Send confirmation email to booker (skip demo @example.com addresses,
+    // same guard as handleSupabaseWebhook — a real Razorpay payment should
+    // never target a demo booking, but this path had no guard at all before)
+    if (booking.booker_email && booking.booker_email.indexOf('@') !== -1 &&
+        !/@example\.com$/i.test(booking.booker_email.trim())) {
       var eventData = fetchEvent(booking.event_id);
       var orgData   = eventData ? fetchOrganiser(eventData.organiser_id) : null;
       var d = {
