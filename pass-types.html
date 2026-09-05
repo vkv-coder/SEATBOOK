@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khursilo — Pass Types</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:'DM Sans',Arial,sans-serif;background:#f7f6f4;margin:0;padding:0;color:#1a1a1a;}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 80px;}
+  h1{font-size:18px;margin:8px 0 18px;}
+  select,input,button{font-family:inherit;font-size:14px;}
+  select,input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #ddd;border-radius:8px;margin-bottom:10px;background:#fff;color:#1a1a1a;}
+  label{font-size:12px;font-weight:600;color:#777;display:block;margin-bottom:4px;}
+  .row{display:flex;gap:10px;}
+  .row>div{flex:1;}
+  button.primary{width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+  button.primary:disabled{opacity:.5;cursor:not-allowed;}
+  .card{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .pt-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;font-size:13px;}
+  .pt-row:last-child{border-bottom:none;}
+  .pt-meta{color:#888;font-size:11px;margin-top:2px;}
+  .pt-actions button{background:none;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;margin-left:6px;}
+  .pt-actions button.danger{color:#cc3333;border-color:rgba(204,51,51,0.3);}
+  .err{color:#cc3333;font-size:12px;margin:-4px 0 10px;}
+  .hint{font-size:11px;color:#999;margin:-6px 0 10px;}
+  #login-screen{max-width:340px;margin:80px auto;text-align:center;}
+  .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#eee;color:#666;margin-left:6px;}
+  .badge.inactive{background:#fce8e8;color:#cc3333;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>Organiser Login</h1>
+  <p class="hint">Sign in the same way as the Khursilo organiser dashboard.</p>
+  <input id="login-email" type="email" placeholder="your@email.com">
+  <button class="primary" onclick="sendOtp()">Send login link</button>
+  <div id="login-msg" class="hint"></div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="wrap">
+    <h1>🎟 Pass Types — Male/Female × Stall Category</h1>
+
+    <div class="card">
+      <label>Event</label>
+      <select id="event-select" onchange="onEventChange()"></select>
+    </div>
+
+    <div class="card" id="existing-card" style="display:none;">
+      <label style="margin-bottom:10px;">Existing pass types for this event</label>
+      <div id="pt-list"></div>
+    </div>
+
+    <div class="card" id="form-card" style="display:none;">
+      <label style="margin-bottom:10px;">Add a pass type</label>
+      <label>Label (shown to customers)</label>
+      <input id="pt-label" placeholder="e.g. Male - General Stall">
+      <div class="row">
+        <div>
+          <label>Gender</label>
+          <select id="pt-gender">
+            <option value="">Not split by gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div>
+          <label>Stall / category name</label>
+          <input id="pt-stall" placeholder="e.g. General Stall">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Daily pass price (₹)</label>
+          <input id="pt-price-daily" type="number" min="0" placeholder="leave blank if not offered">
+        </div>
+        <div>
+          <label>Full-event pass price (₹)</label>
+          <input id="pt-price-full" type="number" min="0" placeholder="leave blank if not offered">
+        </div>
+      </div>
+      <label>Max tickets per day for this pass type</label>
+      <input id="pt-max" type="number" min="1" placeholder="e.g. 300">
+      <div class="hint">A full-event pass reserves one slot against this cap on EVERY day of the event automatically — you don't need to account for that yourself.</div>
+      <div id="pt-err" class="err" style="display:none;"></div>
+      <button class="primary" id="pt-save-btn" onclick="savePassType()">Add pass type</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://jqqnnkzozjskziaizajg.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let currentOrganiser=null;
+let events=[];
+
+window.addEventListener('load', async()=>{
+  const hash=window.location.hash;
+  if(hash&&hash.includes('access_token')){ await new Promise(r=>setTimeout(r,500)); }
+  const{data:{session}}=await sb.auth.getSession();
+  if(session&&session.user) await loginWithSession(session);
+});
+
+async function sendOtp(){
+  const email=document.getElementById('login-email').value.trim();
+  if(!email){document.getElementById('login-msg').textContent='Enter your email.';return;}
+  const{error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  document.getElementById('login-msg').textContent=error?('Error: '+error.message):'Login link sent — check your email.';
+}
+
+async function loginWithSession(session){
+  const email=session.user.email;
+  const ORG_COLS='id,name,email_1,email_2,status';
+  let org=null;
+  const{data:o1}=await sb.from('kh_organisers').select(ORG_COLS).ilike('email_1',email).maybeSingle();
+  if(o1)org=o1;
+  if(!org){const{data:o2}=await sb.from('kh_organisers').select(ORG_COLS).ilike('email_2',email).maybeSingle();if(o2)org=o2;}
+  if(!org){await sb.auth.signOut();document.getElementById('login-msg').textContent='Email '+email+' not registered as an organiser.';return;}
+  if((org.status||'').toLowerCase()!=='active'){await sb.auth.signOut();document.getElementById('login-msg').textContent='Account is '+org.status+'.';return;}
+  currentOrganiser=org;
+  history.replaceState(null,'',window.location.pathname);
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  await loadEvents();
+}
+
+async function loadEvents(){
+  const{data}=await sb.from('kh_events').select('id,name,from_date,to_date,event_date').eq('organiser_id',currentOrganiser.id).order('event_date',{ascending:false});
+  events=data||[];
+  const sel=document.getElementById('event-select');
+  sel.innerHTML=events.map(ev=>`<option value="${ev.id}">${esc(ev.name)}</option>`).join('')||'<option value="">No events yet</option>';
+  if(events.length) onEventChange();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+async function onEventChange(){
+  const eventId=document.getElementById('event-select').value;
+  if(!eventId){document.getElementById('existing-card').style.display='none';document.getElementById('form-card').style.display='none';return;}
+  document.getElementById('form-card').style.display='block';
+  await loadPassTypesFor(eventId);
+}
+
+async function loadPassTypesFor(eventId){
+  const{data}=await sb.from('kh_open_pass_types').select('*').eq('event_id',eventId).order('created_at');
+  const list=document.getElementById('pt-list');
+  const card=document.getElementById('existing-card');
+  if(!data||!data.length){card.style.display='none';return;}
+  card.style.display='block';
+  list.innerHTML=data.map(pt=>`
+    <div class="pt-row">
+      <div>
+        <div>${esc(pt.label)}${pt.active?'':'<span class="badge inactive">inactive</span>'}</div>
+        <div class="pt-meta">${pt.price_daily!=null?'Daily ₹'+pt.price_daily+' · ':''}${pt.price_full_event!=null?'Full-event ₹'+pt.price_full_event+' · ':''}Max ${pt.max_per_day}/day</div>
+      </div>
+      <div class="pt-actions">
+        <button onclick="toggleActive('${pt.id}',${!pt.active})">${pt.active?'Deactivate':'Activate'}</button>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleActive(id,active){
+  await sb.from('kh_open_pass_types').update({active}).eq('id',id);
+  await loadPassTypesFor(document.getElementById('event-select').value);
+}
+
+async function savePassType(){
+  const eventId=document.getElementById('event-select').value;
+  const label=document.getElementById('pt-label').value.trim();
+  const gender=document.getElementById('pt-gender').value||null;
+  const stall=document.getElementById('pt-stall').value.trim()||null;
+  const priceDaily=document.getElementById('pt-price-daily').value;
+  const priceFull=document.getElementById('pt-price-full').value;
+  const maxPerDay=document.getElementById('pt-max').value;
+  const errEl=document.getElementById('pt-err');
+  errEl.style.display='none';
+  if(!eventId){errEl.textContent='Pick an event first.';errEl.style.display='block';return;}
+  if(!label){errEl.textContent='Enter a label.';errEl.style.display='block';return;}
+  if(!priceDaily&&!priceFull){errEl.textContent='Set at least one of daily or full-event price.';errEl.style.display='block';return;}
+  if(!maxPerDay||Number(maxPerDay)<1){errEl.textContent='Set a max tickets per day (at least 1).';errEl.style.display='block';return;}
+  const btn=document.getElementById('pt-save-btn');btn.disabled=true;btn.textContent='Saving…';
+  const{error}=await sb.from('kh_open_pass_types').insert({
+    event_id:eventId,label,gender,stall_name:stall,
+    price_daily:priceDaily?Number(priceDaily):null,
+    price_full_event:priceFull?Number(priceFull):null,
+    max_per_day:Number(maxPerDay)
+  });
+  btn.disabled=false;btn.textContent='Add pass type';
+  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='block';return;}
+  document.getElementById('pt-label').value='';
+  document.getElementById('pt-stall').value='';
+  document.getElementById('pt-price-daily').value='';
+  document.getElementById('pt-price-full').value='';
+  document.getElementById('pt-max').value='';
+  await loadPassTypesFor(eventId);
+}
+</script>
+</body>
+</html>

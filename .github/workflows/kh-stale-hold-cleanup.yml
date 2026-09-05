@@ -1,0 +1,30 @@
+name: Khursilo stale hold cleanup
+
+on:
+  schedule:
+    # Every 5 minutes - reaps 'held'/'pending_payment' bookings older than
+    # 8 minutes (see kh_cleanup_stale_bookings in kh_booking_integrity_migration.sql)
+    # so abandoned seat holds / abandoned Razorpay checkouts don't squat on
+    # a seat or a pass-type's daily capacity forever.
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call kh_cleanup_stale_bookings RPC
+        run: |
+          resp=$(curl -s -w "\n%{http_code}" \
+            "https://jqqnnkzozjskziaizajg.supabase.co/rest/v1/rpc/kh_cleanup_stale_bookings" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg" \
+            -H "Content-Type: application/json" \
+            -d '{"p_minutes": 8}')
+          body=$(echo "$resp" | head -n -1)
+          status=$(echo "$resp" | tail -n1)
+          echo "Response: $body (HTTP $status)"
+          if [ "$status" -ge 300 ]; then
+            echo "cleanup call failed"
+            exit 1
+          fi
