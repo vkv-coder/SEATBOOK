@@ -117,35 +117,6 @@ canvas{display:none;}
   <div class="error-msg" id="error-msg">Could not load event.</div>
 </div>
 
-<!-- SCREEN: PIN SETUP -->
-<div class="screen" id="screen-pin">
-  <div class="setup-title" id="pin-title">Set Supervisor PIN</div>
-  <div class="setup-sub" id="pin-sub">Choose a 4-digit PIN. You will need this to override any duplicate food scan. Share only with your supervisor.</div>
-  <div class="pin-label" id="pin-label">Enter PIN</div>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot" id="pd0"></div>
-    <div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div>
-    <div class="pin-dot" id="pd3"></div>
-  </div>
-  <div class="pin-error" id="pin-error"></div>
-  <div class="numpad">
-    <div class="nk" onclick="nkPress('1')">1</div>
-    <div class="nk" onclick="nkPress('2')">2</div>
-    <div class="nk" onclick="nkPress('3')">3</div>
-    <div class="nk" onclick="nkPress('4')">4</div>
-    <div class="nk" onclick="nkPress('5')">5</div>
-    <div class="nk" onclick="nkPress('6')">6</div>
-    <div class="nk" onclick="nkPress('7')">7</div>
-    <div class="nk" onclick="nkPress('8')">8</div>
-    <div class="nk" onclick="nkPress('9')">9</div>
-    <div class="nk empty"></div>
-    <div class="nk" onclick="nkPress('0')">0</div>
-    <div class="nk del" onclick="nkDel()">⌫</div>
-  </div>
-  <div class="pin-error" id="pin-confirm-error"></div>
-</div>
-
 <!-- SCREEN: SCANNER -->
 <div class="screen" id="screen-scan">
   <div class="scanner-wrap" id="scanner-wrap">
@@ -175,9 +146,9 @@ canvas{display:none;}
     <div class="result-sub" id="res-sub">Ticket verified. Give food.</div>
     <div class="booking-card" id="booking-card"></div>
     <div class="override-box" id="override-box" style="display:none;">
-      <p>⚠️ Food was already given for this ticket. To allow again, enter the supervisor PIN.</p>
+      <p>⚠️ Food was already given for this ticket. Enter today's <strong>supervisor override code</strong> (from organiser dashboard — same code used at the entry gate) to allow again.</p>
       <div class="override-pin-row">
-        <input class="override-pin-input" id="override-pin" type="password" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="PIN">
+        <input class="override-pin-input" id="override-pin" type="password" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="6-digit code" style="letter-spacing:4px;">
         <button class="override-submit" onclick="doOverride()">Allow</button>
       </div>
       <div class="override-err" id="override-err"></div>
@@ -194,13 +165,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const params  = new URLSearchParams(location.search);
 const eventId = params.get('event');
 let eventData = null;
-let pinBuffer = '';
-let pinStage  = 'set';
-let firstPin  = '';
 let currentBooking = null;
 let scanning  = true;
 
-const PIN_KEY = 'khursilo_food_pin_' + eventId;
 let wakeLock    = null;
 let activeStream = null;
 
@@ -244,13 +211,7 @@ async function init() {
   eventData = ev;
   document.getElementById('ev-name').textContent = ev.name;
   document.getElementById('loading-screen').classList.remove('active');
-
-  const savedPin = localStorage.getItem(PIN_KEY);
-  if (savedPin) {
-    startScanner();
-  } else {
-    showScreen('screen-pin');
-  }
+  startScanner();
 }
 
 function showScreen(id) {
@@ -261,51 +222,6 @@ function showError(msg) {
   document.getElementById('loading-screen').classList.remove('active');
   document.getElementById('error-screen').classList.add('active');
   document.getElementById('error-msg').innerHTML = msg;
-}
-
-// ── PIN NUMPAD ────────────────────────────────────────────
-function nkPress(d) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  updateDots();
-  if (pinBuffer.length === 4) setTimeout(pinComplete, 200);
-}
-function nkDel() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-confirm-error').textContent = '';
-  updateDots();
-}
-function updateDots() {
-  for (let i = 0; i < 4; i++) {
-    document.getElementById('pd' + i).classList.toggle('filled', i < pinBuffer.length);
-  }
-}
-function pinComplete() {
-  if (pinStage === 'set') {
-    firstPin = pinBuffer;
-    pinBuffer = '';
-    updateDots();
-    pinStage = 'confirm';
-    document.getElementById('pin-title').textContent = 'Confirm PIN';
-    document.getElementById('pin-sub').textContent = 'Enter the same PIN again to confirm.';
-    document.getElementById('pin-label').textContent = 'Confirm PIN';
-  } else {
-    if (pinBuffer === firstPin) {
-      localStorage.setItem(PIN_KEY, pinBuffer);
-      pinBuffer = ''; updateDots();
-      pinStage = 'set';
-      startScanner();
-    } else {
-      document.getElementById('pin-confirm-error').textContent = 'PINs do not match. Try again.';
-      pinBuffer = ''; firstPin = '';
-      pinStage = 'set';
-      document.getElementById('pin-title').textContent = 'Set Supervisor PIN';
-      document.getElementById('pin-sub').textContent = 'PINs did not match. Please set again.';
-      document.getElementById('pin-label').textContent = 'Enter PIN';
-      updateDots();
-    }
-  }
 }
 
 // ── CAMERA ────────────────────────────────────────────────
@@ -545,13 +461,23 @@ function closeResult() {
 }
 
 // ── OVERRIDE ──────────────────────────────────────────────
+// Verified server-side (kh_verify_scanner_override RPC) - the exact
+// same daily per-event code scanner.html already uses for entry
+// overrides, checked against kh_compute_scan_code() inside the RPC.
+// The old client-side check (compare against a PIN a volunteer set and
+// stored themselves in localStorage) meant the "verification" was
+// never real: kh_bookings' own RLS lets any anon caller write these
+// columns directly regardless of what this function decides, so a
+// wrong/no PIN never actually stopped the write - only this check
+// happening server-side, against a code the client can't fabricate,
+// makes it real.
 async function doOverride() {
-  const entered  = document.getElementById('override-pin').value.trim();
-  const savedPin = localStorage.getItem(PIN_KEY);
-  const errEl    = document.getElementById('override-err');
+  const entered = document.getElementById('override-pin').value.trim();
+  const errEl   = document.getElementById('override-err');
 
-  if (entered !== savedPin) {
-    errEl.textContent = 'Incorrect PIN.';
+  const { data: ok, error } = await sb.rpc('kh_verify_scanner_override', { p_event_id: eventId, p_code: entered });
+  if (error || !ok) {
+    errEl.textContent = 'Incorrect code.';
     document.getElementById('override-pin').value = '';
     return;
   }
