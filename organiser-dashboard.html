@@ -2616,13 +2616,18 @@ function buildPendingItem(b){
   return el;
 }
 
+// Routed through kh_organiser_confirm_manual_payment (2026-09-16 fix) -
+// a direct status/payment_status update from the client hits the
+// payment-verification trigger and always failed silently before this
+// fix (the trigger only lets it through for service_role or this RPC's
+// explicit, identity-checked authorization). The RPC re-verifies the
+// caller is really an active organiser of this booking's event before
+// writing, and records who manually confirmed it for an audit trail.
 async function confirmManualPayment(bookingId){
   const btn = document.getElementById('pconfirm-'+bookingId);
   if(btn){btn.textContent='Confirming…';btn.disabled=true;}
-  const {error} = await sb.from('kh_bookings').update({
-    status:'confirmed', payment_status:'paid'
-  }).eq('id',bookingId);
-  if(error){showToast('Error: '+error.message);if(btn){btn.textContent='✓ Payment received — Activate ticket';btn.disabled=false;}return;}
+  const {data:res, error} = await sb.rpc('kh_organiser_confirm_manual_payment', {p_booking_id: bookingId});
+  if(error || !res || !res.ok){showToast('Error: '+(res&&res.message || error&&error.message || 'failed'));if(btn){btn.textContent='✓ Payment received — Activate ticket';btn.disabled=false;}return;}
 
   // Replace confirm button with WhatsApp send button
   const b = await sb.from('kh_bookings').select('*').eq('id',bookingId).single();
