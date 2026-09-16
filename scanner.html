@@ -689,8 +689,23 @@ function buildManualPunch(bookingId, attendedDays) {
     chip.textContent = (already ? '✓ ' : '') + 'Day ' + d;
     if (!already) {
       chip.onclick = async () => {
+        // Backdating a day with no scan flow behind it at all - needs the
+        // same supervisor code an entry override does (2026-09-16 fix).
+        const code = prompt('Supervisor override code to record Day ' + d + ' for this ticket:');
+        if (code === null) return;
+        const origLabel = chip.textContent;
         chip.textContent = '…'; chip.disabled = true;
-        await punchAttendance(bookingId, d, true);
+        const res = await punchAttendance(bookingId, d, true, code.trim());
+        if (!res || res.status === 'bad_code') {
+          alert('Incorrect code.');
+          chip.textContent = origLabel; chip.disabled = false;
+          return;
+        }
+        if (res.status === 'error') {
+          alert('Could not record this day. Try again.');
+          chip.textContent = origLabel; chip.disabled = false;
+          return;
+        }
         chip.textContent = '✓ Day ' + d;
         chip.className = 'punch-chip done';
         attendedDays.push(d);
@@ -721,19 +736,22 @@ async function confirmDayEntry(bookingId, attendedDays) {
   setTimeout(() => closeResult(), 3000);
 }
 
-// Write to kh_attendance (NEW)
-async function punchAttendance(bookingId, dayNum, manual) {
+// Write to kh_attendance via RPC (2026-09-16 fix) - booking_id/event_id/
+// day_number are no longer directly insertable by anon; kh_process_attendance
+// re-verifies the booking is real, confirmed, and matches this event
+// before writing. Manual (backdated) punches also require the same daily
+// supervisor override code an entry override does.
+async function punchAttendance(bookingId, dayNum, manual, code) {
   try {
-    await sb.from('kh_attendance').insert({
-      booking_id: bookingId,
-      event_id: eventId,
-      day_number: dayNum,
-      scanned_at: new Date().toISOString(),
-      scanned_by: 'scanner',
-      manually_punched: manual
+    const { data: res, error } = await sb.rpc('kh_process_attendance', {
+      p_event_id: eventId, p_booking_id: bookingId, p_day_number: dayNum,
+      p_manual: !!manual, p_code: code || null
     });
+    if (error) { console.error('Punch error:', error); return { status: 'error' }; }
+    return res;
   } catch(e) {
-    if (!e.message?.includes('duplicate') && e.code !== '23505') console.error('Punch error:', e);
+    console.error('Punch error:', e);
+    return { status: 'error' };
   }
 }
 
