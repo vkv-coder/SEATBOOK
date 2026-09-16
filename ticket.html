@@ -549,21 +549,32 @@ function updateStaffPanel(){
 async function markScan(type){
   const field=type==='gate'?'entry_scanned_at':'food_scanned_at';
   const label=type==='gate'?'gate entry':'food collection';
-  // Re-fetch fresh state from DB before marking
-  const{data:fresh}=await sb.from('kh_bookings').select('entry_scanned_at,food_scanned_at').eq('id',bookingId).single();
-  if(fresh){bookingData.entry_scanned_at=fresh.entry_scanned_at;bookingData.food_scanned_at=fresh.food_scanned_at;}
-  const currentVal=fresh?fresh[field]:null;
-  if(currentVal){
-    showScanPopup('warn',label,currentVal);
-    updateStaffPanel();
-    return;
-  }
-  const now=new Date().toISOString();
-  const{error}=await sb.from('kh_bookings').update({[field]:now}).eq('id',bookingId);
-  if(error){alert('Error: '+error.message);return;}
-  bookingData[field]=now;
+  const scanType=type==='gate'?'entry':'food';
+  // This panel has no camera/QR verification and no staff login of any
+  // kind - it's just a button on the customer-facing ticket page, so
+  // ANY ticket holder could previously self-mark their own entry/food
+  // as given by opening their own link. Every use now requires the same
+  // daily supervisor code scanner.html/food-scanner.html use for
+  // overrides (from the organiser dashboard), verified server-side
+  // (kh_process_scan RPC) - not just the duplicate-scan case, since
+  // there's no other signal here that a real staff member is the one
+  // clicking (2026-09-16 fix).
+  const code=prompt('Enter today\'s staff code to mark '+label+':');
+  if(!code)return;
+  // Passing a code always means "verify and write, whether this is the
+  // first scan or a re-scan of an already-marked ticket" - the RPC only
+  // ever returns already_given (no write) when no code is given at all,
+  // which never happens on this page since the prompt above always
+  // collects one first.
+  const{data:res,error}=await sb.rpc('kh_process_scan',{
+    p_event_id:bookingData.event_id,p_booking_id:bookingId,p_scan_type:scanType,p_code:code
+  });
+  if(error||!res){alert('Error. Try again.');return;}
+  if(res.status==='bad_code'){alert('Incorrect staff code.');return;}
+  bookingData.entry_scanned_at=res.booking.entry_scanned_at;
+  bookingData.food_scanned_at=res.booking.food_scanned_at;
   updateStaffPanel();
-  showScanPopup('ok',label,now);
+  showScanPopup('ok',label,bookingData[field]);
 }
 
 function showScanPopup(mode,label,ts){
