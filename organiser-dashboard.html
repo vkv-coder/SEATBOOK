@@ -2095,23 +2095,27 @@ async function openStudioReport(eid){
   }catch(err){document.getElementById('studio-report-loading').textContent='Error: '+err.message;}
 }
 
+// Routed through kh_organiser_set_scan (2026-09-16 fix) - entry/food
+// scan columns are no longer directly writable by anyone, including
+// this authenticated dashboard. The RPC re-verifies auth.uid() really
+// is an active organiser of this specific booking's event before
+// writing, same identity check organiser-dashboard.html's own login
+// already relies on.
 async function manualScan(bookingId, type, btn){
   if(!bookingId) return;
   const already = btn.textContent.trim()==='✅' || btn.textContent.trim()==='🟧';
+  const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
   if(already){
     if(!confirm('Already marked. Clear this mark?')) return;
-    const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
     btn.textContent='…'; btn.disabled=true;
-    const {error} = await sb.from('kh_bookings').update({[col]:null}).eq('id',bookingId);
-    if(error){ showToast('Error: '+error.message); btn.textContent = type==='food' ? '🟧' : '✅'; btn.disabled=false; return; }
+    const {data:res,error} = await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:col,p_value:null});
+    if(error||!res||!res.ok){ showToast('Error: '+(res&&res.message||error&&error.message||'failed')); btn.textContent = type==='food' ? '🟧' : '✅'; btn.disabled=false; return; }
     btn.textContent='⬜'; btn.disabled=false;
     return;
   }
   btn.textContent='…'; btn.disabled=true;
-  const col = type==='food' ? 'food_scanned_at' : 'entry_scanned_at';
-  const {error} = await sb.from('kh_bookings')
-    .update({[col]:new Date().toISOString()}).eq('id',bookingId);
-  if(error){ showToast('Error: '+error.message); btn.textContent='⬜'; btn.disabled=false; return; }
+  const {data:res,error} = await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:col,p_value:new Date().toISOString()});
+  if(error||!res||!res.ok){ showToast('Error: '+(res&&res.message||error&&error.message||'failed')); btn.textContent='⬜'; btn.disabled=false; return; }
   btn.textContent = type==='food' ? '🟧' : '✅';
   btn.disabled=false;
   showToast(type==='food' ? 'Food marked collected' : 'Gate entry marked');
@@ -2483,20 +2487,20 @@ async function openFoodReport(eid){
   }
 }
 
+// Same kh_organiser_set_scan routing as manualScan() above.
 async function manualFoodCollect(bookingId, btn){
   if(!bookingId){ showToast('No booking linked to this order'); return; }
   const already=btn.textContent.trim()==='🟧';
   if(already){
     if(!confirm('Already marked collected. Clear this mark?')) return;
     btn.textContent='…'; btn.disabled=true;
-    await sb.from('kh_bookings').update({food_scanned_at:null}).eq('id',bookingId);
+    await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:'food_scanned_at',p_value:null});
     btn.textContent='⬜'; btn.disabled=false;
     return;
   }
   btn.textContent='…'; btn.disabled=true;
-  const{error}=await sb.from('kh_bookings')
-    .update({food_scanned_at:new Date().toISOString()}).eq('id',bookingId);
-  if(error){ showToast('Error: '+error.message); btn.textContent='⬜'; btn.disabled=false; return; }
+  const{data:res,error}=await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:'food_scanned_at',p_value:new Date().toISOString()});
+  if(error||!res||!res.ok){ showToast('Error: '+(res&&res.message||error&&error.message||'failed')); btn.textContent='⬜'; btn.disabled=false; return; }
   btn.textContent='🟧'; btn.disabled=false;
   showToast('Food marked collected');
 }

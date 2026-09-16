@@ -343,35 +343,20 @@ async function processBooking(bookingId) {
   document.getElementById('scan-status').textContent = 'Checking ticket…';
 
   try {
-    const { data: bk, error } = await sb.from('kh_bookings')
-      .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, food_scanned_at, food_scan_count, food_overridden')
-      .eq('id', bookingId).single();
+    // Verified + written server-side in one atomic step (kh_process_scan
+    // RPC) - the event/status/duplicate checks and the write itself all
+    // happen inside the RPC now, since kh_bookings' food_scanned_at
+    // column is no longer directly writable by anon (2026-09-16 fix).
+    const { data: res, error } = await sb.rpc('kh_process_scan', {
+      p_event_id: eventId, p_booking_id: bookingId, p_scan_type: 'food'
+    });
 
-    if (error || !bk) { showResult('invalid', null, bookingId); return; }
-    if (bk.event_id !== eventId) { showResult('wrong-event', bk, bookingId); return; }
-    if (bk.status !== 'confirmed') { showResult('not-confirmed', bk, bookingId); return; }
-
-    if (bk.food_scanned_at) {
-      showResult('already-given', bk, bookingId);
-      return;
-    }
-
-    // First time — mark food given atomically
-    const { data: updated, error: upErr } = await sb.from('kh_bookings')
-      .update({ food_scanned_at: new Date().toISOString(), food_scan_count: 1 })
-      .eq('id', bookingId)
-      .is('food_scanned_at', null)
-      .select().single();
-
-    if (upErr || !updated) {
-      const { data: refetch } = await sb.from('kh_bookings')
-        .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, food_scanned_at, food_scan_count, food_overridden')
-        .eq('id', bookingId).single();
-      showResult('already-given', refetch, bookingId);
-      return;
-    }
-
-    showResult('valid', updated, bookingId);
+    if (error || !res) { showResult('invalid', null, bookingId); return; }
+    if (res.status === 'not_found') { showResult('invalid', null, bookingId); return; }
+    if (res.status === 'wrong_event') { showResult('wrong-event', res.booking, bookingId); return; }
+    if (res.status === 'not_confirmed') { showResult('not-confirmed', res.booking, bookingId); return; }
+    if (res.status === 'already_given') { showResult('already-given', res.booking, bookingId); return; }
+    showResult('valid', res.booking, bookingId);
 
   } catch(e) {
     document.getElementById('scan-status').textContent = 'Network error — retrying…';
@@ -461,36 +446,35 @@ function closeResult() {
 }
 
 // ── OVERRIDE ──────────────────────────────────────────────
-// Verified server-side (kh_verify_scanner_override RPC) - the exact
-// same daily per-event code scanner.html already uses for entry
-// overrides, checked against kh_compute_scan_code() inside the RPC.
-// The old client-side check (compare against a PIN a volunteer set and
-// stored themselves in localStorage) meant the "verification" was
-// never real: kh_bookings' own RLS lets any anon caller write these
-// columns directly regardless of what this function decides, so a
-// wrong/no PIN never actually stopped the write - only this check
-// happening server-side, against a code the client can't fabricate,
-// makes it real.
+// Verified AND written server-side in one call (kh_process_scan RPC) -
+// the exact same daily per-event code scanner.html already uses for
+// entry overrides, checked against kh_compute_scan_code() inside the
+// RPC. The old client-side check (compare against a PIN a volunteer set
+// and stored themselves in localStorage) meant the "verification" was
+// never real: kh_bookings' food_scanned_at/food_overridden columns used
+// to be directly writable by any anon caller regardless of what this
+// function decided. They no longer are (2026-09-16) - only this RPC can
+// write them now, so a wrong/no code genuinely blocks the write.
 async function doOverride() {
   const entered = document.getElementById('override-pin').value.trim();
   const errEl   = document.getElementById('override-err');
-
-  const { data: ok, error } = await sb.rpc('kh_verify_scanner_override', { p_event_id: eventId, p_code: entered });
-  if (error || !ok) {
-    errEl.textContent = 'Incorrect code.';
-    document.getElementById('override-pin').value = '';
-    return;
-  }
 
   if (!currentBooking) return;
   errEl.textContent = '';
 
   try {
-    await sb.from('kh_bookings').update({
-      food_scanned_at: currentBooking.food_scanned_at || new Date().toISOString(),
-      food_scan_count: (currentBooking.food_scan_count || 0) + 1,
-      food_overridden: true
-    }).eq('id', currentBooking.id);
+    // Verify + write in one atomic RPC call now (kh_process_scan) rather
+    // than a separate verify-RPC followed by a raw table update - the
+    // write itself needs no separate call since the RPC does it
+    // internally once the code checks out.
+    const { data: res, error } = await sb.rpc('kh_process_scan', {
+      p_event_id: eventId, p_booking_id: currentBooking.id, p_scan_type: 'food', p_code: entered
+    });
+    if (error || !res || res.status === 'bad_code') {
+      errEl.textContent = 'Incorrect code.';
+      document.getElementById('override-pin').value = '';
+      return;
+    }
 
     document.getElementById('res-icon').textContent = '✅';
     document.getElementById('res-title').textContent = 'OVERRIDE — FOOD GIVEN';

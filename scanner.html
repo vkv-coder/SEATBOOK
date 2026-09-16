@@ -503,29 +503,28 @@ async function processBooking(bookingId) {
     if (bk.status !== 'confirmed') { showResult('not-confirmed', bk, bookingId); return; }
 
     // ── FOOD MODE ──
+    // Verified + written server-side in one atomic step (kh_process_scan
+    // RPC) - food_scanned_at is no longer directly writable by anon
+    // (2026-09-16 fix), so the raw update this used to do would now just
+    // fail with a permission error.
     if (scanMode === 'food') {
-      if (bk.food_scanned_at) { showResult('food-already', bk, bookingId); return; }
-      const { data: upd, error: fErr } = await sb.from('kh_bookings')
-        .update({ food_scanned_at: new Date().toISOString() })
-        .eq('id', bookingId).is('food_scanned_at', null).select().single();
-      if (fErr || !upd) { showResult('food-already', bk, bookingId); return; }
-      showResult('food-valid', upd, bookingId);
+      const { data: res, error: fErr } = await sb.rpc('kh_process_scan', {
+        p_event_id: eventId, p_booking_id: bookingId, p_scan_type: 'food'
+      });
+      if (fErr || !res || res.status === 'already_given') { showResult('food-already', res ? res.booking : bk, bookingId); return; }
+      showResult('food-valid', res.booking, bookingId);
       return;
     }
 
     if (eventTotalDays <= 1) {
-      // ── SINGLE-DAY gate logic ──
-      if (bk.entry_scanned_at) { showResult('already-used', bk, bookingId); return; }
-      const { data: updated, error: upErr } = await sb.from('kh_bookings')
-        .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: 1 })
-        .eq('id', bookingId).is('entry_scanned_at', null).select().single();
-      if (upErr || !updated) {
-        const { data: refetch } = await sb.from('kh_bookings')
-          .select('id, event_id, booker_name, booker_mobile, seat_keys, seat_count, status, entry_scanned_at, entry_scan_count, entry_overridden, food_scanned_at')
-          .eq('id', bookingId).single();
-        showResult('already-used', refetch, bookingId); return;
+      // ── SINGLE-DAY gate logic ── same RPC, same reasoning as food mode.
+      const { data: res, error: upErr } = await sb.rpc('kh_process_scan', {
+        p_event_id: eventId, p_booking_id: bookingId, p_scan_type: 'entry'
+      });
+      if (upErr || !res || res.status === 'already_given') {
+        showResult('already-used', res ? res.booking : bk, bookingId); return;
       }
-      showResult('valid', updated, bookingId);
+      showResult('valid', res.booking, bookingId);
     } else {
       // ── MULTI-DAY logic (NEW) ──
       // Check attendance for today's day
@@ -707,11 +706,12 @@ async function confirmDayEntry(bookingId, attendedDays) {
   const btn = document.getElementById('res-next-btn');
   btn.textContent = 'Recording…'; btn.disabled = true;
   await punchAttendance(bookingId, currentDay, false);
-  // Also update entry_scanned_at on first-ever scan
+  // Also update entry_scanned_at on first-ever scan - via kh_process_scan
+  // now (2026-09-16 fix), same as everywhere else; it's a no-op status
+  // ('already_given') on every day after the first, matching the old
+  // is('entry_scanned_at', null) guard.
   try {
-    await sb.from('kh_bookings')
-      .update({ entry_scanned_at: new Date().toISOString(), entry_scan_count: (attendedDays.length + 1) })
-      .eq('id', bookingId).is('entry_scanned_at', null);
+    await sb.rpc('kh_process_scan', { p_event_id: eventId, p_booking_id: bookingId, p_scan_type: 'entry' });
   } catch(_) {}
   attendedDays.push(currentDay);
   buildAttDayBoxes(attendedDays, currentDay, false);
@@ -767,22 +767,21 @@ function closeResult() {
 async function doOverride() {
   const entered  = document.getElementById('override-pin').value.trim();
   const errEl    = document.getElementById('override-err');
-  // Verified server-side now (kh_verify_scanner_override RPC) - same
-  // reasoning as the login code above.
-  const { data: ok, error } = await sb.rpc('kh_verify_scanner_override', { p_event_id: eventId, p_code: entered });
-  if (error || !ok) {
-    errEl.textContent = 'Incorrect code.';
-    document.getElementById('override-pin').value = '';
-    return;
-  }
   if (!currentBooking) return;
   errEl.textContent = '';
   try {
-    await sb.from('kh_bookings').update({
-      entry_scanned_at: currentBooking.entry_scanned_at || new Date().toISOString(),
-      entry_scan_count: (currentBooking.entry_scan_count || 0) + 1,
-      entry_overridden: true
-    }).eq('id', currentBooking.id);
+    // Verify + write in one atomic RPC call (kh_process_scan) -
+    // entry_scanned_at/entry_scan_count/entry_overridden are no longer
+    // directly writable by anon (2026-09-16 fix), so the code check and
+    // the write both have to happen inside the RPC now.
+    const { data: res, error } = await sb.rpc('kh_process_scan', {
+      p_event_id: eventId, p_booking_id: currentBooking.id, p_scan_type: 'entry', p_code: entered
+    });
+    if (error || !res || res.status === 'bad_code') {
+      errEl.textContent = 'Incorrect code.';
+      document.getElementById('override-pin').value = '';
+      return;
+    }
 
     // For multi-day, also punch this day
     if (eventTotalDays > 1) {
