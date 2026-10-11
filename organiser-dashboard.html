@@ -209,10 +209,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div style="margin-top:10px;background:#f0f7ff;border-radius:8px;padding:10px 12px;font-size:12px;color:#444;line-height:1.6;">
         📧 You will receive an email from <strong>khursilo</strong> with subject <strong>"Your Magic Link"</strong>. Click <strong>"Log In"</strong> to access your dashboard.
       </div>
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;">
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center;" id="demo-gate">
         <div style="font-size:11px;color:#E65100;font-weight:700;margin-bottom:4px;">🧪 Just looking? See the full organiser dashboard</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Sample event with bookings already in it — no signup needed.</div>
-        <button class="btn-primary" onclick="tryDemoLogin()" style="background:#455A64;width:100%;">Try Demo Dashboard</button>
+        <input class="input-field" type="text" placeholder="Your name" id="demo-name">
+        <input class="input-field" type="tel" placeholder="10-digit mobile number" maxlength="10" id="demo-phone">
+        <button class="btn-primary" onclick="enterDemoGated()" id="demo-btn" style="background:#455A64;width:100%;">Try Demo Dashboard</button>
+        <div id="demo-gate-msg" style="color:#cc3333;font-size:12px;margin-top:6px;"></div>
         <div style="margin-top:10px;">
           <span style="font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;" onclick="toggleHowItWorks()">How does this work?</span>
         </div>
@@ -708,10 +711,14 @@ function showToast(msg, duration=2500){
 
 // ── AUTH ──
 window.addEventListener('load', async()=>{
-  // Lets a direct link (?demo=1) jump straight into the demo dashboard,
-  // same as the "Try Demo Dashboard" button, for one-click demo access
-  // from anyapps.in.
-  if(new URLSearchParams(location.search).get('demo')==='1'){ await tryDemoLogin(); return; }
+  // A direct link (?demo=1) from anyapps.in lands on the gated demo card
+  // below, not an instant silent login - the visitor still enters
+  // name+phone via enterDemoGated() first.
+  if(new URLSearchParams(location.search).get('demo')==='1'){
+    document.getElementById('demo-gate')?.scrollIntoView();
+    document.getElementById('demo-name')?.focus();
+    return;
+  }
   const hash = window.location.hash;
   if(hash && hash.includes('access_token')){
     await new Promise(r=>setTimeout(r,500));
@@ -724,14 +731,28 @@ function toggleHowItWorks(){
   const p = document.getElementById('how-it-works-panel');
   p.style.display = p.style.display==='none' ? 'block' : 'none';
 }
-async function tryDemoLogin(){
+async function enterDemoGated(){
+  const name = document.getElementById('demo-name').value.trim();
+  const phone = document.getElementById('demo-phone').value.trim();
+  const msgEl = document.getElementById('demo-gate-msg');
+  msgEl.textContent = '';
+  if(!name){ msgEl.textContent = 'Please enter your name.'; return; }
+  if(phone.length !== 10 || !/^\d{10}$/.test(phone)){ msgEl.textContent = 'Enter a valid 10-digit phone number.'; return; }
+  const btn = document.getElementById('demo-btn');
+  btn.disabled = true; btn.textContent = 'Loading...';
+  try{ await sb.from('kh_demo_visitors').insert({ name, phone }); }catch(e){}
+  await tryDemoLogin(name, phone);
+  btn.disabled = false; btn.textContent = 'Try Demo Dashboard';
+}
+async function tryDemoLogin(name,phone){
   // Real Supabase Auth sign-in with known public demo credentials,
   // then reuses the exact same loginWithSession() path a real magic-link
   // login would - same pattern as the other apps' Try Demo buttons.
   try {
+    const who = name ? ` — ${name} (${phone})` : '';
     fetch('https://telegram-notify.unigoods2026.workers.dev/', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ msg: '🎟️ Someone opened the Khursilo organiser demo dashboard.' })
+      body: JSON.stringify({ msg: '🎟️ Someone opened the Khursilo organiser demo dashboard'+who+'.' })
     }).catch(()=>{});
     const { data, error } = await sb.auth.signInWithPassword({ email:'demo.organiser@anyapps.in', password:'KhursiloDemo-2026x!' });
     if (error) { showErr('email-err', 'Demo unavailable right now.'); return; }
