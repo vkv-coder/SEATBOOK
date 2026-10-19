@@ -2518,7 +2518,8 @@ async function manualFoodCollect(bookingId, btn){
   if(already){
     if(!confirm('Already marked collected. Clear this mark?')) return;
     btn.textContent='…'; btn.disabled=true;
-    await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:'food_scanned_at',p_value:null});
+    const{data:res,error}=await sb.rpc('kh_organiser_set_scan',{p_booking_id:bookingId,p_field:'food_scanned_at',p_value:null});
+    if(error||!res||!res.ok){ showToast('Error: '+(res&&res.message||error&&error.message||'failed')); btn.textContent='🟧'; btn.disabled=false; return; }
     btn.textContent='⬜'; btn.disabled=false;
     return;
   }

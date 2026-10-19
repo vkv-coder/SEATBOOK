@@ -723,7 +723,11 @@ function buildManualPunch(bookingId, attendedDays) {
 async function confirmDayEntry(bookingId, attendedDays) {
   const btn = document.getElementById('res-next-btn');
   btn.textContent = 'Recording…'; btn.disabled = true;
-  await punchAttendance(bookingId, currentDay, false);
+  const res = await punchAttendance(bookingId, currentDay, false);
+  if (!res || res.status === 'error') {
+    btn.textContent = 'Could not record — try again'; btn.disabled = false;
+    return;
+  }
   // Also update entry_scanned_at on first-ever scan - via kh_process_scan
   // now (2026-09-16 fix), same as everywhere else; it's a no-op status
   // ('already_given') on every day after the first, matching the old
