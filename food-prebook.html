@@ -372,20 +372,38 @@ async function confirmOrder(paymentId){
   const btn=document.getElementById('pay-btn');
   const total=foodItem.paid_item_price*qty;
 
-  const{data,error}=await sb.from('kh_food_orders').insert({
-    booking_id:bookingId,
-    event_id:eventData.id,
-    booker_name:bookingData.booker_name||'',
-    booker_mobile:bookingData.booker_mobile||'',
-    quantity:qty,
-    paid_item_name:foodItem.paid_item_name,
-    free_item_name:null,
-    amount_per_unit:foodItem.paid_item_price,
-    total_amount:total,
-    razorpay_payment_id:paymentId||null,
-    status:'confirmed',
-    created_at:new Date().toISOString()
-  }).select().single();
+  let data,error;
+  if(paymentId){
+    // Paid order - server-side Razorpay verification required, see
+    // kh_food_orders_insert_lockdown.sql.
+    const verifyRes=await fetch(`${SUPABASE_URL}/functions/v1/verify-food-payment`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+      body:JSON.stringify({event_id:eventData.id,booking_id:bookingId,booker_name:bookingData.booker_name||'',booker_mobile:bookingData.booker_mobile||'',quantity:qty,razorpay_payment_id:paymentId})
+    });
+    const verifyData=await verifyRes.json().catch(()=>({ok:false,error:'Could not reach verification service'}));
+    if(!verifyData.ok){
+      alert('Payment could not be verified: '+(verifyData.error||'unknown error')+'\n\nIf money was deducted, contact support with payment ID: '+paymentId);
+      btn.textContent='Book Food — Pay ₹'+total+' →';btn.disabled=false;return;
+    }
+    data=verifyData.order;
+  }else{
+    // Free order (total===0) - no payment to verify.
+    ({data,error}=await sb.from('kh_food_orders').insert({
+      booking_id:bookingId,
+      event_id:eventData.id,
+      booker_name:bookingData.booker_name||'',
+      booker_mobile:bookingData.booker_mobile||'',
+      quantity:qty,
+      paid_item_name:foodItem.paid_item_name,
+      free_item_name:null,
+      amount_per_unit:foodItem.paid_item_price,
+      total_amount:total,
+      razorpay_payment_id:null,
+      status:'confirmed',
+      created_at:new Date().toISOString()
+    }).select().single());
+  }
 
   if(error){alert('Error saving order: '+error.message);btn.textContent='Book Food — Pay ₹'+total+' →';btn.disabled=false;return;}
 

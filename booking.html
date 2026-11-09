@@ -1331,16 +1331,15 @@ async function bookFoodInline(){
   rzp.open();
 }
 async function saveFoodOrderInline(paymentId,total){
-  const{error}=await sb.from('kh_food_orders').insert({
-    event_id:eventId,booking_id:bookingId,
-    booker_mobile:ticketData&&ticketData.bookerMobile||'',
-    paid_item_name:eventFoodItem.paid_item_name,
-    free_item_name:null,
-    quantity:inlineFoodQty,total_amount:total,
-    razorpay_payment_id:paymentId,status:'confirmed',
-    created_at:new Date().toISOString()
+  // Server-side Razorpay verification required, see
+  // kh_food_orders_insert_lockdown.sql.
+  const verifyRes=await fetch(`${SUPABASE_URL}/functions/v1/verify-food-payment`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({event_id:eventId,booking_id:bookingId,booker_mobile:ticketData&&ticketData.bookerMobile||'',quantity:inlineFoodQty,razorpay_payment_id:paymentId})
   });
-  if(error){alert('Could not save food order: '+error.message);return;}
+  const verifyData=await verifyRes.json().catch(()=>({ok:false,error:'Could not reach verification service'}));
+  if(!verifyData.ok){alert('Could not save food order: '+(verifyData.error||'unknown error'));return;}
   document.getElementById('if-pay-btn').style.display='none';
   document.getElementById('if-qty-wrap').style.display='none';
   document.getElementById('if-done').style.display='block';
@@ -1402,8 +1401,15 @@ async function bookFoodStandalone(){
   rzp.open();
 }
 async function saveFoodOrderStandalone(paymentId,name,mobile,total){
-  const{error}=await sb.from('kh_food_orders').insert({event_id:eventId,booking_id:null,booker_mobile:mobile,booker_name:name,paid_item_name:eventFoodItem.paid_item_name,free_item_name:null,quantity:foodOnlyQty,total_amount:total,razorpay_payment_id:paymentId,status:'confirmed',created_at:new Date().toISOString()});
-  if(error){alert('Could not save food order: '+error.message);return;}
+  // Server-side Razorpay verification required, see
+  // kh_food_orders_insert_lockdown.sql.
+  const verifyRes=await fetch(`${SUPABASE_URL}/functions/v1/verify-food-payment`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({event_id:eventId,booking_id:null,booker_name:name,booker_mobile:mobile,quantity:foodOnlyQty,razorpay_payment_id:paymentId})
+  });
+  const verifyData=await verifyRes.json().catch(()=>({ok:false,error:'Could not reach verification service'}));
+  if(!verifyData.ok){alert('Could not save food order: '+(verifyData.error||'unknown error'));return;}
   document.getElementById('fo-pay-btn').style.display='none';
   document.getElementById('fo-food-card').style.display='none';
   const d=document.getElementById('fo-done');
