@@ -15,8 +15,8 @@ jobs:
         run: |
           resp=$(curl -s -w "\n%{http_code}" \
             "https://jqqnnkzozjskziaizajg.supabase.co/rest/v1/rpc/reset_khursilo_demo" \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg" \
+            -H "apikey: ${{ secrets.KHURSILO_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.KHURSILO_SERVICE_ROLE_KEY }}" \
             -H "Content-Type: application/json" \
             -d "{\"p_secret\": \"${{ secrets.KHURSILO_RESET_SECRET }}\"}")
           body=$(echo "$resp" | head -n -1)
