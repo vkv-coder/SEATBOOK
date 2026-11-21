@@ -821,8 +821,20 @@ async function loginWithSession(session) {
 }
 
 async function loadHalls() {
-  const { data: halls } = await sb.from('kh_halls').select('id, name, city, layout_json').order('name');
+  const { data: halls } = await sb.from('kh_halls').select('id, name, city, layout_json').eq('organiser_id', currentOrg.id).order('name');
   allHalls = halls || [];
+}
+
+// Organisers only ever see halls allotted to them (organiser_id match) -
+// if none have been allotted, the Hall/Venue category is disabled and
+// they can only create Open Selection (no seat map) events.
+function applyHallAvailability() {
+  const hallBtn = document.getElementById('cat-hall-btn');
+  const hasHalls = allHalls.length > 0;
+  hallBtn.disabled = !hasHalls;
+  hallBtn.style.opacity = hasHalls ? '1' : '0.4';
+  hallBtn.style.cursor = hasHalls ? 'pointer' : 'not-allowed';
+  hallBtn.title = hasHalls ? '' : 'No venue allotted to you yet — contact admin to add one.';
 }
 
 // ── LOGIN ──
@@ -890,7 +902,8 @@ function startCreateEvent() {
   document.getElementById('pricing-preview').style.display = 'none';
   uploadedImageFile = null;
   uploadedImageUrl = null;
-  selectCategory('hall');
+  applyHallAvailability();
+  selectCategory(allHalls.length > 0 ? 'hall' : 'open_ground');
   selectDuration('single');
   selectMode('paid');
   initPolicy();
