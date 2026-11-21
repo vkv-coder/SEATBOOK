@@ -2628,11 +2628,13 @@ function buildPendingItem(b){
   const sc = b.seat_count||1;
   const amt = b.amount||0;
   const ago = timeAgo(b.created_at);
+  const refCode = 'TKT-'+String(b.id||'').slice(0,8).toUpperCase();
   el.innerHTML=`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
       <div>
         <div style="font-size:13px;font-weight:600;">${b.booker_name||'Unknown'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px;">${b.booker_mobile||'—'} · ${sc} person${sc>1?'s':''} · ${ago}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:monospace;">Ref: ${refCode}</div>
       </div>
       <div style="font-size:15px;font-weight:700;color:var(--accent);">₹${fmt(amt)}</div>
     </div>

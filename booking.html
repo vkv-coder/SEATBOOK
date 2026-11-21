@@ -317,6 +317,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="form-panel" style="padding-bottom:40px;">
     <div class="fp-title">📋 How to pay</div>
     <div class="fp-sub" id="manual-sub">Complete your payment using the details below</div>
+    <div style="text-align:center;background:#fff8e6;border:1px solid rgba(200,134,10,0.3);border-radius:var(--rsm);padding:10px;margin-bottom:14px;font-size:13px;color:#7a4f06;">
+      Your reference code: <strong id="manual-ref-code" style="font-family:monospace;">—</strong><br>
+      <span style="font-size:11px;">This is pre-filled as the payment note — keep it handy in case the organiser needs it to find your payment.</span>
+    </div>
     <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
       <a id="manual-upi-link" href="#" style="display:inline-block;">
         <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
@@ -1257,11 +1261,14 @@ async function showManualInstructions(name,persons,amt){
   document.getElementById('manual-booking-id').textContent=manualBookingId.slice(0,16)+'…';
   window._manualTicketUrl=ticketUrl;
 
+  const refCode='TKT-'+manualBookingId.slice(0,8).toUpperCase();
+  document.getElementById('manual-ref-code').textContent=refCode;
+
   const vpa=extractUpiVpa(instructions);
   const qrWrap=document.getElementById('manual-qr-wrap');
   if(vpa&&Number(amt)>0){
     const payeeName=(eventData.name||'Khursilo').slice(0,40);
-    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&pn='+encodeURIComponent(payeeName)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent('Khursilo ticket');
+    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&pn='+encodeURIComponent(payeeName)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
     const qrDataUrl=await generateQR(upiUrl);
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
