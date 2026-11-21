@@ -583,12 +583,18 @@ function viewOrg(id) {
 async function toggleOrgStatus() {
   const org = allOrgs.find(o => o.id === currentOrgId);
   if (!org) return;
-  const newStatus = (org.status || 'pending').toLowerCase() === 'active' ? 'suspended' : 'ACTIVE';
+  const suspending = (org.status || 'pending').toLowerCase() === 'active';
+  const newStatus = suspending ? 'suspended' : 'ACTIVE';
+  if (suspending && !confirm('Suspend ' + org.name + '?\n\nThis also closes booking on ALL of their events immediately (use for disputes) - existing confirmed tickets are unaffected, but no new bookings can come in until you reactivate.')) return;
   const { error } = await adminWrite('update', 'kh_organisers', { status: newStatus }, {column:'id', value: currentOrgId});
   if (error) { alert('Error: ' + error.message); return; }
+  if (suspending) {
+    const { error: evErr } = await adminWrite('update', 'kh_events', { status: 'closed' }, {column:'organiser_id', value: currentOrgId});
+    if (evErr) { alert('Organiser suspended, but closing their events failed: ' + evErr.message + '\nClose them manually from the Events tab.'); }
+  }
   closeModal('modal-org-detail');
   await loadOrgs();
-  alert('✓ Status updated to ' + newStatus);
+  alert('✓ Status updated to ' + newStatus + (suspending ? ' — all their events closed to new bookings.' : ''));
 }
 
 async function addOrg() {
@@ -603,7 +609,7 @@ async function addOrg() {
 
   const { error } = await adminWrite('insert', 'kh_organisers', {
     name, contact_1_name: contact, contact_1_mobile: mobile,
-    email_1: email, event_type: type, status: 'ACTIVE'
+    email_1: email, event_type: type, status: 'pending'
   });
   if (error) { alert('Error: ' + error.message); return; }
   closeModal('modal-add-org');
@@ -612,7 +618,7 @@ async function addOrg() {
   document.getElementById('new-org-mobile').value = '';
   document.getElementById('new-org-email').value = '';
   await loadOrgs();
-  alert('✓ ' + name + ' added.\nThey can login at khursilo.in/organiser-dashboard.html using their email.');
+  alert('✓ ' + name + ' added as Pending.\nThey cannot log in yet — open their org detail and tap Activate once you\'ve agreed terms (venue, per-ticket fee, etc.).');
 }
 
 // ── EVENTS ──
