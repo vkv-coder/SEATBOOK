@@ -317,6 +317,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div class="form-panel" style="padding-bottom:40px;">
     <div class="fp-title">📋 How to pay</div>
     <div class="fp-sub" id="manual-sub">Complete your payment using the details below</div>
+    <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
+      <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Scan with any UPI app (Google Pay / PhonePe / Paytm)</div>
+    </div>
     <div style="background:#f0f7ff;border:1px solid rgba(43,111,212,0.2);border-radius:var(--rsm);padding:14px;margin-bottom:16px;white-space:pre-wrap;font-size:13px;color:#1a1a1a;line-height:1.8;" id="manual-instructions">—</div>
     <div style="background:rgba(46,158,96,0.08);border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:#1a4a1a;line-height:1.6;">
       ✅ Once you pay, the organiser will verify and activate your ticket.<br>
@@ -1236,7 +1240,12 @@ async function saveManualBooking(name,mobile,seatKeys,amt,qty){
   }
 }
 
-function showManualInstructions(name,persons,amt){
+function extractUpiVpa(text){
+  const m=(text||'').match(/[a-zA-Z0-9.\-_]{2,}@[a-zA-Z][a-zA-Z0-9]{1,}/);
+  return m?m[0]:null;
+}
+
+async function showManualInstructions(name,persons,amt){
   const instructions=eventData.payment_instructions||'Please contact the organiser for payment details.';
   const ticketUrl=location.origin+'/ticket.html?id='+manualBookingId;
   document.getElementById('manual-sub').textContent=
@@ -1244,6 +1253,19 @@ function showManualInstructions(name,persons,amt){
   document.getElementById('manual-instructions').textContent=instructions;
   document.getElementById('manual-booking-id').textContent=manualBookingId.slice(0,16)+'…';
   window._manualTicketUrl=ticketUrl;
+
+  const vpa=extractUpiVpa(instructions);
+  const qrWrap=document.getElementById('manual-qr-wrap');
+  if(vpa&&Number(amt)>0){
+    const payeeName=(eventData.name||'Khursilo').slice(0,40);
+    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&pn='+encodeURIComponent(payeeName)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent('Khursilo ticket');
+    const qrDataUrl=await generateQR(upiUrl);
+    if(qrDataUrl){document.getElementById('manual-qr-img').src=qrDataUrl;qrWrap.style.display='block';}
+    else{qrWrap.style.display='none';}
+  }else{
+    qrWrap.style.display='none';
+  }
+
   document.getElementById('manual-overlay').classList.add('show');
 }
 
