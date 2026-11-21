@@ -318,8 +318,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
     <div class="fp-title">📋 How to pay</div>
     <div class="fp-sub" id="manual-sub">Complete your payment using the details below</div>
     <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
-      <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Scan with any UPI app (Google Pay / PhonePe / Paytm)</div>
+      <a id="manual-upi-link" href="#" style="display:inline-block;">
+        <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
+      </a>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">On mobile, tap the QR to open directly in your UPI app<br>On another device, scan it with Google Pay / PhonePe / Paytm</div>
+      <a id="manual-upi-btn" href="#" style="display:block;margin-top:10px;width:100%;box-sizing:border-box;padding:13px;background:#2e9e60;color:#fff;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">📲 Pay via UPI app →</a>
     </div>
     <div style="background:#f0f7ff;border:1px solid rgba(43,111,212,0.2);border-radius:var(--rsm);padding:14px;margin-bottom:16px;white-space:pre-wrap;font-size:13px;color:#1a1a1a;line-height:1.8;" id="manual-instructions">—</div>
     <div style="background:rgba(46,158,96,0.08);border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:#1a4a1a;line-height:1.6;">
@@ -1260,8 +1263,12 @@ async function showManualInstructions(name,persons,amt){
     const payeeName=(eventData.name||'Khursilo').slice(0,40);
     const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&pn='+encodeURIComponent(payeeName)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent('Khursilo ticket');
     const qrDataUrl=await generateQR(upiUrl);
-    if(qrDataUrl){document.getElementById('manual-qr-img').src=qrDataUrl;qrWrap.style.display='block';}
-    else{qrWrap.style.display='none';}
+    if(qrDataUrl){
+      document.getElementById('manual-qr-img').src=qrDataUrl;
+      document.getElementById('manual-upi-link').href=upiUrl;
+      document.getElementById('manual-upi-btn').href=upiUrl;
+      qrWrap.style.display='block';
+    }else{qrWrap.style.display='none';}
   }else{
     qrWrap.style.display='none';
   }
