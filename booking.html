@@ -1630,9 +1630,28 @@ async function bookOpenEntry(){
       // ── Paid, categorized pass (Male/Female × stall, daily or full-event) ──
       const{data:srvAmt,error:amtErr}=await sb.rpc('verify_open_pass_amount',{p_pass_type_id:pass_type_id,p_is_full_event:is_full_event,p_qty:openQty});
       if(amtErr||!srvAmt){alert('Could not price this pass. Contact organiser.');btn.textContent='Book Now →';btn.disabled=false;return;}
+      const newId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+      const passLabel=selectedPassType?selectedPassType.label:'Entry Pass';
+
+      if(eventData.payment_mode==='manual'){
+        // ── Manual / UPI payment — organiser confirms after verifying payment, no Razorpay needed ──
+        const{error:insErr}=await sb.from('kh_bookings').insert({
+          id:newId,event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+          seat_keys:[],seat_count:openQty,amount:srvAmt,payment_status:'pending',status:'pending_manual',
+          booking_type:'open_paid',pass_type_id,is_full_event,booking_day,created_at:new Date().toISOString()
+        });
+        if(insErr){
+          if((insErr.message||'').includes('PASS_SOLD_OUT')){handlePassSoldOut();}else{alert('Error: '+insErr.message);}
+          btn.textContent='Book Now →';btn.disabled=false;return;
+        }
+        manualBookingId=newId;
+        showManualInstructions(name,openQty,srvAmt);
+        btn.textContent='Book Now →';btn.disabled=false;
+        return;
+      }
+
       const rzpKey=organiserData&&organiserData.razorpay_key_id;
       if(!rzpKey){alert('Payment not configured. Contact organiser.');btn.textContent='Book Now →';btn.disabled=false;return;}
-      const newId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
       const{error:insErr}=await sb.from('kh_bookings').insert({
         id:newId,event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
         seat_keys:[],seat_count:openQty,amount:srvAmt,payment_status:'pending',status:'pending_payment',
@@ -1643,7 +1662,6 @@ async function bookOpenEntry(){
         btn.textContent='Book Now →';btn.disabled=false;return;
       }
       bookingId=newId;
-      const passLabel=selectedPassType?selectedPassType.label:'Entry Pass';
       const rzp=new Razorpay({key:rzpKey,amount:srvAmt*100,currency:'INR',name:eventData.name||'Khursilo',description:passLabel,notes:{booking_id:bookingId,event_id:eventId},prefill:{name,contact:mobile,email:email||''},theme:{color:'#1a1a1a'},modal:{ondismiss:()=>{btn.textContent='Book Now →';btn.disabled=false;sb.from('kh_bookings').update({status:'cancelled'}).eq('id',bookingId).eq('status','pending_payment');}},handler:async(res)=>{await handlePaymentSuccess(res.razorpay_payment_id,name,mobile,email,[passLabel],srvAmt);}});
       rzp.on('payment.failed',(res)=>{alert('Payment failed: '+res.error.description);btn.textContent='Book Now →';btn.disabled=false;});
       rzp.open();

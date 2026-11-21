@@ -410,6 +410,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
 
+    <!-- Payment collection method -->
+    <div class="form-card">
+      <div class="form-card-title">💰 Payment collection</div>
+      <div class="type-toggle">
+        <button class="type-btn active" id="pay-razorpay-btn" onclick="selectPaymentMethod('razorpay')">💳 Razorpay</button>
+        <button class="type-btn" id="pay-manual-btn" onclick="selectPaymentMethod('manual')">📱 Manual / UPI</button>
+      </div>
+      <div id="pay-razorpay-desc" style="font-size:11px;color:var(--muted);line-height:1.5;">Card/UPI/wallet payments auto-collected via your Razorpay account.</div>
+      <div id="pay-manual-desc" style="display:none;font-size:11px;color:var(--muted);line-height:1.5;">No Razorpay needed. Buyer pays you directly (UPI/cash). You confirm each booking from your dashboard, then the ticket is sent to their WhatsApp.</div>
+      <div id="pay-manual-instructions-wrap" style="display:none;margin-top:10px;">
+        <div class="field-label">Payment instructions shown to buyer <span>*</span></div>
+        <textarea class="input-field" rows="3" id="pay-instructions" placeholder="e.g. Pay via UPI to 9XXXXXXXXX@upi (Google Pay / PhonePe). Your ticket will be confirmed within a few hours of payment."></textarea>
+      </div>
+    </div>
+
     <!-- Cancellation Policy -->
     <div class="form-card" id="cancellation-card">
       <div class="form-card-title">↩️ Cancellation & refund policy</div>
@@ -662,6 +677,7 @@ let selectedHallId = null;
 let selectedHallName = '';
 let eventMode = 'paid';
 let eventCategory = 'hall'; // 'hall' or 'open_ground'
+let paymentMethod = 'razorpay'; // 'razorpay' or 'manual'
 let eventDuration = 'single'; // 'single' or 'multi'
 let parsedSections = [];
 let createdEventId = null;
@@ -953,6 +969,16 @@ function calcDays() {
   }
 }
 
+// ── PAYMENT METHOD ──
+function selectPaymentMethod(m) {
+  paymentMethod = m;
+  document.getElementById('pay-razorpay-btn').classList.toggle('active', m === 'razorpay');
+  document.getElementById('pay-manual-btn').classList.toggle('active', m === 'manual');
+  document.getElementById('pay-razorpay-desc').style.display = m === 'razorpay' ? 'block' : 'none';
+  document.getElementById('pay-manual-desc').style.display = m === 'manual' ? 'block' : 'none';
+  document.getElementById('pay-manual-instructions-wrap').style.display = m === 'manual' ? 'block' : 'none';
+}
+
 // ── MODE ──
 function selectMode(mode) {
   eventMode = mode;
@@ -1001,6 +1027,7 @@ function validateStep1() {
     if (diff > 10) { alert('Maximum 10 days allowed.'); return false; }
   }
   if (eventCategory === 'hall' && !selectedHallId) { alert('Please select a hall.'); return false; }
+  if (paymentMethod === 'manual' && !document.getElementById('pay-instructions').value.trim()) { alert('Please enter payment instructions (e.g. your UPI ID) for manual payment.'); return false; }
   if (!openDate) { alert('Please select booking open date.'); return false; }
   if (!closeDate) { alert('Please select booking close date.'); return false; }
   return true;
@@ -1221,6 +1248,8 @@ async function publishEvent() {
       status: 'active',
       seat_price_map: window._seatPriceMap || {},
       cancellation_policy: getCancellationPolicy(),
+      payment_mode: paymentMethod === 'manual' ? 'manual' : null,
+      payment_instructions: paymentMethod === 'manual' ? document.getElementById('pay-instructions').value.trim() : null,
       created_at: new Date().toISOString()
     };
 
