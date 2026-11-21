@@ -322,11 +322,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       <span style="font-size:11px;">This is pre-filled as the payment note — keep it handy in case the organiser needs it to find your payment.</span>
     </div>
     <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
-      <a id="manual-upi-link" href="#" style="display:inline-block;">
-        <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
-      </a>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;">On mobile, tap the QR to open directly in your UPI app<br>On another device, scan it with Google Pay / PhonePe / Paytm</div>
-      <a id="manual-upi-btn" href="#" style="display:block;margin-top:10px;width:100%;box-sizing:border-box;padding:13px;background:#2e9e60;color:#fff;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">📲 Pay via UPI app →</a>
+      <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-top:8px;">📷 Scan this with your UPI app's camera</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Most reliable way to pay — works the same as scanning any shop's QR code</div>
+      <a id="manual-upi-btn" href="#" style="display:block;margin-top:12px;width:100%;box-sizing:border-box;padding:12px;background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Or tap here to open your UPI app →</a>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">(Some banks' apps block this tap-through method — scanning the QR above almost always works even when this doesn't)</div>
     </div>
     <div style="background:#f0f7ff;border:1px solid rgba(43,111,212,0.2);border-radius:var(--rsm);padding:14px;margin-bottom:16px;white-space:pre-wrap;font-size:13px;color:#1a1a1a;line-height:1.8;" id="manual-instructions">—</div>
     <div style="background:rgba(46,158,96,0.08);border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:#1a4a1a;line-height:1.6;">
@@ -1274,18 +1274,22 @@ async function showManualInstructions(name,persons,amt){
   const vpa=extractUpiVpa(instructions);
   const qrWrap=document.getElementById('manual-qr-wrap');
   if(vpa&&Number(amt)>0){
-    // No &pn= (payee name) - we only know the organiser's event name, not
-    // the real registered name on their UPI ID, and several banks treat a
-    // pn that doesn't match the actual account holder as a fraud signal
-    // and block the payment outright ("cannot pay to this person"),
-    // confirmed live across two different banks. Every UPI app resolves
-    // and displays the real verified name from `pa` on its own regardless
-    // of whether pn is present.
+    // No &pn= (payee name) - dropped it because several banks treat a pn
+    // that doesn't match the real account holder as a fraud signal and
+    // block the payment ("cannot pay to this person"). That fixed it for
+    // one bank but NOT for two others tested afterward - the upi://pay
+    // tap-through intent itself (as opposed to scanning the identical
+    // payload as a QR code) gets blocked outright by some banking apps as
+    // a standing anti-fraud policy on externally-triggered deep links to a
+    // non-merchant VPA, unrelated to any parameter we send. No URL fix
+    // resolves that - scanning the QR with the camera is the reliable
+    // path (same banks that block the tap-through accept the scan), so
+    // the UI now leads with "scan this" and demotes the tap button to a
+    // clearly-labelled fallback.
     const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
     const qrDataUrl=await generateQR(upiUrl);
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
-      document.getElementById('manual-upi-link').href=upiUrl;
       document.getElementById('manual-upi-btn').href=upiUrl;
       qrWrap.style.display='block';
     }else{qrWrap.style.display='none';}
