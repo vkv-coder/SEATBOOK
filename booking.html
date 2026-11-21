@@ -1667,9 +1667,28 @@ async function bookOpenEntry(){
     if(pass_type_id){
       // ── Paid, categorized pass (Male/Female × stall, daily or full-event) ──
       const{data:srvAmt,error:amtErr}=await sb.rpc('verify_open_pass_amount',{p_pass_type_id:pass_type_id,p_is_full_event:is_full_event,p_qty:openQty});
-      if(amtErr||!srvAmt){alert('Could not price this pass. Contact organiser.');btn.textContent='Book Now →';btn.disabled=false;return;}
+      if(amtErr||srvAmt==null){alert('Could not price this pass. Contact organiser.');btn.textContent='Book Now →';btn.disabled=false;return;}
       const newId=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
       const passLabel=selectedPassType?selectedPassType.label:'Entry Pass';
+
+      if(srvAmt===0){
+        // ── Free pass type (e.g. a Terrace/General free category) — confirm immediately, no payment step ──
+        const{error:insErr}=await sb.from('kh_bookings').insert({
+          id:newId,event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
+          seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',
+          booking_type:'open_paid',pass_type_id,is_full_event,booking_day,created_at:new Date().toISOString()
+        });
+        if(insErr){
+          if((insErr.message||'').includes('PASS_SOLD_OUT')){handlePassSoldOut();}else{alert('Error: '+insErr.message);}
+          btn.textContent='Book Now →';btn.disabled=false;return;
+        }
+        bookingId=newId;
+        await showSuccess(name,mobile,email,[passLabel],0);
+        const oe=organiserData&&organiserData.email_1?organiserData.email_1:'';
+        const vt='Valid for '+openQty+' person'+(openQty>1?'s':'');
+        document.getElementById('ticket-footer').innerHTML='Show QR at entry gate · '+vt+(oe?'<br>Support: '+oe:'')+'<br>khursilo.in';
+        return;
+      }
 
       if(eventData.payment_mode==='manual'){
         // ── Manual / UPI payment — organiser confirms after verifying payment, no Razorpay needed ──
