@@ -137,6 +137,8 @@ async function loadEvents(){
   events=data||[];
   const sel=document.getElementById('event-select');
   sel.innerHTML=events.map(ev=>`<option value="${ev.id}">${esc(ev.name)}</option>`).join('')||'<option value="">No events yet</option>';
+  const preselect=new URLSearchParams(window.location.search).get('event');
+  if(preselect&&events.some(ev=>ev.id===preselect)) sel.value=preselect;
   if(events.length) onEventChange();
 }
 
