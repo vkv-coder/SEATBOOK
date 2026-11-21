@@ -415,7 +415,7 @@ let foodOnlyQty=1,OPEN_PAID_PRICE=250;
 let eventFoodItem=null,inlineFoodQty=1;
 let realtimeChannel=null; // Supabase Realtime channel
 const params=new URLSearchParams(location.search);
-const eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
+let eventId=params.get('event')||'ebcf1bc0-16d1-47c1-90cd-da04e88a4cd4';
 window.addEventListener('DOMContentLoaded',loadEvent);
 
 // ── GOOGLE APPS SCRIPT EMAIL WEB APP URL ──
@@ -488,7 +488,14 @@ const _e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/
 
 async function loadEvent(){
   try{
-    const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single();
+    const slugParam=params.get('e');
+    let ev,evErr;
+    if(slugParam){
+      ({data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('slug',slugParam.toLowerCase()).single());
+      if(ev)eventId=ev.id;
+    }else{
+      ({data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single());
+    }
     if(evErr)throw evErr;
     if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
     if(ev.status==='closed'){isViewOnly=true;}
@@ -1585,7 +1592,7 @@ let openPassTypes=[];
 let selectedPassType=null;
 let selectedPassDay=null; // 'full' or 'YYYY-MM-DD'
 
-function openQtyChange(delta){const n=openQty+delta;if(n<1||n>10)return;openQty=n;document.getElementById('open-qty-display').textContent=n;updatePassPriceDisplay();}
+function openQtyChange(delta){const n=openQty+delta;if(n<1||n>4)return;openQty=n;document.getElementById('open-qty-display').textContent=n;updatePassPriceDisplay();}
 
 async function loadPassTypes(){
   try{

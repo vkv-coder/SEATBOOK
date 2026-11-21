@@ -1226,7 +1226,9 @@ async function checkIn(){
 
 // ── SHARE ──
 function shareLink(eid){
-  const url = BOOKING_BASE + eid + '&v=3';
+  const ev = allEvents.find(e=>e.event.id===eid);
+  const slug = ev && ev.event.slug;
+  const url = slug ? ('https://khursilo.in/booking.html?e='+slug) : (BOOKING_BASE + eid + '&v=3');
   if(navigator.share){ navigator.share({title:'Book seats',url}); }
   else { navigator.clipboard.writeText(url).then(()=>showToast('Booking link copied!')); }
 }

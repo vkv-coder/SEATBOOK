@@ -297,6 +297,11 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <div class="field-label">Venue / Location <span>*</span></div>
         <input class="input-field" type="text" id="ev-venue" placeholder="e.g. Race Course Maidan, Vadodara">
       </div>
+      <div class="field-group" style="margin:0;">
+        <div class="field-label">Short link <span style="font-weight:400;color:#bbb;">(optional — makes your booking link shorter)</span></div>
+        <input class="input-field" type="text" id="ev-slug" placeholder="e.g. alica" style="font-family:monospace;">
+        <div class="hint" style="font-size:11px;color:var(--muted);margin-top:4px;">Letters/numbers only. Link becomes khursilo.in/booking.html?e=yourcode</div>
+      </div>
     </div>
 
     <!-- Event Poster / Banner Image -->
@@ -1036,6 +1041,8 @@ function validateStep1() {
   }
   if (eventCategory === 'hall' && !selectedHallId) { alert('Please select a hall.'); return false; }
   if (paymentMethod === 'manual' && !document.getElementById('pay-instructions').value.trim()) { alert('Please enter payment instructions (e.g. your UPI ID) for manual payment.'); return false; }
+  const slugVal = document.getElementById('ev-slug').value.trim();
+  if (slugVal && !/^[a-zA-Z0-9-]+$/.test(slugVal)) { alert('Short link can only contain letters, numbers, and hyphens.'); return false; }
   if (!openDate) { alert('Please select booking open date.'); return false; }
   if (!closeDate) { alert('Please select booking close date.'); return false; }
   return true;
@@ -1258,6 +1265,7 @@ async function publishEvent() {
       cancellation_policy: getCancellationPolicy(),
       payment_mode: paymentMethod === 'manual' ? 'manual' : null,
       payment_instructions: paymentMethod === 'manual' ? document.getElementById('pay-instructions').value.trim() : null,
+      slug: document.getElementById('ev-slug').value.trim() ? document.getElementById('ev-slug').value.trim().toLowerCase() : null,
       created_at: new Date().toISOString()
     };
 
@@ -1267,7 +1275,10 @@ async function publishEvent() {
     }
 
     const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select().single();
-    if (evErr) throw evErr;
+    if (evErr) {
+      if ((evErr.message || '').includes('slug')) throw new Error('That short link is already taken by another event — pick a different one.');
+      throw evErr;
+    }
     createdEventId = ev.id;
 
     // ── Upload event image if provided ──
@@ -1289,7 +1300,7 @@ async function publishEvent() {
       }
     }
 
-    const bookingUrl = `https://khursilo.in/booking.html?event=${ev.id}`;
+    const bookingUrl = ev.slug ? `https://khursilo.in/booking.html?e=${ev.slug}` : `https://khursilo.in/booking.html?event=${ev.id}`;
     document.getElementById('success-link').textContent = bookingUrl;
     showScreen('screen-success');
 
