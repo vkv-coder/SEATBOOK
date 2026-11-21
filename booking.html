@@ -1620,9 +1620,11 @@ async function bookOpenEntry(){
   if(selectedPassType&&!selectedPassDay){alert('Please select a day or full-event option');return;}
   const btn=document.getElementById('open-book-btn');btn.textContent='Booking…';btn.disabled=true;
   try{
-    // Block duplicate registrations from the same mobile
+    // Warn on duplicate registrations from the same mobile, but let them buy another ticket if they confirm
     const{data:isDup}=await sb.rpc('kh_check_duplicate_booking',{p_event_id:eventId,p_mobile:mobile});
-    if(isDup){alert('You have already registered for this event. Please check your WhatsApp for the ticket link.');btn.textContent='Book Now →';btn.disabled=false;return;}
+    if(isDup&&!confirm('This mobile number has already booked for this event. Do you want to book another ticket?')){
+      btn.textContent='Book Now →';btn.disabled=false;return;
+    }
 
     const{pass_type_id,is_full_event,booking_day}=currentPassSelection();
 
