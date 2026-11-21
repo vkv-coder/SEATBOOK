@@ -321,12 +321,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       Your reference code: <strong id="manual-ref-code" style="font-family:monospace;">—</strong><br>
       <span style="font-size:11px;">This is pre-filled as the payment note — keep it handy in case the organiser needs it to find your payment.</span>
     </div>
+    <div id="manual-vpa-wrap" style="display:none;text-align:center;background:#fff;border:1px solid var(--border2);border-radius:var(--rsm);padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">📱 On one phone? This is the most reliable way:</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Copy this UPI ID, open your own UPI app, choose "Pay by UPI ID / VPA", paste it and enter the amount yourself.</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+        <span id="manual-vpa-text" style="font-family:monospace;font-size:15px;font-weight:700;word-break:break-all;">—</span>
+        <button onclick="copyManualVpa()" id="manual-vpa-copy-btn" style="background:#1a1a1a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">📋 Copy</button>
+      </div>
+    </div>
     <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Have a second phone handy? Scan this instead:</div>
       <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-top:8px;">📷 Scan this with your UPI app's camera</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Most reliable way to pay — works the same as scanning any shop's QR code</div>
-      <a id="manual-upi-btn" href="#" style="display:block;margin-top:12px;width:100%;box-sizing:border-box;padding:12px;background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Or tap here to open your UPI app →</a>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;">(Some banks' apps block this tap-through method — scanning the QR above almost always works even when this doesn't)</div>
+      <a id="manual-upi-btn" href="#" style="display:block;margin-top:12px;width:100%;box-sizing:border-box;padding:12px;background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Or tap here to try opening your UPI app →</a>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">(Works on most banks, but some block this — use the copy-UPI-ID option above if it doesn't work)</div>
     </div>
     <div style="background:#f0f7ff;border:1px solid rgba(43,111,212,0.2);border-radius:var(--rsm);padding:14px;margin-bottom:16px;white-space:pre-wrap;font-size:13px;color:#1a1a1a;line-height:1.8;" id="manual-instructions">—</div>
     <div style="background:rgba(46,158,96,0.08);border:1px solid rgba(46,158,96,0.2);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:#1a4a1a;line-height:1.6;">
@@ -1273,6 +1280,14 @@ async function showManualInstructions(name,persons,amt){
 
   const vpa=extractUpiVpa(instructions);
   const qrWrap=document.getElementById('manual-qr-wrap');
+  const vpaWrap=document.getElementById('manual-vpa-wrap');
+  window._manualVpa=vpa;
+  if(vpa&&Number(amt)>0){
+    document.getElementById('manual-vpa-text').textContent=vpa;
+    vpaWrap.style.display='block';
+  }else{
+    vpaWrap.style.display='none';
+  }
   if(vpa&&Number(amt)>0){
     // No &pn= (payee name) - dropped it because several banks treat a pn
     // that doesn't match the real account holder as a fraud signal and
@@ -1302,6 +1317,14 @@ async function showManualInstructions(name,persons,amt){
 
 function openTicketLink(){
   if(window._manualTicketUrl)window.open(window._manualTicketUrl,'_blank');
+}
+
+function copyManualVpa(){
+  if(!window._manualVpa)return;
+  navigator.clipboard.writeText(window._manualVpa).then(()=>{
+    const btn=document.getElementById('manual-vpa-copy-btn');
+    if(btn){const t=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=t,2000);}
+  });
 }
 
 function copyTicketLink(){
