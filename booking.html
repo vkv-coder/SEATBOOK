@@ -626,7 +626,7 @@ async function loadEvent(){
       document.getElementById('open-panel').style.display='block';
       if(isOpenGround){
         document.getElementById('open-panel-icon').textContent='🌳';
-        document.getElementById('open-panel-title').textContent=eventTotalDays>1?'Multi-Day Event Entry':'Open Ground Event';
+        document.getElementById('open-panel-title').textContent=eventTotalDays>1?'Multi-Day Event Entry':'Open Selection Event';
         document.getElementById('open-panel-desc').textContent=eventTotalDays>1?'Register once. Your ticket is valid for all '+eventTotalDays+' days.':'Register your name and mobile to get an entry pass.';
       }
       if(eventTotalDays>1){

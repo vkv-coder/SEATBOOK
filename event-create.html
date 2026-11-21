@@ -275,7 +275,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="form-card-title">🎪 Event category</div>
       <div class="type-toggle">
         <button class="type-btn active" id="cat-hall-btn" onclick="selectCategory('hall')">🏛️ Hall / Venue</button>
-        <button class="type-btn" id="cat-open-btn" onclick="selectCategory('open_ground')">🌳 Open Ground</button>
+        <button class="type-btn" id="cat-open-btn" onclick="selectCategory('open_ground')">🌳 Open Selection</button>
       </div>
       <div id="cat-hall-desc" style="font-size:11px;color:var(--muted);line-height:1.5;">With seat map. Select existing hall or any venue with seat layout.</div>
       <div id="cat-open-desc" style="display:none;font-size:11px;color:var(--muted);line-height:1.5;">No seat map. Open ground, maidan, or any open venue. Ticket issued for entry only.</div>
@@ -516,7 +516,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       </div>
     </div>
     <div class="form-card" id="open-ground-notice" style="display:none;">
-      <div class="form-card-title">🌳 Open Ground Event</div>
+      <div class="form-card-title">🌳 Open Selection Event</div>
       <div class="info-box amber">No seat map needed. Tickets are issued as entry passes. Proceed to next step.</div>
     </div>
   </div>
@@ -1036,7 +1036,7 @@ function updateSummary() {
   const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
   document.getElementById('sum-open').textContent = fmt(openDate);
   document.getElementById('sum-close').textContent = fmt(closeDate);
-  document.getElementById('sum-category').textContent = eventCategory === 'hall' ? '🏛️ Hall Event' : '🌳 Open Ground';
+  document.getElementById('sum-category').textContent = eventCategory === 'hall' ? '🏛️ Hall Event' : '🌳 Open Selection';
   const modeLabels = { paid: '💳 Paid', free: '🎁 Free', open: '🚪 Free Open Entry' };
   document.getElementById('sum-mode').textContent = modeLabels[eventMode] || eventMode;
   if (eventDuration === 'single') {
