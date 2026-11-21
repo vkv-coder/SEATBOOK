@@ -2641,7 +2641,7 @@ function buildPendingItem(b){
     <div id="pitem-actions-${b.id}" style="display:flex;flex-direction:column;gap:6px;">
       <button onclick="confirmManualPayment('${b.id}')" id="pconfirm-${b.id}"
         style="width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
-        ✓ Payment received — Activate ticket
+        Confirm payment received →
       </button>
     </div>`;
   return el;
@@ -2655,10 +2655,11 @@ function buildPendingItem(b){
 // caller is really an active organiser of this booking's event before
 // writing, and records who manually confirmed it for an audit trail.
 async function confirmManualPayment(bookingId){
+  if(!confirm('Have you actually received this payment in your bank/UPI account? This will immediately activate the ticket.')) return;
   const btn = document.getElementById('pconfirm-'+bookingId);
   if(btn){btn.textContent='Confirming…';btn.disabled=true;}
   const {data:res, error} = await sb.rpc('kh_organiser_confirm_manual_payment', {p_booking_id: bookingId});
-  if(error || !res || !res.ok){showToast('Error: '+(res&&res.message || error&&error.message || 'failed'));if(btn){btn.textContent='✓ Payment received — Activate ticket';btn.disabled=false;}return;}
+  if(error || !res || !res.ok){showToast('Error: '+(res&&res.message || error&&error.message || 'failed'));if(btn){btn.textContent='Confirm payment received →';btn.disabled=false;}return;}
 
   // Replace confirm button with WhatsApp send button
   const b = await sb.from('kh_bookings').select('booker_name,booker_mobile,booker_email').eq('id',bookingId).single();
