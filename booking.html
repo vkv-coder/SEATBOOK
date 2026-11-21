@@ -1165,7 +1165,7 @@ async function confirmBooking(){
         event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
         seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,
         payment_status:'pending',status:'pending_payment',created_at:new Date().toISOString()
-      }).select().single();
+      }).select('id').single();
       if(error)throw error;
       bookingId=booking.id;
     }
@@ -1200,7 +1200,7 @@ async function saveFreeBooking(name,mobile,email,seatKeys,totalAmt){
         event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,
         seat_keys:seatKeys,seat_count:selectedSeats.length,amount:totalAmt,
         payment_status:'free',status:'confirmed',created_at:new Date().toISOString()
-      }).select().single();
+      }).select('id').single();
       if(error)throw error;
       savedId=data.id;
     }
@@ -1224,7 +1224,7 @@ async function saveManualBooking(name,mobile,seatKeys,amt,qty){
       seat_keys:seatKeys,seat_count:sc,amount:amt,
       payment_status:'pending',status:'pending_manual',
       booking_type:'paid',created_at:new Date().toISOString()
-    }).select().single();
+    }).select('id').single();
     if(error)throw error;
     manualBookingId=data.id;
     closeForm();
@@ -1357,7 +1357,7 @@ async function saveOpenPaidBooking(name,mobile,email,seatKeys,amt){
       if(updErr)bookingId=null;
     }
     if(!bookingId){
-      const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:seatKeys.length,amount:amt,payment_status:'pending',status:'pending_payment',booking_type:'open_paid',created_at:new Date().toISOString()}).select().single();
+      const{data:booking,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:seatKeys,seat_count:seatKeys.length,amount:amt,payment_status:'pending',status:'pending_payment',booking_type:'open_paid',created_at:new Date().toISOString()}).select('id').single();
       if(error)throw error;
       bookingId=booking.id;
     }
@@ -1673,7 +1673,7 @@ async function bookOpenEntry(){
       await saveManualBooking(name,mobile,[],eventData.ticket_price*openQty,openQty);
       btn.textContent='Book Now →';btn.disabled=false;return;
     }
-    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select().single();
+    const{data,error}=await sb.from('kh_bookings').insert({event_id:eventId,booker_name:name,booker_mobile:mobile,booker_email:email||null,seat_keys:[],seat_count:openQty,amount:0,payment_status:'free',status:'confirmed',created_at:new Date().toISOString()}).select('id').single();
     if(error)throw error;
     bookingId=data.id;
     const label=openQty>1?`Open Entry · ${openQty} persons`:'Open Entry';

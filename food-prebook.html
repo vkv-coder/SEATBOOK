@@ -239,7 +239,7 @@ async function init(){
   if(!bookingId){showError('No booking ID provided. Please use the link from your ticket.');return;}
 
   // Load booking
-  const{data:booking,error:bErr}=await sb.from('kh_bookings').select('*').eq('id',bookingId).maybeSingle();
+  const{data:booking,error:bErr}=await sb.from('kh_bookings').select('event_id,seat_count,seat_keys,booker_name,booker_mobile').eq('id',bookingId).maybeSingle();
   if(bErr||!booking){showError('Booking not found. Please check your ticket link.');return;}
   bookingData=booking;
 

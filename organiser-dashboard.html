@@ -847,7 +847,7 @@ async function loadDashboard(){
   // 3. Fetch all bookings for all these events in one query
   const eventIds = events.map(e=>e.id);
   const {data:allBookings} = await sb.from('kh_bookings')
-    .select('*')
+    .select('id,event_id,status,payment_status,amount,seat_keys,seat_count,booker_name,customer_name,booker_mobile,customer_mobile,created_at')
     .in('event_id', eventIds)
     .order('created_at', {ascending: false});
 
@@ -1177,7 +1177,7 @@ async function checkIn(){
 
   // Query Supabase for this booking ID under the selected event
   const {data:bk, error} = await sb.from('kh_bookings')
-    .select('*')
+    .select('booker_name,customer_name,seat_keys,payment_status,status')
     .eq('id', val)
     .eq('event_id', eid)
     .maybeSingle();
@@ -2601,7 +2601,7 @@ async function openPendingPayments(eid){
   document.getElementById('pending-modal').classList.add('show');
 
   const {data:bookings,error} = await sb.from('kh_bookings')
-    .select('*')
+    .select('id,booker_name,booker_mobile,amount,seat_count,created_at')
     .eq('event_id',eid)
     .eq('status','pending_manual')
     .order('created_at',{ascending:false});
@@ -2658,7 +2658,7 @@ async function confirmManualPayment(bookingId){
   if(error || !res || !res.ok){showToast('Error: '+(res&&res.message || error&&error.message || 'failed'));if(btn){btn.textContent='✓ Payment received — Activate ticket';btn.disabled=false;}return;}
 
   // Replace confirm button with WhatsApp send button
-  const b = await sb.from('kh_bookings').select('*').eq('id',bookingId).single();
+  const b = await sb.from('kh_bookings').select('booker_name,booker_mobile,booker_email').eq('id',bookingId).single();
   const bk = b.data;
   const actionsDiv = document.getElementById('pitem-actions-'+bookingId);
   if(actionsDiv && bk){

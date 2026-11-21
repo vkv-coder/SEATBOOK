@@ -238,7 +238,7 @@ async function loadTicket(){
   if(!bookingId){showError('No ticket ID provided. Please use the link sent to you on WhatsApp.');return;}
 
   // Load booking
-  const{data:booking,error:bErr}=await sb.from('kh_bookings').select('*').eq('id',bookingId).maybeSingle();
+  const{data:booking,error:bErr}=await sb.from('kh_bookings').select('event_id,seat_count,seat_keys,booking_type,payment_status,status,booker_name,booker_mobile,created_at,amount,entry_scanned_at,food_scanned_at').eq('id',bookingId).maybeSingle();
   if(bErr||!booking){showError('Ticket not found. Please check the link or contact the organiser.');return;}
   bookingData=booking;
 
