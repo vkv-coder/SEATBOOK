@@ -287,6 +287,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
         <input class="input-field" type="password" id="prof-rzp-secret" placeholder="••••••••••••••••" style="font-family:monospace;font-size:13px;">
       </div>
     </div>
+    <div class="profile-card">
+      <div class="profile-card-title">👥 Team / co-admins</div>
+      <div style="background:rgba(43,111,212,0.06);border:1px solid rgba(43,111,212,0.15);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:#1a4a8a;margin-bottom:12px;line-height:1.5;">
+        ℹ️ Add anyone who should be able to log in and manage your events — no limit, and you don't need to ask Khursilo admin to add them.
+      </div>
+      <div id="team-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <div class="field-group" style="margin-bottom:8px;">
+        <div class="field-label">Email</div>
+        <input class="input-field" type="email" id="team-add-email" placeholder="teammate@email.com">
+      </div>
+      <div class="field-group" style="margin:0 0 10px;">
+        <div class="field-label">Name <span style="font-weight:400;color:#bbb;">(optional)</span></div>
+        <input class="input-field" type="text" id="team-add-name" placeholder="Full name">
+      </div>
+      <div id="team-add-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:8px;"></div>
+      <button id="team-add-btn" onclick="addTeamMember()" style="width:100%;padding:11px;background:var(--text,#1a1a1a);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">+ Add team member</button>
+    </div>
     <div id="profile-err" style="display:none;background:var(--red-dim);border:1px solid rgba(204,51,51,0.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--red);"></div>
     <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">Save & go to dashboard →</button>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px;">You can update these details anytime from your dashboard</div>
@@ -764,11 +781,8 @@ async function tryDemoLogin(name,phone){
 }
 async function loginWithSession(session){
   const email = session.user.email;
-  let org = null;
-  const ORG_COLS = 'id,name,contact_1_name,contact_1_mobile,contact_2_name,contact_2_mobile,email_1,email_2,event_type,status,razorpay_key_id,created_at,hall_id';
-  const {data:o1} = await sb.from('kh_organisers').select(ORG_COLS).ilike('email_1',email).maybeSingle();
-  if(o1) org=o1;
-  if(!org){ const {data:o2}=await sb.from('kh_organisers').select(ORG_COLS).ilike('email_2',email).maybeSingle(); if(o2) org=o2; }
+  const {data:rows} = await sb.rpc('kh_resolve_organiser_login', {p_email: email});
+  const org = rows && rows.length ? rows[0] : null;
   if(!org){ await sb.auth.signOut(); showErr('email-err','Email '+email+' not registered.'); return; }
   if((org.status||'').toLowerCase()!=='active'){ await sb.auth.signOut(); showErr('email-err','Account is '+org.status+'. Contact admin.'); return; }
   currentOrganiser = org;
@@ -1310,7 +1324,7 @@ async function sendOTP(){
   btn.textContent='Sending link…'; btn.disabled=true;
   const {error} = await sb.auth.signInWithOtp({
     email,
-    options:{shouldCreateUser:false, emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}
+    options:{shouldCreateUser:true, emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}
   });
   if(error){
     btn.textContent='Send login link →'; btn.disabled=false;
@@ -1331,7 +1345,7 @@ async function sendOTP(){
 
 async function resendOTP(){
   const email = document.getElementById('inp-email').value.trim();
-  await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}});
+  await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true,emailRedirectTo:'https://khursilo.in/organiser-dashboard.html'}});
   showToast('Login link resent to '+email);
 }
 
@@ -1423,6 +1437,45 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  if(id==='screen-profile') loadTeamMembers();
+}
+
+async function loadTeamMembers(){
+  const list=document.getElementById('team-list');
+  list.innerHTML='<div style="font-size:12px;color:var(--muted);">Loading…</div>';
+  const {data,error}=await sb.rpc('kh_organiser_list_team_members');
+  if(error){list.innerHTML='<div style="font-size:12px;color:var(--red);">Could not load team members.</div>';return;}
+  if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);">No team members added yet — just you.</div>';return;}
+  list.innerHTML=data.map(m=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:var(--radius-sm);padding:9px 12px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${m.name?esc(m.name):m.email}</div>
+        ${m.name?`<div style="font-size:11px;color:var(--muted);">${esc(m.email)}</div>`:''}
+      </div>
+      <button onclick="removeTeamMember('${m.id}')" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;">Remove</button>
+    </div>`).join('');
+}
+
+async function addTeamMember(){
+  const email=document.getElementById('team-add-email').value.trim();
+  const name=document.getElementById('team-add-name').value.trim();
+  const errEl=document.getElementById('team-add-err');
+  errEl.style.display='none';
+  if(!email||!email.includes('@')){errEl.textContent='Enter a valid email address.';errEl.style.display='block';return;}
+  const btn=document.getElementById('team-add-btn');btn.textContent='Adding…';btn.disabled=true;
+  const {data,error}=await sb.rpc('kh_organiser_add_team_member',{p_email:email,p_name:name||null});
+  btn.textContent='+ Add team member';btn.disabled=false;
+  if(error||!data||!data.ok){errEl.textContent=(data&&data.message)||(error&&error.message)||'Could not add team member.';errEl.style.display='block';return;}
+  document.getElementById('team-add-email').value='';
+  document.getElementById('team-add-name').value='';
+  await loadTeamMembers();
+}
+
+async function removeTeamMember(id){
+  if(!confirm('Remove this team member\'s access?')) return;
+  const {error}=await sb.rpc('kh_organiser_remove_team_member',{p_member_id:id});
+  if(error){showToast('Error: '+error.message);return;}
+  await loadTeamMembers();
 }
 function showErr(id,msg){
   const el=document.getElementById(id);

@@ -113,17 +113,14 @@ window.addEventListener('load', async()=>{
 async function sendOtp(){
   const email=document.getElementById('login-email').value.trim();
   if(!email){document.getElementById('login-msg').textContent='Enter your email.';return;}
-  const{error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
+  const{error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname}});
   document.getElementById('login-msg').textContent=error?('Error: '+error.message):'Login link sent — check your email.';
 }
 
 async function loginWithSession(session){
   const email=session.user.email;
-  const ORG_COLS='id,name,email_1,email_2,status';
-  let org=null;
-  const{data:o1}=await sb.from('kh_organisers').select(ORG_COLS).ilike('email_1',email).maybeSingle();
-  if(o1)org=o1;
-  if(!org){const{data:o2}=await sb.from('kh_organisers').select(ORG_COLS).ilike('email_2',email).maybeSingle();if(o2)org=o2;}
+  const{data:rows}=await sb.rpc('kh_resolve_organiser_login',{p_email:email});
+  const org=rows&&rows.length?rows[0]:null;
   if(!org){await sb.auth.signOut();document.getElementById('login-msg').textContent='Email '+email+' not registered as an organiser.';return;}
   if((org.status||'').toLowerCase()!=='active'){await sb.auth.signOut();document.getElementById('login-msg').textContent='Account is '+org.status+'.';return;}
   currentOrganiser=org;

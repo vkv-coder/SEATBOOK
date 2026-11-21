@@ -801,14 +801,8 @@ window.addEventListener('load', async () => {
 
 async function loginWithSession(session) {
   const email = session.user.email;
-  let org = null;
-  const ORG_COLS = 'id,name,contact_1_name,contact_1_mobile,contact_2_name,contact_2_mobile,email_1,email_2,event_type,status,razorpay_key_id,created_at,hall_id';
-  const { data: o1 } = await sb.from('kh_organisers').select(ORG_COLS).ilike('email_1', email).maybeSingle();
-  if (o1) org = o1;
-  if (!org) {
-    const { data: o2 } = await sb.from('kh_organisers').select(ORG_COLS).ilike('email_2', email).maybeSingle();
-    if (o2) org = o2;
-  }
+  const { data: rows } = await sb.rpc('kh_resolve_organiser_login', { p_email: email });
+  const org = rows && rows.length ? rows[0] : null;
   if (!org || org.status?.toLowerCase() !== 'active') {
     await sb.auth.signOut();
     showErr('email-err', 'Email not registered or account inactive. Contact admin.');
@@ -849,7 +843,7 @@ async function sendOTP() {
   btn.disabled = true;
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false, emailRedirectTo: window.location.href }
+    options: { shouldCreateUser: true, emailRedirectTo: window.location.href }
   });
   if (error) {
     btn.textContent = 'Send login link →';
