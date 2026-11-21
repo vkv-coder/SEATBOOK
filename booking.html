@@ -1267,8 +1267,14 @@ async function showManualInstructions(name,persons,amt){
   const vpa=extractUpiVpa(instructions);
   const qrWrap=document.getElementById('manual-qr-wrap');
   if(vpa&&Number(amt)>0){
-    const payeeName=(eventData.name||'Khursilo').slice(0,40);
-    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&pn='+encodeURIComponent(payeeName)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
+    // No &pn= (payee name) - we only know the organiser's event name, not
+    // the real registered name on their UPI ID, and several banks treat a
+    // pn that doesn't match the actual account holder as a fraud signal
+    // and block the payment outright ("cannot pay to this person"),
+    // confirmed live across two different banks. Every UPI app resolves
+    // and displays the real verified name from `pa` on its own regardless
+    // of whether pn is present.
+    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
     const qrDataUrl=await generateQR(upiUrl);
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
