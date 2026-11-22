@@ -1079,7 +1079,12 @@ function closeForm(){
   clearSelectedSeats(); // reset seat visuals to available
 }
 
-function generateQR(id){return new Promise(r=>{const c=document.getElementById('qr-hidden');c.innerHTML='';new QRCode(c,{text:id,width:200,height:200,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});setTimeout(()=>{const img=c.querySelector('img'),can=c.querySelector('canvas');r(can?can.toDataURL('image/png'):img?img.src:null);},300);});}
+function generateQR(id,opts){
+  opts=opts||{};
+  const size=opts.size||200;
+  const correctLevel=opts.correctLevel||QRCode.CorrectLevel.H;
+  return new Promise(r=>{const c=document.getElementById('qr-hidden');c.innerHTML='';new QRCode(c,{text:id,width:size,height:size,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel});setTimeout(()=>{const img=c.querySelector('img'),can=c.querySelector('canvas');r(can?can.toDataURL('image/png'):img?img.src:null);},300);});
+}
 function renderQROnCard(du){const box=document.getElementById('qr-display');box.innerHTML='';const img=document.createElement('img');img.src=du;img.style.width='80px';img.style.height='80px';box.appendChild(img);}
 
 // ── BUILD DAY BOXES ON TICKET (NEW) ──
@@ -1314,7 +1319,15 @@ async function showManualInstructions(name,persons,amt){
     const pnGuess=vpa.split('@')[0].replace(/[._-]+/g,' ').trim().slice(0,40);
     const upiUrlTap='upi://pay?pa='+encodeURIComponent(vpa)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
     const upiUrlQr=upiUrlTap+(pnGuess?'&pn='+encodeURIComponent(pnGuess):'');
-    const qrDataUrl=await generateQR(upiUrlQr);
+    // Larger canvas + lower error-correction density than the default
+    // (used elsewhere for the short booking-id ticket QR) - this payload
+    // is a long URL (~90-100 chars incl. pn), which at the default 200px/
+    // CorrectLevel.H packs many small modules into little space. Confirmed
+    // the downloaded image "looks fine" to the eye but still failed one
+    // bank's upload-scan decode ("wrong QR") - a larger, sparser QR
+    // survives any resize/recompression in the phone's save pipeline with
+    // much more margin before fine module edges blur past readability.
+    const qrDataUrl=await generateQR(upiUrlQr,{size:500,correctLevel:QRCode.CorrectLevel.M});
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
       document.getElementById('manual-qr-download-btn').href=qrDataUrl;
