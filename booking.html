@@ -224,8 +224,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
   <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;" id="open-panel-desc">Seats are on first come, first basis.<br>No specific seat will be assigned.</div>
   <div id="open-multiday-info" style="display:none;background:#f0eeea;border-radius:10px;padding:12px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:1.6;"></div>
   <div id="pass-type-wrap" style="display:none;margin-bottom:14px;text-align:left;max-width:340px;margin-left:auto;margin-right:auto;">
-    <label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Pass type</label>
-    <select id="pass-type-select" onchange="onPassTypeChange()" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:14px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);"></select>
+    <label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:6px;">Pass type</label>
+    <div id="pass-type-chips" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
   <div id="pass-day-wrap" style="display:none;margin-bottom:14px;text-align:left;max-width:340px;margin-left:auto;margin-right:auto;">
     <label style="font-size:12px;font-weight:500;color:var(--muted);display:block;margin-bottom:4px;">Which day(s)?</label>
@@ -1296,21 +1296,29 @@ async function showManualInstructions(name,persons,amt){
     // No &pn= (payee name) - dropped it because several banks treat a pn
     // that doesn't match the real account holder as a fraud signal and
     // block the payment ("cannot pay to this person"). That fixed it for
-    // one bank but NOT for two others tested afterward - the upi://pay
-    // tap-through intent itself (as opposed to scanning the identical
-    // payload as a QR code) gets blocked outright by some banking apps as
-    // a standing anti-fraud policy on externally-triggered deep links to a
-    // non-merchant VPA, unrelated to any parameter we send. No URL fix
-    // resolves that - scanning the QR with the camera is the reliable
-    // path (same banks that block the tap-through accept the scan), so
-    // the UI now leads with "scan this" and demotes the tap button to a
-    // clearly-labelled fallback.
-    const upiUrl='upi://pay?pa='+encodeURIComponent(vpa)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
-    const qrDataUrl=await generateQR(upiUrl);
+    // one bank's tap-through but NOT for two others tested afterward - the
+    // upi://pay tap-through intent itself gets blocked outright by some
+    // banking apps as a standing anti-fraud policy on externally-triggered
+    // deep links to a non-merchant VPA, unrelated to any parameter we
+    // send. But omitting &pn= entirely then broke the DOWNLOADED QR for
+    // "scan from gallery/upload" on another bank ("wrong QR") - confirmed
+    // the downloaded image itself was a clean, undamaged QR, so that bank's
+    // upload-scan path is doing a stricter structural validation that
+    // requires pn to be present (unlike live camera scan or tap-through,
+    // which don't seem to care). No single &pn= value satisfies both
+    // constraints, so give the tap-through link none (least likely to
+    // trigger a name-mismatch block) and the QR/download a generic,
+    // non-impersonating guess derived from the VPA's own local-part
+    // instead of this event's name - better than an obviously-wrong name,
+    // without hardcoding anything organiser-specific.
+    const pnGuess=vpa.split('@')[0].replace(/[._-]+/g,' ').trim().slice(0,40);
+    const upiUrlTap='upi://pay?pa='+encodeURIComponent(vpa)+'&am='+encodeURIComponent(Number(amt).toFixed(2))+'&cu=INR&tn='+encodeURIComponent(refCode);
+    const upiUrlQr=upiUrlTap+(pnGuess?'&pn='+encodeURIComponent(pnGuess):'');
+    const qrDataUrl=await generateQR(upiUrlQr);
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
       document.getElementById('manual-qr-download-btn').href=qrDataUrl;
-      document.getElementById('manual-upi-btn').href=upiUrl;
+      document.getElementById('manual-upi-btn').href=upiUrlTap;
       qrWrap.style.display='block';
     }else{qrWrap.style.display='none';}
   }else{
@@ -1634,14 +1642,24 @@ async function loadPassTypes(){
   const wrap=document.getElementById('pass-type-wrap');
   if(!openPassTypes.length){wrap.style.display='none';document.getElementById('pass-day-wrap').style.display='none';document.getElementById('pass-price-display').style.display='none';selectedPassType=null;return;}
   wrap.style.display='block';
-  const sel=document.getElementById('pass-type-select');
-  sel.innerHTML=openPassTypes.map(pt=>`<option value="${pt.id}">${_e(pt.label)}</option>`).join('');
-  onPassTypeChange();
+  const chips=document.getElementById('pass-type-chips');
+  chips.innerHTML=openPassTypes.map(pt=>{
+    const priceLabel=pt.price_daily!=null?(pt.price_daily===0?'Free':'₹'+pt.price_daily):(pt.price_full_event!=null?'₹'+pt.price_full_event:'');
+    return `<div class="pass-chip" id="pass-chip-${pt.id}" onclick="selectPassTypeChip('${pt.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--rsm);cursor:pointer;background:var(--white);transition:background .15s,border-color .15s;">
+      <span style="font-size:14px;font-weight:600;color:var(--text);">${_e(pt.label)}</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text);">${priceLabel}</span>
+    </div>`;
+  }).join('');
+  selectPassTypeChip(openPassTypes[0].id);
 }
 
-function onPassTypeChange(){
-  const sel=document.getElementById('pass-type-select');
-  selectedPassType=openPassTypes.find(pt=>pt.id===sel.value)||null;
+function selectPassTypeChip(id){
+  document.querySelectorAll('.pass-chip').forEach(c=>{
+    const isSel=c.id==='pass-chip-'+id;
+    c.style.background=isSel?'rgba(46,158,96,0.12)':'var(--white)';
+    c.style.borderColor=isSel?'var(--green)':'var(--border2)';
+  });
+  selectedPassType=openPassTypes.find(pt=>pt.id===id)||null;
   const dayWrap=document.getElementById('pass-day-wrap');
   if(!selectedPassType){dayWrap.style.display='none';updatePassPriceDisplay();return;}
   const daySel=document.getElementById('pass-day-select');
