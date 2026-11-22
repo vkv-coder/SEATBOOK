@@ -321,6 +321,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
       Your reference code: <strong id="manual-ref-code" style="font-family:monospace;">—</strong><br>
       <span style="font-size:11px;">This is pre-filled as the payment note — keep it handy in case the organiser needs it to find your payment.</span>
     </div>
+    <div id="manual-realqr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">✅ Scan this — your bank's own official QR, works with any UPI app:</div>
+      <img id="manual-realqr-img" src="" alt="Payment QR code" style="width:220px;max-width:100%;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
+      <a id="manual-realqr-download-btn" href="#" download="khursilo-payment-qr.jpg" style="display:block;margin-top:10px;width:100%;box-sizing:border-box;padding:13px;background:#2e9e60;color:#fff;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;">⬇️ Download this QR</a>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Scan with your camera, or download and use "Scan from Gallery" in your UPI app. This QR doesn't carry an amount — enter <strong id="manual-realqr-amt">₹—</strong> yourself when it asks.</div>
+    </div>
     <div id="manual-qr-wrap" style="display:none;text-align:center;margin-bottom:16px;">
       <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;">✅ Best way on a single phone — no typing, right amount guaranteed:</div>
       <img id="manual-qr-img" src="" alt="UPI QR code" style="width:200px;height:200px;border:1px solid var(--border2);border-radius:var(--rsm);background:#fff;padding:8px;">
@@ -335,7 +341,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
         <button onclick="copyManualVpa()" id="manual-vpa-copy-btn" style="background:#1a1a1a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">📋 Copy</button>
       </div>
     </div>
-    <div style="text-align:center;margin-bottom:16px;">
+    <div id="manual-upi-btn-wrap" style="text-align:center;margin-bottom:16px;">
       <a id="manual-upi-btn" href="#" style="display:block;width:100%;box-sizing:border-box;padding:12px;background:none;border:1px solid var(--border2);color:var(--text);border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;">Or tap here to try opening your UPI app →</a>
       <div style="font-size:10px;color:var(--muted);margin-top:4px;">(Works on most banks, but some block this — use the options above if it doesn't work)</div>
     </div>
@@ -1290,6 +1296,8 @@ async function showManualInstructions(name,persons,amt){
   const vpa=extractUpiVpa(instructions);
   const qrWrap=document.getElementById('manual-qr-wrap');
   const vpaWrap=document.getElementById('manual-vpa-wrap');
+  const realQrWrap=document.getElementById('manual-realqr-wrap');
+  const upiBtnWrap=document.getElementById('manual-upi-btn-wrap');
   window._manualVpa=vpa;
   if(vpa&&Number(amt)>0){
     document.getElementById('manual-vpa-text').textContent=vpa;
@@ -1297,6 +1305,38 @@ async function showManualInstructions(name,persons,amt){
   }else{
     vpaWrap.style.display='none';
   }
+
+  // An organiser-uploaded real bank QR (confirmed, live: IDFC's own
+  // "Scan & Pay" poster works via both camera scan AND gallery-upload on
+  // banks that reject our generated upi://pay QR as "wrong QR" - it's in
+  // the proper BharatQR/EMVCo format, not a bare payment-link URI) fully
+  // replaces both our generated QR and the tap-through link when present -
+  // it's strictly more reliable on every axis except not carrying the
+  // amount, which we just tell the payer to enter themselves.
+  if(eventData.payment_qr_url&&Number(amt)>0){
+    document.getElementById('manual-realqr-img').src=eventData.payment_qr_url;
+    document.getElementById('manual-realqr-amt').textContent='₹'+Number(amt).toLocaleString('en-IN');
+    const dlBtn=document.getElementById('manual-realqr-download-btn');
+    // The image lives on a different origin (Supabase storage) - the
+    // download attribute is unreliable cross-origin in most browsers (it
+    // just navigates/opens the image instead of saving it), so fetch it
+    // and download as a same-origin blob instead, same fix as the
+    // generated QR.
+    try{
+      const blob=await (await fetch(eventData.payment_qr_url)).blob();
+      dlBtn.href=URL.createObjectURL(blob);
+    }catch(e){
+      dlBtn.href=eventData.payment_qr_url;
+    }
+    realQrWrap.style.display='block';
+    qrWrap.style.display='none';
+    upiBtnWrap.style.display='none';
+    document.getElementById('manual-overlay').classList.add('show');
+    return;
+  }
+  realQrWrap.style.display='none';
+  upiBtnWrap.style.display=vpa&&Number(amt)>0?'block':'none';
+
   if(vpa&&Number(amt)>0){
     // No &pn= (payee name) - dropped it because several banks treat a pn
     // that doesn't match the real account holder as a fraud signal and

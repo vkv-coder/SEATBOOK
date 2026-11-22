@@ -428,6 +428,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div id="pay-manual-instructions-wrap" style="display:none;margin-top:10px;">
         <div class="field-label">Payment instructions shown to buyer <span>*</span></div>
         <textarea class="input-field" rows="3" id="pay-instructions" placeholder="e.g. Pay via UPI to 9XXXXXXXXX@upi (Google Pay / PhonePe). Your ticket will be confirmed within a few hours of payment."></textarea>
+        <div class="field-label" style="margin-top:12px;">Your bank's "Scan &amp; Pay" QR image <span style="font-weight:400;color:#bbb;">(optional, but recommended)</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.5;">Upload the actual QR photo/poster your bank (IDFC, GPay, PhonePe etc.) gave you — not a screenshot of someone else's. This works far more reliably for buyers than a QR we generate ourselves, since it's in your bank's own standard format. Uploaded as-is, not compressed, so it stays scannable.</div>
+        <input type="file" id="pay-qr-file-input" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handlePaymentQrUpload(this)">
+        <div id="pay-qr-upload-zone" onclick="document.getElementById('pay-qr-file-input').click()" style="border:2px dashed var(--border2);border-radius:var(--rsm);padding:16px;text-align:center;cursor:pointer;background:var(--surface2);">
+          <div id="pay-qr-placeholder" style="font-size:12px;color:var(--muted);">📷 Tap to upload your QR image</div>
+          <img id="pay-qr-preview" src="" alt="" style="display:none;max-width:160px;max-height:160px;border-radius:6px;">
+        </div>
+        <button id="pay-qr-remove-btn" onclick="removePaymentQr(event)" style="display:none;margin-top:6px;background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;">✕ Remove QR</button>
       </div>
     </div>
 
@@ -693,6 +701,7 @@ const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891
 // ── IMAGE UPLOAD ──
 let uploadedImageFile = null;
 let uploadedImageUrl = null;
+let uploadedPaymentQrFile = null;
 
 // Posters coming straight from a phone/WhatsApp are routinely 1-5MB -
 // noticeably slows down booking.html on mobile data even under the old
@@ -727,6 +736,49 @@ function handleImageUpload(input) {
   };
   img.onerror = () => { URL.revokeObjectURL(objectUrl); alert('Could not read this image. Try a different file.'); };
   img.src = objectUrl;
+}
+
+// Deliberately NOT run through the canvas/JPEG recompression pipeline
+// handleImageUpload() uses for posters - confirmed live that re-encoding
+// a QR image (even at high quality, even just resizing) can push it past
+// a bank app's decode tolerance. Upload the organiser's file byte-for-byte.
+function handlePaymentQrUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('Image too large. Max 10MB.'); return; }
+  uploadedPaymentQrFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('pay-qr-preview').src = e.target.result;
+    document.getElementById('pay-qr-preview').style.display = 'block';
+    document.getElementById('pay-qr-placeholder').style.display = 'none';
+    document.getElementById('pay-qr-remove-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePaymentQr(e) {
+  e.stopPropagation();
+  uploadedPaymentQrFile = null;
+  document.getElementById('pay-qr-preview').src = '';
+  document.getElementById('pay-qr-preview').style.display = 'none';
+  document.getElementById('pay-qr-placeholder').style.display = 'block';
+  document.getElementById('pay-qr-remove-btn').style.display = 'none';
+  document.getElementById('pay-qr-file-input').value = '';
+}
+
+async function uploadPaymentQrImage(eventId) {
+  if (!uploadedPaymentQrFile) return null;
+  try {
+    const ext = uploadedPaymentQrFile.name.split('.').pop().toLowerCase();
+    const path = `events/${eventId}-paymentqr.${ext}`;
+    const { error } = await sb.storage
+      .from('event-images')
+      .upload(path, uploadedPaymentQrFile, { upsert: true, contentType: uploadedPaymentQrFile.type });
+    if (error) { console.warn('Payment QR upload error:', error.message); return null; }
+    const { data } = sb.storage.from('event-images').getPublicUrl(path);
+    return data.publicUrl;
+  } catch(e) { console.warn('Payment QR upload failed:', e.message); return null; }
 }
 
 function removeImage(e) {
@@ -921,6 +973,11 @@ function startCreateEvent() {
   document.getElementById('pricing-preview').style.display = 'none';
   uploadedImageFile = null;
   uploadedImageUrl = null;
+  uploadedPaymentQrFile = null;
+  document.getElementById('pay-qr-preview').src = '';
+  document.getElementById('pay-qr-preview').style.display = 'none';
+  document.getElementById('pay-qr-placeholder').style.display = 'block';
+  document.getElementById('pay-qr-remove-btn').style.display = 'none';
   applyHallAvailability();
   selectCategory(allHalls.length > 0 ? 'hall' : 'open_ground');
   selectDuration('single');
@@ -1305,6 +1362,14 @@ async function publishEvent() {
       const imgUrl = await uploadEventImage(ev.id);
       if (imgUrl) {
         await sb.from('kh_events').update({ image_url: imgUrl }).eq('id', ev.id);
+      }
+    }
+
+    // ── Upload organiser's real bank payment QR if provided ──
+    if (uploadedPaymentQrFile) {
+      const qrUrl = await uploadPaymentQrImage(ev.id);
+      if (qrUrl) {
+        await sb.from('kh_events').update({ payment_qr_url: qrUrl }).eq('id', ev.id);
       }
     }
 
