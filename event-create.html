@@ -694,20 +694,39 @@ const SECTION_COLORS = ['#c8860a','#2b6fd4','#2e9e60','#7c3aed','#cc3333','#0891
 let uploadedImageFile = null;
 let uploadedImageUrl = null;
 
+// Posters coming straight from a phone/WhatsApp are routinely 1-5MB -
+// noticeably slows down booking.html on mobile data even under the old
+// 2MB hard-reject cap (confirmed live: a 1.6MB poster made the booking
+// page sluggish to open). Compress every upload down to a sane web size
+// client-side instead of just rejecting large files, so organisers never
+// have to pre-compress their own photos.
 function handleImageUpload(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { alert('Image too large. Max 2MB.'); return; }
-  uploadedImageFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('img-preview').src = e.target.result;
-    document.getElementById('img-preview').style.display = 'block';
-    document.getElementById('img-placeholder').style.display = 'none';
-    document.getElementById('img-remove-btn').style.display = 'block';
-    document.getElementById('img-upload-zone').classList.add('has-image');
+  if (file.size > 15 * 1024 * 1024) { alert('Image too large. Max 15MB.'); return; }
+  const img = new Image();
+  const objectUrl = URL.createObjectURL(file);
+  img.onload = () => {
+    const maxW = 1200;
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(objectUrl);
+    canvas.toBlob((blob) => {
+      if (!blob) { alert('Could not process this image. Try a different file.'); return; }
+      uploadedImageFile = new File([blob], 'poster.jpg', { type: 'image/jpeg' });
+      const previewUrl = URL.createObjectURL(blob);
+      document.getElementById('img-preview').src = previewUrl;
+      document.getElementById('img-preview').style.display = 'block';
+      document.getElementById('img-placeholder').style.display = 'none';
+      document.getElementById('img-remove-btn').style.display = 'block';
+      document.getElementById('img-upload-zone').classList.add('has-image');
+    }, 'image/jpeg', 0.82);
   };
-  reader.readAsDataURL(file);
+  img.onerror = () => { URL.revokeObjectURL(objectUrl); alert('Could not read this image. Try a different file.'); };
+  img.src = objectUrl;
 }
 
 function removeImage(e) {
