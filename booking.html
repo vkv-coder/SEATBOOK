@@ -1330,7 +1330,16 @@ async function showManualInstructions(name,persons,amt){
     const qrDataUrl=await generateQR(upiUrlQr,{size:500,correctLevel:QRCode.CorrectLevel.M});
     if(qrDataUrl){
       document.getElementById('manual-qr-img').src=qrDataUrl;
-      document.getElementById('manual-qr-download-btn').href=qrDataUrl;
+      // A data: URI download attribute behaves inconsistently on some
+      // mobile browsers (re-encoding or mishandling very large base64
+      // strings) - a real Blob + object URL preserves the exact PNG bytes
+      // far more reliably for the "download then upload to bank app" path.
+      try{
+        const blob=await (await fetch(qrDataUrl)).blob();
+        document.getElementById('manual-qr-download-btn').href=URL.createObjectURL(blob);
+      }catch(e){
+        document.getElementById('manual-qr-download-btn').href=qrDataUrl;
+      }
       document.getElementById('manual-upi-btn').href=upiUrlTap;
       qrWrap.style.display='block';
     }else{qrWrap.style.display='none';}
