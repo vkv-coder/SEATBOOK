@@ -318,7 +318,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     </div>
     <div class="topbar-user">
       <button onclick="showScreen('screen-profile')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:2px 2px 2px 2px;font-family:'DM Sans',sans-serif;">
-        <div class="avatar" id="user-avatar">VD</div>
+        <div class="avatar" id="user-avatar">👤</div>
         <span style="font-size:12px;font-weight:600;color:var(--muted);">Profile / Team</span>
       </button>
       <button class="logout-btn" onclick="logout()">Logout</button>
@@ -804,7 +804,10 @@ async function loginWithSession(session){
 }
 
 function setAvatar(name){
-  document.getElementById('user-avatar').textContent = initials(name);
+  // A letter-initial here reads as a logout/account-switch control next to
+  // the actual Logout button - use a plain person icon instead, unambiguous
+  // regardless of the organiser's name.
+  document.getElementById('user-avatar').textContent = '👤';
 }
 
 // ── LOAD DASHBOARD ──
