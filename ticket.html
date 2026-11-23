@@ -243,7 +243,7 @@ async function loadTicket(){
   bookingData=booking;
 
   // Load event
-  const{data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',booking.event_id).maybeSingle();
+  const{data:ev,error:evErr}=await sb.from('kh_events').select('id,organiser_id,hall_id,name,description,event_date,event_time,mode,booking_open,booking_close,status,created_at,seat_price_map,event_type,from_date,to_date,cancellation_policy,image_url,payment_mode,payment_instructions,blocked_seats,slug,payment_qr_url,access_code_required').eq('id',booking.event_id).maybeSingle();
   if(evErr||!ev){showError('Event details not found.');return;}
 
   // Load hall

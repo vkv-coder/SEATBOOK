@@ -133,6 +133,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);max
 <div id="ev-banner-wrap" style="display:none;">
   <img id="ev-banner-img" class="event-banner-img" src="" alt="" loading="lazy">
 </div>
+
+<!-- ACCESS CODE GATE — shown for events the organiser has locked with a shared code -->
+<div class="form-overlay" id="access-gate-overlay" style="z-index:80;align-items:center;">
+  <div class="form-panel" style="border-radius:16px;max-width:360px;margin:0 16px;padding:24px 20px;animation:none;">
+    <div class="fp-title">🔒 Private event</div>
+    <div class="fp-sub">This event needs the access code shared by the organiser to continue.</div>
+    <input id="access-gate-input" type="text" placeholder="Enter access code" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--border2);border-radius:var(--rsm);font-size:15px;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);margin-bottom:10px;" onkeydown="if(event.key==='Enter')submitAccessGate()">
+    <div id="access-gate-err" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px;"></div>
+    <button onclick="submitAccessGate()" id="access-gate-btn" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:var(--rsm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Continue →</button>
+  </div>
+</div>
 <!-- FOOD PROMO BANNER — shown when event has active food items -->
 <div id="food-promo-bar" style="display:none;margin:0;background:linear-gradient(135deg,#a83000,#c84010,#e05520);padding:18px 16px 14px;cursor:pointer;flex-direction:column;gap:0;" onclick="window.location.href=window.location.pathname+'?event='+new URLSearchParams(window.location.search).get('event')+'&food=1'">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -503,20 +514,46 @@ function showCancellationPolicy(policy) {
 // XSS-safe escape (from live version)
 const _e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+async function submitAccessGate(){
+  const code=document.getElementById('access-gate-input').value.trim();
+  const errEl=document.getElementById('access-gate-err');
+  errEl.style.display='none';
+  if(!code){errEl.textContent='Enter the access code.';errEl.style.display='block';return;}
+  const btn=document.getElementById('access-gate-btn');
+  btn.textContent='Checking…';btn.disabled=true;
+  const{data:ok,error}=await sb.rpc('kh_verify_event_access_code',{p_event_id:eventId,p_code:code});
+  btn.textContent='Continue →';btn.disabled=false;
+  if(error||!ok){errEl.textContent='Incorrect code. Please check with the organiser.';errEl.style.display='block';return;}
+  sessionStorage.setItem('kh_gate_'+eventId,'1');
+  document.getElementById('access-gate-overlay').classList.remove('show');
+  document.getElementById('loading-screen').style.display='flex';
+  loadEvent();
+}
+
 async function loadEvent(){
   try{
     const slugParam=params.get('e');
     let ev,evErr;
+    const EV_COLS='id,organiser_id,hall_id,name,description,event_date,event_time,mode,booking_open,booking_close,status,created_at,seat_price_map,event_type,from_date,to_date,cancellation_policy,image_url,payment_mode,payment_instructions,blocked_seats,slug,payment_qr_url,access_code_required';
     if(slugParam){
-      ({data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('slug',slugParam.toLowerCase()).single());
+      ({data:ev,error:evErr}=await sb.from('kh_events').select(EV_COLS).eq('slug',slugParam.toLowerCase()).single());
       if(ev)eventId=ev.id;
     }else{
-      ({data:ev,error:evErr}=await sb.from('kh_events').select('*').eq('id',eventId).single());
+      ({data:ev,error:evErr}=await sb.from('kh_events').select(EV_COLS).eq('id',eventId).single());
     }
     if(evErr)throw evErr;
     if(ev.status==='draft'||ev.status==='upcoming'){showError('This event is not yet open for booking.');return;}
     if(ev.status==='closed'){isViewOnly=true;}
     eventData=ev;
+
+    // Private event gate — the actual code never leaves the server (see
+    // kh_events_access_code.sql); this flag only says whether one is set.
+    if(ev.access_code_required && sessionStorage.getItem('kh_gate_'+ev.id)!=='1'){
+      document.getElementById('access-gate-overlay').classList.add('show');
+      document.getElementById('loading-screen').style.display='none';
+      setTimeout(()=>document.getElementById('access-gate-input').focus(),300);
+      return;
+    }
 
     // ── Compute total days (NEW) ──
     const fromDate=ev.from_date||ev.event_date;

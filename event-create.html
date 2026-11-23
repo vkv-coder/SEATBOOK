@@ -1350,7 +1350,7 @@ async function publishEvent() {
       insertData.description = venue + (desc ? '\n' + desc : '');
     }
 
-    const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select().single();
+    const { data: ev, error: evErr } = await sb.from('kh_events').insert(insertData).select('id,slug').single();
     if (evErr) {
       if ((evErr.message || '').includes('slug')) throw new Error('That short link is already taken by another event — pick a different one.');
       throw evErr;
