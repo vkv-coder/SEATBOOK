@@ -1081,7 +1081,7 @@ function buildEventCard(event, bookings){
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(46,158,96,0.2);border-radius:20px;padding:4px 10px;">
             <div style="width:7px;height:7px;border-radius:50%;background:var(--green);"></div>
-            <span style="font-size:12px;font-weight:500;color:var(--green);">Booked: ${confirmed} seats (${totalSeats>0?Math.round((confirmed/totalSeats)*100):0}%)</span>
+            <span style="font-size:12px;font-weight:500;color:var(--green);">Booked: ${bookedSeats} seats (${pct}%)</span>
           </div>
           <div style="display:flex;align-items:center;gap:5px;background:var(--red-dim);border:1px solid rgba(204,51,51,0.15);border-radius:20px;padding:4px 10px;">
             <div style="width:7px;height:7px;border-radius:50%;background:var(--red);"></div>
