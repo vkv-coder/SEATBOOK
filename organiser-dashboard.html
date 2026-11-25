@@ -2269,7 +2269,7 @@ async function downloadSeatMap(eid){
   wb.created=new Date();
 
   const ws=wb.addWorksheet('Seat Map',{
-    pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.4,right:0.4,top:0.4,bottom:0.4}}
+    pageSetup:{orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalDpi:300,verticalDpi:300,margins:{left:0.4,right:0.4,top:0.4,bottom:0.4}}
   });
 
   // Column widths
