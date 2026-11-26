@@ -766,7 +766,8 @@ async function loadEvent(){
 function showError(msg){document.getElementById('loading-screen').style.display='none';document.getElementById('error-screen').classList.add('show');document.getElementById('err-msg').textContent=msg;}
 
 async function loadSeatStatus(){
-  const{data:bookings}=await sb.from('kh_bookings').select('seat_keys,status').eq('event_id',eventId);
+  const{data:bookings,error}=await sb.from('kh_bookings').select('seat_keys,status').eq('event_id',eventId);
+  if(error)throw error;
   seatStatusMap={};
   (bookings||[]).forEach(b=>{(b.seat_keys||[]).forEach(k=>{if(b.status==='confirmed')seatStatusMap[k]='booked';else if(b.status==='held')seatStatusMap[k]='held';});});
   (eventData&&eventData.blocked_seats||[]).forEach(k=>{seatStatusMap[k]='blocked';});
